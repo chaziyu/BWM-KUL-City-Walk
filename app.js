@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Site Modal
     closeSiteModal.addEventListener('click', hideSiteInfo);
     siteModal.addEventListener('click', (e) => {
-        if (e.g.target === siteModal) hideSiteInfo();
+        if (e.target === siteModal) hideSiteInfo();
     });
 
     // Filter Modal
@@ -231,4 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create or update the user's marker
         if (map.hasLayer(L.marker.userMarker)) {
             L.marker.userMarker.setLatLng(e.latlng);
-            L.circle.userCircle.setLatLng(
+            L.circle.userCircle.setLatLng(e.latlng).setRadius(radius);
+        } else {
+            L.marker.userMarker = L.marker(e.latlng).addTo(map).bindPopup("You are here!");
+            L.circle.userCircle = L.circle(e.latlng, {
+                radius: radius,
+                color: '#007bff',
+                fillColor: '#007bff',
+                fillOpacity: 0.1
+            }).addTo(map);
+        }
+    });
+
+    map.on('locationerror', (e) => {
+        console.error(e.message);
+        alert("Geolocation failed. 'Find Closest' will not work.");
+    });
+
+    map.locate({ watch: true, enableHighAccuracy: true });
+});
