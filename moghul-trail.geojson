@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Moghul Architecture Trail"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.6944, 3.1489],
+          [101.6947, 3.1485],
+          [101.69405, 3.14675],
+          [101.6952, 3.1508],
+          [101.69555, 3.15027],
+          [101.6950, 3.15027]
+        ]
+      }
+    }
+  ]
+}
