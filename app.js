@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTrailLayer = null;
 
     // --- 2. GET ALL HTML ELEMENTS ---
-    const map = L.map('map');
+    const map = L.map('map').setView([3.1483, 101.6938], 16);
     
     // Site Modal (for info)
     const siteModal = document.getElementById('siteModal');
