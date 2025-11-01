@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set "Get Directions" button link
         const lat = site.coordinates[0];
         const lng = site.coordinates[1];
-        getDirectionsButton.href = `http://googleusercontent.com/maps/google.com/4{lat},${lng}`;
+        getDirectionsButton.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`; // <-- THIS IS THE CORRECT LINE
 
         siteModal.classList.remove('hidden');
     }
