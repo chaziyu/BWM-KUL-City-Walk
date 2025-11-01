@@ -4,10 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let allSitesData = [];
     let allMarkersLayer = L.layerGroup(); // A group to hold all markers for filtering
     let userLocation = null;
-    let currentTrailLayer = null;
+    // Removed all "trail" variables
 
     // --- 2. GET ALL HTML ELEMENTS ---
-    const map = L.map('map').setView([3.1483, 101.6938], 16);
+    const map = L.map('map').setView([3.1483, 101.6938], 16); // Added default view
     
     // Site Modal (for info)
     const siteModal = document.getElementById('siteModal');
@@ -28,12 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const openFilterButton = document.getElementById('openFilterButton');
     const closeFilterModal = document.getElementById('closeFilterModal');
     const filterContainer = document.getElementById('filterContainer');
-
-    // Trails Modal
-    const trailsModal = document.getElementById('trailsModal');
-    const openTrailsButton = document.getElementById('openTrailsButton');
-    const closeTrailsModal = document.getElementById('closeTrailsModal');
-    const clearTrailButton = document.getElementById('clearTrailButton');
 
     // "Find Closest" Button
     const findClosestButton = document.getElementById('findClosestButton');
@@ -74,26 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const hideSiteInfo = () => siteModal.classList.add('hidden');
 
-    // Function to load a trail
-    function loadTrail(trailFile) {
-        if (currentTrailLayer) {
-            map.removeLayer(currentTrailLayer); // Remove old trail
-        }
-        fetch(trailFile)
-            .then(response => response.json())
-            .then(data => {
-                currentTrailLayer = L.geoJSON(data, {
-                    style: { color: '#007bff', weight: 5, opacity: 0.7 }
-                }).addTo(map);
-                map.fitBounds(currentTrailLayer.getBounds()); // Zoom to the trail
-                trailsModal.classList.add('hidden'); // Close modal
-            })
-            .catch(error => console.error('Error loading trail data:', error));
-    }
-
     // --- 5. LOAD ALL DATA AND SET UP FEATURES ---
     fetch('data.json')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok. Check file path.');
+            }
+            return response.json();
+        })
         .then(sites => {
             allSitesData = sites;
             let categories = new Set(); // To auto-find all categories
@@ -171,12 +153,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     filterContainer.querySelector('.filter-checkbox[value="All"]').checked = false;
                 }
                 
+                let allUnchecked = true;
                 checkboxes.forEach(cb => {
                     if (cb.checked && cb.value !== 'All') {
                         selectedCategories.push(cb.value);
+                        allUnchecked = false;
                     }
                 });
                 
+                // If all are unchecked, re-check "Show All"
+                if (allUnchecked && !filterContainer.querySelector('.filter-checkbox[value="All"]').checked) {
+                     filterContainer.querySelector('.filter-checkbox[value="All"]').checked = true;
+                }
+
                 if (filterContainer.querySelector('.filter-checkbox[value="All"]').checked) {
                     selectedCategories = Array.from(categories); // All categories
                 }
@@ -217,7 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         })
-        .catch(error => console.error('Error loading heritage data:', error));
+        .catch(error => {
+            console.error('CRITICAL ERROR: Could not load data.json.', error);
+            alert('Error: Could not load heritage site data. Please check data.json for syntax errors.');
+        });
 
     // --- 7. MODAL & BUTTON LISTENERS (that don't need data) ---
     
@@ -230,21 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Filter Modal
     openFilterButton.addEventListener('click', () => filterModal.classList.remove('hidden'));
     closeFilterModal.addEventListener('click', () => filterModal.classList.add('hidden'));
-
-    // Trails Modal
-    openTrailsButton.addEventListener('click', () => trailsModal.classList.remove('hidden'));
-    closeTrailsModal.addEventListener('click', () => trailsModal.classList.add('hidden'));
-    document.querySelectorAll('.trail-button').forEach(button => {
-        button.addEventListener('click', (e) => {
-            loadTrail(e.target.dataset.trailFile);
-        });
-    });
-    clearTrailButton.addEventListener('click', () => {
-        if (currentTrailLayer) {
-            map.removeLayer(currentTrailLayer);
-        }
-        trailsModal.classList.add('hidden');
-    });
 
     // --- 8. SETUP GEOLOCATION ---
     map.on('locationfound', (e) => {
