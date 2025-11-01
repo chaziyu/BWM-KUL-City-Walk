@@ -26,7 +26,6 @@
                 <button id="findClosestButton" class="p-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">Find Closest</button>
                 <button id="openFilterButton" class="p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700">Filters</button>
                 <button id="openTrailsButton" class="p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700">Trails</button>
-                <button id="openEventsButton" class="p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700">BWM Events</button>
             </nav>
         </div>
     </header>
@@ -37,7 +36,7 @@
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[85vh] flex flex-col">
             <div class="p-5 border-b flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-gray-800">Filter Sites</h2>
-                <button id="closeFilterModal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+                <button id="closeFilterModal" class="text-gray-500 hover:text-gray-800 text-3xl">×</button>
             </div>
             <div id="filterContainer" class="p-6 overflow-y-auto">
                 <div class="mb-4">
@@ -51,23 +50,11 @@
         </div>
     </div>
 
-    <div id="eventsModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-[1000] hidden flex justify-center items-center p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
-            <div class="p-5 border-b flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-gray-800">BWM Events & Activities</h2>
-                <button id="closeEventsModal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
-            </div>
-            <div id="eventsContainer" class="p-6 overflow-y-auto">
-                <p>Loading events...</p>
-            </div>
-        </div>
-    </div>
-
     <div id="trailsModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-[1000] hidden flex justify-center items-center p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[85vh] flex flex-col">
             <div class="p-5 border-b flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-gray-800">Walking Trails</h2>
-                <button id="closeTrailsModal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+                <button id="closeTrailsModal" class="text-gray-500 hover:text-gray-800 text-3xl">×</button>
             </div>
             <div class="p-6 overflow-y-auto space-y-3">
                 <button class="trail-button w-full p-3 bg-green-600 text-white rounded-md hover:bg-green-700" data-trail-file="moghul-trail.geojson">Moghul Architecture Trail</button>
@@ -81,7 +68,7 @@
         <div class="bg-white rounded-t-lg md:rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] flex flex-col">
             <div class="p-5 border-b flex justify-between items-center">
                 <h2 id="modalTitle" class="text-2xl font-bold text-gray-800">Site Title</h2>
-                <button id="closeSiteModal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+                <button id="closeSiteModal" class="text-gray-500 hover:text-gray-800 text-3xl">×</button>
             </div>
             <div class="p-6 overflow-y-auto">
                 <img id="modalImage" class="w-full h-48 md:h-64 object-cover rounded-md mb-4 shadow-sm" src="" alt="Site Image">
