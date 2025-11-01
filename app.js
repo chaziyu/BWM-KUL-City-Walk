@@ -2,9 +2,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. GET MODAL ELEMENTS ---
-    // These are the parts of the "attractive" modal we need to update
     const siteModal = document.getElementById('siteModal');
     const modalTitle = document.getElementById('modalTitle');
+    const modalImage = document.getElementById('modalImage'); // Added image element
     const modalBuilt = document.getElementById('modalBuilt');
     const modalArchitects = document.getElementById('modalArchitects');
     const modalInfo = document.getElementById('modalInfo');
@@ -24,28 +24,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 2. INITIALIZE THE MAP ---
-    // Centered on Dataran Merdeka [3.1483, 101.6938]
-    const map = L.map('map').setView([3.1483, 101.6938], 16);
+    const map = L.map('map'); // Removed initial setView
 
     // Add the free OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // --- 3. MAKE IT "INTERACTIVE" (LOAD MARKERS) ---
-    // Fetch your "database" file
+    // --- 3. MAKE IT "INTERACTIVE" (LOAD MARKERS & FOCUS MAP) ---
     fetch('data.json')
         .then(response => response.json())
         .then(sites => {
+            const markers = []; // Array to store all marker coordinates
+            
             sites.forEach(site => {
-                // Create a marker for each site
                 const marker = L.marker(site.coordinates).addTo(map);
+                markers.push(site.coordinates); // Add coordinates to array
                 
-                // **THIS IS THE INTERACTIVE PART**
                 // Add a click event to each marker
                 marker.on('click', () => {
                     // 1. Populate the modal with data from the JSON
                     modalTitle.textContent = `${site.id}. ${site.name}`;
+                    
+                    // Handle image: show if available, hide if not
+                    if (site.imageUrl) {
+                        modalImage.src = site.imageUrl;
+                        modalImage.alt = site.name;
+                        modalImage.classList.remove('hidden'); // Ensure image is visible
+                        // Fallback in case image fails to load
+                        modalImage.onerror = () => {
+                            modalImage.src = "https://via.placeholder.com/400x250?text=Image+Not+Found";
+                        };
+                    } else {
+                        modalImage.classList.add('hidden'); // Hide if no image URL
+                    }
+
                     modalBuilt.textContent = site.built || "N/A";
                     modalArchitects.textContent = site.architects || "N/A";
                     modalInfo.textContent = site.info;
@@ -54,34 +67,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     siteModal.classList.remove('hidden');
                 });
             });
+
+            // --- Focus map on all markers after they are loaded ---
+            if (markers.length > 0) {
+                const bounds = L.latLngBounds(markers);
+                map.fitBounds(bounds, { padding: [50, 50] }); // Add some padding
+            }
         })
         .catch(error => console.error('Error loading heritage data:', error));
 
     // --- 4. ADD USER'S LIVE GPS LOCATION ---
     // This adds the "blue dot" to the map
     
-    // Add a marker for the user's location
-    const userMarker = L.marker([0, 0]).addTo(map);
-    // Add a circle to show accuracy
-    const userCircle = L.circle([0, 0], {
-        radius: 10,
-        color: '#007bff',
-        fillColor: '#007bff',
-        fillOpacity: 0.1
-    }).addTo(map);
+    let userMarker = null; // To hold the user's location marker
+    let userCircle = null; // To hold the user's accuracy circle
 
     function onLocationFound(e) {
         const radius = e.accuracy / 2;
-        userMarker.setLatLng(e.latlng);
-        userCircle.setLatLng(e.latlng).setRadius(radius);
+
+        if (userMarker) { // If marker already exists, update its position
+            userMarker.setLatLng(e.latlng);
+            userCircle.setLatLng(e.latlng).setRadius(radius);
+        } else { // Create marker and circle if they don't exist
+            userMarker = L.marker(e.latlng).addTo(map)
+                         .bindPopup("You are here.").openPopup();
+            userCircle = L.circle(e.latlng, {
+                radius: radius,
+                color: '#007bff',
+                fillColor: '#007bff',
+                fillOpacity: 0.1
+            }).addTo(map);
+        }
         
         // Optionally, uncomment the line below to auto-follow the user
         // map.setView(e.latlng, 17);
     }
 
     function onLocationError(e) {
-        alert("Geolocation failed. Please enable location services.");
-        console.error(e.message);
+        console.error("Geolocation failed:", e.message);
+        // You can add a visual indication to the user here if desired
     }
 
     // Start watching the user's position
@@ -90,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     map.locate({
         watch: true,        // Continuously update location
-        setView: true,      // Center the map on the user's location on first load
+        setView: false,     // Don't auto-center the map on the user on first load (we want it to focus on all sites)
         maxZoom: 18,
         enableHighAccuracy: true
     });
