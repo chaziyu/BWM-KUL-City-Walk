@@ -1,5 +1,4 @@
-/* The map container must fill the whole screen */
-#map {
+map {
     width: 100vw;
     height: 100vh;
     /* z-index: 0 keeps it behind the header and modals */
