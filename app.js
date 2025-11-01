@@ -35,18 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeTrailsModal = document.getElementById('closeTrailsModal');
     const clearTrailButton = document.getElementById('clearTrailButton');
 
-    // Events Modal
-    const eventsModal = document.getElementById('eventsModal');
-    const openEventsButton = document.getElementById('openEventsButton');
-    const closeEventsModal = document.getElementById('closeEventsModal');
-    const eventsContainer = document.getElementById('eventsContainer');
-
     // "Find Closest" Button
     const findClosestButton = document.getElementById('findClosestButton');
 
     // --- 3. INITIALIZE THE MAP ---
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     allMarkersLayer.addTo(map); // Add the marker layer group to the map
 
@@ -71,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalArchitects.textContent = site.architects || "N/A";
         modalInfo.textContent = site.info;
         
-        // NEW: Set "Get Directions" button link
+        // Set "Get Directions" button link
         const lat = site.coordinates[0];
         const lng = site.coordinates[1];
         getDirectionsButton.href = `https://www.google.com/maps?daddr=${lat},${lng}`;
@@ -80,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const hideSiteInfo = () => siteModal.classList.add('hidden');
 
-    // NEW: Function to load a trail
+    // Function to load a trail
     function loadTrail(trailFile) {
         if (currentTrailLayer) {
             map.removeLayer(currentTrailLayer); // Remove old trail
@@ -95,40 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 trailsModal.classList.add('hidden'); // Close modal
             })
             .catch(error => console.error('Error loading trail data:', error));
-    }
-
-    // NEW: Function to load BWM Events
-    function showEvents() {
-        eventsModal.classList.remove('hidden');
-        eventsContainer.innerHTML = '<p>Loading events...</p>';
-        
-        // **IMPORTANT**: You must create and publish your own Google Sheet and paste the URL here
-        const googleSheetURL = 'YOUR_GOOGLE_SHEET_PUBLISHED_URL_HERE';
-
-        fetch(googleSheetURL)
-            .then(response => response.text())
-            .then(text => {
-                // This is a simple parser for Google Sheets published as CSV
-                const rows = text.split('\n').slice(1); // Split by line, skip header
-                eventsContainer.innerHTML = ''; // Clear "loading"
-                rows.forEach(row => {
-                    const columns = row.split(','); // Assumes format: Date,EventName,Description
-                    if (columns.length >= 3) {
-                        const eventEl = document.createElement('div');
-                        eventEl.className = 'p-4 border-b';
-                        eventEl.innerHTML = `
-                            <h3 class="font-bold text-lg">${columns[1]}</h3>
-                            <p class="text-sm text-gray-600 mb-2">${columns[0]}</p>
-                            <p>${columns.slice(2).join(',')}</p>
-                        `;
-                        eventsContainer.appendChild(eventEl);
-                    }
-                });
-            })
-            .catch(error => {
-                console.error('Error loading events:', error);
-                eventsContainer.innerHTML = '<p>Could not load events. Please check your Google Sheet URL.</p>';
-            });
     }
 
     // --- 5. LOAD ALL DATA AND SET UP FEATURES ---
@@ -285,10 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         trailsModal.classList.add('hidden');
     });
-
-    // Events Modal
-    openEventsButton.addEventListener('click', showEvents);
-    closeEventsModal.addEventListener('click', () => eventsModal.classList.add('hidden'));
 
     // --- 8. SETUP GEOLOCATION ---
     map.on('locationfound', (e) => {
