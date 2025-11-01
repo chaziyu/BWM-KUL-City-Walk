@@ -15,12 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBuilt = document.getElementById('modalBuilt');
     const modalArchitects = document.getElementById('modalArchitects');
     const modalInfo = document.getElementById('modalInfo');
-    const getDirectionsButton = document.getElementById('getDirectionsButton');
     const closeSiteModal = document.getElementById('closeSiteModal');
 
     // Search Bar
     const searchBox = document.getElementById('searchBox');
     const searchResults = document.getElementById('searchResults');
+
+    // Filter Modal
+    const filterModal = document.getElementById('filterModal');
+    const openFilterButton = document.getElementById('openFilterButton');
+    const closeFilterModal = document.getElementById('closeFilterModal');
+    const filterContainer = document.getElementById('filterContainer');
+
+    // "Find Closest" Button
+    const findClosestButton = document.getElementById('findClosestButton');
 
     // --- 3. INITIALIZE THE MAP ---
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -49,10 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modalArchitects.textContent = site.architects || "N/A";
         modalInfo.textContent = site.info;
         
-        // Set "Get Directions" button link
-        const lat = site.coordinates[0];
-        const lng = site.coordinates[1];
-        getDirectionsButton.href = `https://www.google.com/maps/dir/?api=1&destination=LATITUDE,LONGITUDE{lat},${lng}`;
+        // "Get Directions" code has been removed.
+
         siteModal.classList.remove('hidden');
     }
     const hideSiteInfo = () => siteModal.classList.add('hidden');
@@ -67,8 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(sites => {
             allSitesData = sites;
+            let categories = new Set(); // To auto-find all categories
 
             sites.forEach(site => {
+                // Add category to the set
+                if (site.category) {
+                    categories.add(site.category);
+                }
+
                 // Create marker and add to layer group
                 const marker = L.marker(site.coordinates);
                 marker.siteData = site; // Attach site data to marker
@@ -109,14 +121,89 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             });
+
+            // --- 7. SET UP FILTERS ---
+            // Create filter checkboxes dynamically
+            categories.forEach(category => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center';
+                label.innerHTML = `
+                    <input type="checkbox" class="filter-checkbox" value="${category}" checked>
+                    <span class="ml-2">${category}</span>
+                `;
+                filterContainer.appendChild(label);
+            });
+            
+            // Add listener to all filter checkboxes
+            filterContainer.addEventListener('change', (e) => {
+                let selectedCategories = [];
+                const checkboxes = filterContainer.querySelectorAll('.filter-checkbox');
+                
+                // Special "Show All" logic
+                if (e.target.value === 'All') {
+                    checkboxes.forEach(cb => cb.checked = e.target.checked);
+                } else if (!e.target.checked) {
+                    filterContainer.querySelector('.filter-checkbox[value="All"]').checked = false;
+                }
+                
+                let allUnchecked = true;
+                checkboxes.forEach(cb => {
+                    if (cb.checked && cb.value !== 'All') {
+                        selectedCategories.push(cb.value);
+                        allUnchecked = false;
+                    }
+                });
+                
+                if (allUnchecked && !filterContainer.querySelector('.filter-checkbox[value="All"]').checked) {
+                     filterContainer.querySelector('.filter-checkbox[value="All"]').checked = true;
+                }
+
+                if (filterContainer.querySelector('.filter-checkbox[value="All"]').checked) {
+                    selectedCategories = Array.from(categories); // All categories
+                }
+
+                // Filter the markers
+                allMarkersLayer.eachLayer(marker => {
+                    if (selectedCategories.includes(marker.siteData.category)) {
+                        marker.addTo(map);
+                    } else {
+                        marker.removeFrom(map);
+                    }
+                });
+            });
+
+            // --- 8. SET UP "FIND CLOSEST" ---
+            findClosestButton.addEventListener('click', () => {
+                if (!userLocation) {
+                    alert("Please enable location services first.");
+                    return;
+                }
+                
+                let closestSite = null;
+                let minDistance = Infinity;
+
+                allSitesData.forEach(site => {
+                    const siteLatLng = L.latLng(site.coordinates[0], site.coordinates[1]);
+                    const distance = userLocation.distanceTo(siteLatLng);
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestSite = site;
+                    }
+                });
+
+                if (closestSite) {
+                    map.setView(closestSite.coordinates, 18);
+                    showSiteInfo(closestSite);
+                }
+            });
         })
         .catch(error => {
             console.error('CRITICAL ERROR: Could not load data.json.', error);
-            // This alert is what you saw in your screenshot.
             alert('Error: Could not load heritage site data. Please check data.json for syntax errors.');
         });
 
-    // --- 7. MODAL & BUTTON LISTENERS ---
+    // --- 9. MODAL & BUTTON LISTENERS (that don't need data) ---
     
     // Site Modal
     closeSiteModal.addEventListener('click', hideSiteInfo);
@@ -124,7 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === siteModal) hideSiteInfo();
     });
 
-    // --- 8. SETUP GEOLOCATION ---
+    // Filter Modal
+    openFilterButton.addEventListener('click', () => filterModal.classList.remove('hidden'));
+    closeFilterModal.addEventListener('click', () => filterModal.classList.add('hidden'));
+
+    // --- 10. SETUP GEOLOCATION ---
     map.on('locationfound', (e) => {
         userLocation = e.latlng; // Store user's location
         const radius = e.accuracy / 2;
