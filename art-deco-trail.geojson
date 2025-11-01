@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Art Deco Trail"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.69598, 3.14736],
+          [101.6958, 3.1465],
+          [101.69527, 3.14555],
+          [101.6949, 3.1480],
+          [101.69713, 3.1499]
+        ]
+      }
+    }
+  ]
+}
