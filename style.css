@@ -5,8 +5,8 @@
     z-index: 1; 
 }
 
-/* Gatekeeper Transition */
-#gatekeeper {
+/* Gatekeeper & Staff Screen Transitions */
+#gatekeeper, #staff-screen {
     transition: opacity 0.3s ease;
 }
 
