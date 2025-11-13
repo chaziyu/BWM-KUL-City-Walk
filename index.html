@@ -75,7 +75,7 @@
     <div id="siteModal" class="fixed inset-0 bg-black bg-opacity-70 z-[3000] hidden flex justify-center items-end md:items-center p-4">
         <div class="bg-white rounded-t-xl md:rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col animate-bounce-up">
             
-            <div id="modalImageContainer" class="hidden relative w-full h-48 md:h-64">
+            <div id="modalImageContainer" class="hidden relative w-full h-48 md:h-64 flex-shrink-0">
                 <img id="modalImage" src="" alt="Site Photo" class="w-full h-full object-cover rounded-t-xl bg-gray-200">
             </div>
 
@@ -104,7 +104,19 @@
                         <span id="modalArchitects" class="text-gray-800 font-medium">...</span>
                     </div>
                 </div>
+
                 <hr class="border-gray-100 my-4">
+
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-purple-900 font-bold text-sm uppercase tracking-wider">✨ AI Historian</h3>
+                        <span class="text-xs text-purple-400">Powered by Gemini</span>
+                    </div>
+                    <p id="aiResponse" class="text-purple-800 text-sm italic hidden mb-2">Loading...</p>
+                    <button id="btnAskAI" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 rounded-lg transition shadow-sm">
+                        Tell me a secret fact!
+                    </button>
+                </div>
                 <p id="modalInfo" class="text-gray-700 leading-relaxed text-justify">...</p>
             </div>
         </div>
