@@ -207,13 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDirections = document.getElementById('btnDirections');
     const rewardModal = document.getElementById('rewardModal');
     const closeReward = document.getElementById('closeReward');
+    const btnShare = document.getElementById('btnShare');
+    const btnRecenter = document.getElementById('btnRecenter');
 
     const elements = {
         title: document.getElementById('modalTitle'),
         built: document.getElementById('modalBuilt'),
         architects: document.getElementById('modalArchitects'),
-        info: document.getElementById('modalInfo'),
-        image: document.getElementById('modalImage')
+        info: document.getElementById('modalInfo')
     };
 
     fetch('data.json')
@@ -253,22 +254,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             };
                         }
                     }
-                    
-                    
-                    //Populate image if exists
-                    if (site.image) {
-                        elements.image.src = site.image;
-                        elements.image.classList.remove('hidden');
-                    } else {
-                        // Hide image area if no photo exists for this site
-                        elements.image.classList.add('hidden'); 
-                    }
-
                     siteModal.classList.remove('hidden');
                 });
             });
         })
-        .catch(err => console.error("Error loading Map Data:", err)); // Added Error Logging
+        .catch(err => console.error("Error loading Map Data:", err));
 
     function collectStamp(siteId, marker, btn) {
         if (!visitedSites.includes(siteId)) {
@@ -300,6 +290,21 @@ document.addEventListener('DOMContentLoaded', () => {
         progressBar.style.width = `${percent}%`;
         progressText.textContent = `${count}/${TOTAL_SITES} Sites`;
     }
+
+    // --- NEW BUTTON LOGIC ---
+    
+    // Recenter Button: Resets view to Dataran Merdeka (Centre of Zone)
+    btnRecenter.addEventListener('click', () => {
+        map.setView([3.1483, 101.6938], 16);
+    });
+
+    // Share Button: Opens WhatsApp with victory message
+    btnShare.addEventListener('click', () => {
+        const text = "I just became an Official Explorer by visiting all 13 Heritage Sites in Kuala Lumpur! 🇲🇾✨ Try the Jejak Warisan challenge here:";
+        const url = "https://jejak-warisan.vercel.app";
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+        window.open(whatsappUrl, '_blank');
+    });
 
     const userMarker = L.marker([0, 0]).addTo(map);
     const userCircle = L.circle([0, 0], { radius: 10 }).addTo(map);
