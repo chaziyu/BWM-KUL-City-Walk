@@ -3,7 +3,7 @@
     "id": "1",
     "name": "Bangunan Sultan Abdul Samad",
     "coordinates": [3.1489, 101.6944],
-    "image": "images/1.jpg",
+    "image": "images/bangunan_sultan_abdul_samad.jpeg",
     "built": "1894-1897",
     "architects": "A.C. Norman, R.A.J. Bidwell, A.B. Hubback",
     "info": "Once the largest building of its day, this administrative centre cost $198,000 Straits Dollars to build. It used over 4 million bricks! The massive 140ft clock tower houses a one-ton bell that first chimed for Queen Victoria's birthday in 1897. Look for the granite bollards near the porch—they were originally used for tethering horses."
@@ -12,7 +12,7 @@
     "id": "2",
     "name": "Old Post Office",
     "coordinates": [3.1485, 101.6947],
-    "image": "images/2.jpg",
+    "image": "images/old_post_office.jpg",
     "built": "1904-1907",
     "architects": "A.B. Hubback",
     "info": "Built at a cost of $100,000 Straits Dollars, this Moghul-style structure served as KL's General Post Office until 1984. Designed to match the Sultan Abdul Samad building, it features wide verandahs and pointed horse-shoe arches. It is now used by the Ministry of Tourism and Culture."
@@ -21,7 +21,7 @@
     "id": "3",
     "name": "Wisma Straits Trading & Loke Yew Building",
     "coordinates": [3.1480, 101.6949],
-    "image": "images/3.jpg",
+    "image": "images/wismastraits.jpg",
     "built": "Early 1900s - 1930s",
     "architects": "B.M. Iversen (Loke Yew), A.K. Moosden (Chow Kit)",
     "info": "A cluster of commercial history. The Loke Yew Building is an iconic 6-storey Art Deco structure designed by B.M. Iversen. Next door is the Neo-Renaissance style Chow Kit & Co. Building (1905), featuring Flemish pediments. These sites mark the empire established by early tin tycoons like Loke Yew."
@@ -30,7 +30,7 @@
     "id": "4",
     "name": "Masjid Jamek",
     "coordinates": [3.1471, 101.6954],
-    "image": "images/4.jpg",
+    "image": "images/jamek_bridge.jpg",
     "built": "1908-1909",
     "architects": "A.B. Hubback",
     "info": "Built for $33,500 Straits Dollars at the confluence of the Klang and Gombak rivers. This Moghul-inspired mosque sits on an old Malay cemetery. Admire the red and white brick bands and the flooring, which uses original Doulton tiles designed in the pattern of prayer mats."
@@ -39,7 +39,7 @@
     "id": "5",
     "name": "Medan Pasar (Old Market Square)",
     "coordinates": [3.14736, 101.69598],
-    "image": "images/5.jpg",
+    "image": "images/medan_pasar.jpg",
     "built": "1907 (Shophouses), 1937 (Clock Tower)",
     "architects": "N/A",
     "info": "The original town center of Kapitan Yap Ah Loy. The square is lined with ornate 1907 Neo-classical shophouses. In the center stands an Art Deco Clock Tower featuring a 'sunburst' motif, built in 1937 to commemorate the coronation of King George VI."
@@ -48,7 +48,7 @@
     "id": "6",
     "name": "Sze Ya Temple",
     "coordinates": [3.1457, 101.6964],
-    "image": "images/6.jpg",
+    "image": "images/sze_ya_temple.jpg",
     "built": "1864 (Founded), 1882 (Rebuilt)",
     "architects": "N/A",
     "info": "KL's oldest traditional Chinese temple, founded by Kapitan Yap Ah Loy. Uniquely, it sits at an angle to the road to follow Feng Shui principles. From the lane off Lebuh Pudu, you can see the intricate ceramic carp on the roof ridge. It is dedicated to the deities who guided Yap Ah Loy during the Civil War."
@@ -57,7 +57,7 @@
     "id": "7",
     "name": "The Triangle (Old Federal Stores)",
     "coordinates": [3.1462, 101.6966],
-    "image": "images/7.jpg",
+    "image": "images/triangle_kl.jpg",
     "built": "1905",
     "architects": "N/A",
     "info": "Located at the Bangkok Bank Triangle. The Old Federal Stores building is unique because it spans the entire block and has no 'five-foot way.' It features fanciful garlic-shaped finials and was once occupied by the founders of Cycle & Carriage, who imported the first cars into Malaya."
@@ -66,7 +66,7 @@
     "id": "8",
     "name": "Kedai Ubat Kwong Ban Heng",
     "coordinates": [3.1484, 101.6978],
-    "image": "images/8.jpg",
+    "image": "images/kwongubat.jpg",
     "built": "c. 1980s (Established)",
     "architects": "N/A",
     "info": "Step back in time at No. 62. Established over 30 years ago, this traditional medicine shop retains its original glass cabinets and fittings. It is a living museum where you can still buy traditional herbs for everything from coughs and digestion to stress relief."
@@ -75,7 +75,7 @@
     "id": "9",
     "name": "Oriental Building",
     "coordinates": [3.1493, 101.6967],
-    "image": "images/9.jpg",
+    "image": "images/oriental_building.jpg",
     "built": "1932",
     "architects": "A.O. Coltman",
     "info": "When built in 1932, this 85-foot Art Deco masterpiece was the tallest building in Kuala Lumpur! Designed by A.O. Coltman on a triangular site, it features a beautiful curved façade. It originally housed Radio Malaya and later served as a bank."
@@ -84,7 +84,7 @@
     "id": "10",
     "name": "Flower Garland Stalls",
     "coordinates": [3.1511, 101.6979],
-    "image": "images/10.jpg",
+    "image": "images/flower_garland.webp",
     "built": "N/A",
     "architects": "N/A",
     "info": "A feast for the senses located near the Teochew Association. Here you can watch artisans weaving traditional fresh flower garlands used for religious offerings and celebrations. From here, you can also see the Eng Choon Huay Kuan clan house skirting the foot of Bukit Nanas."
@@ -93,7 +93,7 @@
     "id": "11",
     "name": "Masjid India",
     "coordinates": [3.1516, 101.6963],
-    "image": "images/11.jpg",
+    "image": "images/masjid_india.jpg",
     "built": "1966 (Rebuilt)",
     "architects": "N/A",
     "info": "Started as a timber hut in 1893, the current Southern Indian style structure was opened in 1966 to hold 3,500 people. Unlike Masjid Jamek, services here are conducted in both Arabic and Tamil. The surrounding arcade is famous for textiles, spices, and religious items."
@@ -102,7 +102,7 @@
     "id": "12",
     "name": "P.H. Hendry Royal Jewellers",
     "coordinates": [3.1510, 101.6954],
-    "image": "images/12.jpg",
+    "image": "images/ph_hendry.jpg",
     "built": "1902 (Established)",
     "architects": "N/A",
     "info": "Malaysia's oldest existing jewellers, founded by P.H. Hendry from Sri Lanka after he was shipwrecked en route to Australia! The family became so renowned they were appointed Royal Jewellers to three different Sultans in the 1920s."
@@ -111,7 +111,7 @@
     "id": "13",
     "name": "Panggong Bandaraya (Old City Hall)",
     "coordinates": [3.1503, 101.6950],
-    "image": "images/13.jpg",
+    "image": "images/panggung_bandaraya.jpg",
     "built": "1904",
     "architects": "A.B. Hubback",
     "info": "Built for $107,000 Straits Dollars, this Moghul-style beauty housed the Municipal Offices and KL's only theatre auditorium. After surviving a major fire in the 1980s, it was restored as the Panggong Bandaraya. Note the deep black interior of the arched windows."
@@ -120,7 +120,7 @@
     "id": "A",
     "name": "Dataran Merdeka",
     "coordinates": [3.1483, 101.6938],
-    "image": "images/A.jpg",
+    "image": "images/around_merdeka.jpg",
     "built": "1897 (Fountain)",
     "architects": "N/A",
     "info": "The historic cricket 'Padang'. At midnight on August 31, 1957, the Union Jack was lowered here, marking independence. Features include a 100m flagpole (once the world's tallest) and a Victorian fountain imported from England in 1897 for $4,000."
@@ -129,7 +129,7 @@
     "id": "B",
     "name": "National Textile Museum",
     "coordinates": [3.14675, 101.69405],
-    "image": "images/B.jpg",
+    "image": "images/textile_museum.jpg",
     "built": "1904-1905",
     "architects": "A.B. Hubback",
     "info": "Originally the Railway Offices (Cost: $116,000), this building is a classic example of 'Blood and Bandage' brickwork (red and white bands). Designed by A.B. Hubback, it now houses a fascinating collection of Malaysian textiles."
@@ -138,7 +138,7 @@
     "id": "C",
     "name": "OCBC Building",
     "coordinates": [3.1465, 101.6958],
-    "image": "images/C.jpg",
+    "image": "images/ocbc.jpg",
     "built": "1936",
     "architects": "A.O. Coltman",
     "info": "A 1936 Art Deco gem by A.O. Coltman. It was innovatively designed with a basement bicycle garage! Look up to see the stepped pylon and a mosaic panel featuring a Chinese Junk ship, the bank's original logo."
@@ -147,7 +147,7 @@
     "id": "D",
     "name": "Central Market (Pasar Seni)",
     "coordinates": [3.14555, 101.69527],
-    "image": "images/D.jpg",
+    "image": "images/central_market.jpg",
     "built": "1936",
     "architects": "N/A",
     "info": "Built in 1936 as the wholesale wet market for $330,000. It used special 'Calorex' glass to keep the interior cool, saving the city from needing refrigerators! In 1986, it was converted into the award-winning arts market."
@@ -156,7 +156,6 @@
     "id": "E",
     "name": "Jalan Yap Ah Loy",
     "coordinates": [3.1469, 101.69689],
-    "image": "images/E.jpg",
     "built": "N/A",
     "architects": "N/A",
     "info": "A short street with huge history. This road originally led directly to the home of Kapitan Yap Ah Loy. It joins Jalan Hang Lekiu (formerly Klyne Street), which was once one of the only paved streets in the city."
@@ -165,7 +164,7 @@
     "id": "F",
     "name": "Lebuh Ampang",
     "coordinates": [3.1491, 101.69743],
-    "image": "images/F.jpg",
+    "image": "images/lebuh_ampang.webp",
     "built": "N/A",
     "architects": "N/A",
     "info": "Historically the street of the Chettiars (money-lenders). Look closely at No. 85—it features beautiful ceramic peacock tiles. The peacock is the symbol of Lord Muruga, the deity of the Chettiar caste."
@@ -174,7 +173,7 @@
     "id": "G",
     "name": "Jalan Melaka",
     "coordinates": [3.1499, 101.69713],
-    "image": "images/G.jpg",
+    "image": "images/jalan_melaka.jpg",
     "built": "N/A",
     "architects": "N/A",
     "info": "A mix of old and new. Notable for the Bank Muamalat building, which was designed to look like a traditional Malay House despite being a modern banking hall. The Malay school was originally located in this area."
@@ -183,7 +182,7 @@
     "id": "H",
     "name": "Selangor Mansion & Malayan Mansion",
     "coordinates": [3.1535, 101.6975],
-    "image": "images/H.jpg",
+    "image": "images/selangor_mansion.jpg",
     "built": "1964",
     "architects": "N/A",
     "info": "Completed in 1964 for $2.5 million, these 8-storey blocks were an early experiment in mass public housing for the newly independent nation. They replaced the former squatters of Lorong Gombak."
@@ -192,7 +191,7 @@
     "id": "I",
     "name": "Wisma Yakin",
     "coordinates": [3.1530, 101.6970],
-    "image": "images/I.jpg",
+    "image": "images/wisma_yakin.jpg",
     "built": "1970s",
     "architects": "N/A",
     "info": "Built in the 1970s, this tower was once the tallest in the area. It remains the absolute best place in the city to buy traditional Malay attire like Baju Melayu and Songkok (visit Stall 11 to meet En Zolfadli, the expert)."
@@ -201,7 +200,7 @@
     "id": "J",
     "name": "Jalan Melayu",
     "coordinates": [3.1507, 101.69628],
-    "image": "images/J.jpg",
+    "image": "images/jalan_melayu.jpg",
     "built": "N/A",
     "architects": "N/A",
     "info": "Known as 'Malay Street,' this area was once filled with spice factories and bakeries. Look for the 100-year-old business selling 'Kain Pelekat' (sarongs) at No 3-5, run by the Kulasingam Chettiar family since 1895."
@@ -210,7 +209,7 @@
     "id": "K",
     "name": "Batu Road (Jalan TAR)",
     "coordinates": [3.1535, 101.69633],
-    "image": "images/K.jpg",
+    "image": "images/jalan_tar.jpg",
     "built": "1915-1920 (Shophouses)",
     "architects": "N/A",
     "info": "Now Jalan Tuanku Abdul Rahman, this was originally just a track leading to the tin mines at Batu Caves. The stunning block of shophouses here (built 1912-1915) features giant pilasters and decorative plaster garlands."
@@ -219,7 +218,7 @@
     "id": "L",
     "name": "Old Survey Office",
     "coordinates": [3.15027, 101.69555],
-    "image": "images/L.jpg",
+    "image": "images/survey_office.jpg",
     "built": "1909-1910",
     "architects": "A.B. Hubback",
     "info": "Another A.B. Hubback design built for $150,000. It features a dramatic 400ft long arcade. Look for the twin 'Chatris' (domed pavilions) on the roof. It sits sadly beneath the modern LRT line but remains a stunning piece of architecture."
@@ -228,7 +227,7 @@
     "id": "M",
     "name": "Old High Court",
     "coordinates": [3.1508, 101.6952],
-    "image": "images/M.jpg",
+    "image": "images/old_high_court.jpg",
     "built": "1912-1915",
     "architects": "A.B. Hubback",
     "info": "Costing $208,000, this 1915 building replaced the courts on the hill. It features a grand inner courtyard and was designed by—you guessed it—A.B. Hubback. It is currently awaiting restoration by Kraftangan Malaysia."
