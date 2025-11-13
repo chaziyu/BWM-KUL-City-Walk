@@ -1,7 +1,32 @@
 // --- CONFIGURATION ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtyJ200uEv2yu24C-DesB5g57iBX9CpO_qp8mAQCKX1LYrS_S8BnZGtfVDq_9LqnJ7HO6nbXpu8J4/pub?gid=0&single=true&output=csv"; 
 const ADMIN_PASSWORD = "BWM"; 
-const GEMINI_API_KEY = "AIzaSyDJdiq3SRAl4low1-VW-msp4A1ZD_5bymw"; // Your provided API Key
+const GEMINI_API_KEY = "AIzaSyDJdiq3SRAl4low1-VW-msp4A1ZD_5bymw";
+
+// --- KNOWLEDGE BASE (Extracted from BWM Document PDF) ---
+const PDF_KNOWLEDGE_BASE = `
+SOURCE MATERIAL: "This Kul City: Discover Kwala Lumpur" by Badan Warisan Malaysia.
+
+SITE 1: Bangunan Sultan Abdul Samad. Built 1894-1897. Architects: AC Norman, RAJ Bidwell, CE Spooner, AB Hubback. Originally Govt Offices. 480ft long in "Mahometan" style. Clock tower is 140ft high. Contains 4 million bricks, 5000lbs copper. The clock was first heard on Queen Victoria's birthday in 1897.
+SITE 2: Old Post Office. Built 1904-1907 by Architect AB Hubback. Cost $100,000. Features horse-shoe arches. Used to be Ministry of Tourism.
+SITE 3: Wisma Straits Trading & Loke Yew Building. Loke Yew Building is Art Deco (designed by B.M. Iversen). Chow Kit & Co building (1904) is Neo-Renaissance, designed by AK Moosden.
+SITE 4: Masjid Jamek. Built 1908-1909 by AB Hubback. Cost $33,500. Sited on an old Malay cemetery. Moghul style with onion domes and red/white brick bands.
+SITE 5: Medan Pasar (Old Market Square). Site of Yap Ah Loy's market. The Clock tower was erected in 1937 for King George VI's coronation and features an Art Deco sunburst motif.
+SITE 6: Sze Ya Temple. Built 1882. Oldest traditional Chinese temple in KL. Dedicated to deities Sin Sze Ya and Si Sze Ya who guided Yap Ah Loy. Built at an angle for Feng Shui.
+SITE 7: The Triangle / Old Federal Stores. Federal Stores (1905) has "garlic shaped finials" and no five-foot way.
+SITE 8: Kedai Ubat Kwong Ban Heng. Traditional herb shop established over 30 years ago at No 62.
+SITE 9: Oriental Building. Built 1932 by A.O. Coltman. Was the tallest in KL (85ft) at the time. Features a curved facade.
+SITE 10: Flower Garland Stall. Located near the Teochew Association.
+SITE 11: Masjid India. Originally timber (1893), rebuilt 1966. Southern Indian style with chatris. Prayers conducted in Arabic and Tamil.
+SITE 12: P.H. Hendry Royal Jewellers. Oldest jewellers in Malaysia. Founded by P.H. Dineshamy from Ceylon. Appointed royal jewellers to Sultans.
+SITE 13: Old City Hall. Built 1904 by AB Hubback. Cost $107,000. Now venue for "MUD: Our Story of KL".
+
+ADDITIONAL FACTS:
+- Dataran Merdeka (The Padang) has a 100m flagpole. Union Jack lowered Aug 31, 1957.
+- Textile Museum (1905) was originally FMS Railway Offices.
+- OCBC Building (1936) by AO Coltman had bicycle parking in the basement.
+- Central Market (1936) used "Calorex" glass to reduce heat.
+`;
 
 // --- GAME STATE ---
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
@@ -182,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // USE THIS CLEAN STYLE (CartoDB Positron)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
@@ -303,17 +328,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     aiBtn.parentNode.replaceChild(newAiBtn, aiBtn);
 
                     newAiBtn.addEventListener('click', async () => {
-                        newAiBtn.innerHTML = "Thinking... 🤖";
+                        newAiBtn.innerHTML = "Consulting Archives... 📜"; 
                         newAiBtn.disabled = true;
                         newAiBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                        aiText.textContent = "Consulting the history books...";
+                        aiText.textContent = "Reading the historical records...";
                         aiText.classList.remove('hidden');
 
-                        // AI Prompt
-                        const prompt = `I am a tourist at ${site.name} in Kuala Lumpur. 
-                        The official info says: "${site.info}".
-                        Act as a passionate local historian. Tell me one short, fascinating, "hidden" fact or ghost story about this specific place that isn't in the standard guide. 
-                        Keep it under 2 sentences. Make it exciting.`;
+                        // AI Prompt with PDF Knowledge
+                        const prompt = `
+                        CONTEXT: You are an expert historian guide for Kuala Lumpur.
+                        
+                        REFERENCE MATERIAL:
+                        ${PDF_KNOWLEDGE_BASE}
+                        
+                        USER LOCATION: ${site.name}
+                        OFFICIAL INFO: ${site.info}
+                        
+                        TASK: The user is standing at this location. Based strictly on the REFERENCE MATERIAL provided above, tell them a "Hidden Secret" or interesting historical fact about this specific building.
+                        
+                        RULES:
+                        1. Use specific details (dates, architects, costs, names) from the text.
+                        2. If the reference material mentions a specific person (like "Yap Ah Loy" or "AC Norman"), mention them.
+                        3. Keep it short (maximum 2-3 sentences).
+                        4. Be exciting and passionate.
+                        `;
 
                         // Call Gemini API
                         try {
@@ -326,8 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 })
                             });
                             const data = await response.json();
-                            const aiResult = data.candidates[0].content.parts[0].text;
-                            aiText.textContent = aiResult;
+                            
+                            if(data.candidates && data.candidates.length > 0) {
+                                const aiResult = data.candidates[0].content.parts[0].text;
+                                aiText.textContent = aiResult;
+                            } else {
+                                aiText.textContent = "I couldn't find that page in the history book!";
+                            }
                         } catch (error) {
                             console.error(error);
                             aiText.textContent = "The historian is on a coffee break. (Error connecting to AI)";
