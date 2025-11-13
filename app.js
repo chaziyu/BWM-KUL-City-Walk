@@ -204,7 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
         title: document.getElementById('modalTitle'),
         built: document.getElementById('modalBuilt'),
         architects: document.getElementById('modalArchitects'),
-        info: document.getElementById('modalInfo')
+        info: document.getElementById('modalInfo'),
+        image: document.getElementById('modalImage')
     };
 
     const hideModal = () => siteModal.classList.add('hidden');
@@ -223,6 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.built.textContent = site.built || "N/A";
                     elements.architects.textContent = site.architects || "N/A";
                     elements.info.textContent = site.info;
+                    
+                    //Populate image if exists
+                    if (site.image) {
+                        elements.image.src = site.image;
+                        elements.image.classList.remove('hidden');
+                    } else {
+                        // Hide image area if no photo exists for this site
+                        elements.image.classList.add('hidden'); 
+                    }
+
                     siteModal.classList.remove('hidden');
                 });
             });
