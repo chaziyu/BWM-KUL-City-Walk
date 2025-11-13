@@ -15,23 +15,19 @@
 <body class="overflow-hidden bg-gray-100">
 
     <div id="landing-page" class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
-        
         <div class="mb-10 animate-fade-in">
             <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-3 tracking-tight">Jejak Warisan KL</h1>
             <p class="text-gray-500 text-sm md:text-base uppercase tracking-widest">Discover Kuala Lumpur's Heritage</p>
         </div>
 
         <div class="w-full max-w-xs space-y-4 animate-slide-up">
-            
             <button id="btnVisitor" class="w-full group relative flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                 <span class="mr-3 text-xl">🗝️</span>
                 Enter with Passkey
             </button>
-
             <button id="btnStaff" class="w-full flex justify-center items-center py-4 px-4 border-2 border-gray-200 text-sm font-bold rounded-xl text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-all">
                 BWM Staff Login
             </button>
-
         </div>
 
         <div class="absolute bottom-6 text-xs text-gray-400 animate-fade-in">
@@ -41,56 +37,34 @@
 
     <div id="gatekeeper" class="fixed inset-0 bg-slate-900 z-[5000] hidden flex flex-col justify-center items-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative">
-            
-            <button id="backToHome" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">
-                ← Back
-            </button>
-
+            <button id="backToHome" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">← Back</button>
             <div class="mb-4 mt-2 text-5xl">🔐</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Visitor Access</h2>
             <p class="text-gray-600 mb-6 text-sm">Please enter the Passkey provided by the counter.</p>
-            
-            <input type="text" id="passcodeInput" placeholder="e.g. AB-1234" 
-                class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition font-mono">
-            
-            <button id="unlockBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">
-                Verify & Unlock
-            </button>
-            
+            <input type="text" id="passcodeInput" placeholder="e.g. AB-1234" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition font-mono">
+            <button id="unlockBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Verify & Unlock</button>
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
         </div>
     </div>
 
     <div id="staff-screen" class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white">
-        
-        <button id="closeStaffScreen" class="absolute top-6 right-6 text-gray-400 hover:text-white text-lg font-bold border border-gray-600 px-4 py-2 rounded-lg hover:border-white transition">
-            Close ✕
-        </button>
-
+        <button id="closeStaffScreen" class="absolute top-6 right-6 text-gray-400 hover:text-white text-lg font-bold border border-gray-600 px-4 py-2 rounded-lg hover:border-white transition">Close ✕</button>
         <h2 class="text-gray-400 uppercase tracking-[0.3em] mb-6 text-sm font-bold">Today's Passkey</h2>
-        
-        <div id="adminPasskeyDisplay" class="text-6xl md:text-8xl font-mono font-bold tracking-wider text-yellow-400 mb-6 drop-shadow-2xl">
-            LOADING...
-        </div>
-        
+        <div id="adminPasskeyDisplay" class="text-6xl md:text-8xl font-mono font-bold tracking-wider text-yellow-400 mb-6 drop-shadow-2xl">LOADING...</div>
         <div class="bg-slate-800 px-6 py-2 rounded-full border border-slate-700">
             <p id="adminDateDisplay" class="text-gray-400 text-sm md:text-base font-mono">Date: ...</p>
         </div>
-
-        <p class="mt-12 text-gray-500 text-xs max-w-md leading-relaxed">
-            Share this Passkey with visitors after payment.<br>It will expire automatically at midnight.
-        </p>
+        <p class="mt-12 text-gray-500 text-xs max-w-md leading-relaxed">Share this Passkey with visitors after payment.<br>It will expire automatically at midnight.</p>
     </div>
 
-
-    <header class="fixed top-0 left-0 w-full bg-white shadow-md z-50">
-        <div class="container mx-auto p-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Jejak Warisan KL</h1>
-                <p class="text-xs text-gray-600">Interactive Map</p>
+    <div id="game-ui" class="fixed top-0 left-0 w-full z-[2000] hidden px-4 pt-4 pointer-events-none">
+        <div class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto pointer-events-auto flex items-center">
+            <div class="bg-gray-200 rounded-full h-3 w-full mx-3 relative overflow-hidden">
+                <div id="progressBar" class="bg-green-500 h-full w-0 transition-all duration-500"></div>
             </div>
+            <span id="progressText" class="text-xs font-bold text-gray-700 whitespace-nowrap mr-2">0/13 Sites</span>
         </div>
-    </header>
+    </div>
 
     <div id="map" class="w-full h-screen z-0"></div>
 
@@ -98,13 +72,22 @@
         <div class="bg-white rounded-t-xl md:rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col animate-bounce-up">
             
             <img id="modalImage" src="" alt="Site Image" class="w-full h-48 md:h-64 object-cover rounded-t-xl bg-gray-200 hidden">
-            
+
             <div class="p-4 border-b flex justify-between items-center bg-gray-50">
                 <h2 id="modalTitle" class="text-xl font-bold text-gray-800">Site Title</h2>
                 <button id="closeModal" class="text-gray-400 hover:text-gray-800 text-3xl leading-none">&times;</button>
             </div>
             
             <div class="p-6 overflow-y-auto">
+                <div class="flex gap-3 mb-6">
+                    <button id="btnCollectStamp" class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 rounded-lg shadow-sm transition flex justify-center items-center gap-2">
+                        <span>🏆</span> Collect Stamp
+                    </button>
+                    <a id="btnDirections" href="#" target="_blank" class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold py-3 rounded-lg shadow-sm transition flex justify-center items-center gap-2">
+                        <span>🚶</span> Directions
+                    </a>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
                     <div>
                         <strong class="block text-gray-500 uppercase text-xs">Built</strong>
@@ -118,6 +101,20 @@
                 <hr class="border-gray-100 my-4">
                 <p id="modalInfo" class="text-gray-700 leading-relaxed text-justify">...</p>
             </div>
+        </div>
+    </div>
+
+    <div id="rewardModal" class="fixed inset-0 bg-black/80 z-[8000] hidden flex justify-center items-center p-6 text-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full animate-bounce-up relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500"></div>
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Congratulations!</h2>
+            <p class="text-gray-600 mb-6">You have visited all 13 Heritage Sites in Kuala Lumpur.</p>
+            <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
+                <p class="text-xs text-yellow-800 uppercase font-bold tracking-wider">Official Explorer</p>
+                <p class="text-2xl font-bold text-gray-900">100% Complete</p>
+            </div>
+            <button id="closeReward" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition">Close</button>
         </div>
     </div>
 
