@@ -63,3 +63,43 @@ const PORT = process.env.PORT |
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// This logic happens inside the /api/askAI endpoint on server.js
+
+// 1. User question from client
+const userQuestion = req.body.prompt; // e.g., "Tell me about the Sze Ya Temple."
+
+// 2. (Simulated) Vector search retrieves the most relevant chunk from 
+const retrievedChunk = `
+6. Sze Ya Temple
+This is the oldest traditional Chinese temple
+in the city. It remains very well revered to today.
+Originally housed in a small attap hut, the Temple
+was rebuilt in 1882 in brick and tiles. It comprises
+a main hall and two side halls. Following Feng shui
+principles, it is set at an angle to Jalan Tun HS Lee and
+Lebuh Pudu.... The
+board at the entrance attributes Kapitan Yap Ah Loy
+as the founder of the temple in 1864.
+`; // 
+
+// 3. Construct the augmented prompt
+const finalPrompt = `
+You are a helpful tour guide for Kuala Lumpur.
+Your knowledge is strictly limited to the provided context.
+Do not use any outside information.
+Answer the user's question based ONLY on the context below.
+
+Context:
+---
+${retrievedChunk}
+---
+
+Question:
+${userQuestion}
+
+Answer:
+`;
+
+// 4. Send THIS finalPrompt to the Gemini API
+// (The rest of the fetch logic from Section 2.2 follows)
