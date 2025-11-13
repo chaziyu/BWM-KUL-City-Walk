@@ -214,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
         title: document.getElementById('modalTitle'),
         built: document.getElementById('modalBuilt'),
         architects: document.getElementById('modalArchitects'),
-        info: document.getElementById('modalInfo')
+        info: document.getElementById('modalInfo'),
+        image: document.getElementById('modalImage')
     };
 
     fetch('data.json')
@@ -232,6 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.built.textContent = site.built || "N/A";
                     elements.architects.textContent = site.architects || "N/A";
                     elements.info.textContent = site.info;
+
+                    // Selects Image
+                    if (site.image) {
+                        elements.image.src = site.image;
+                        elements.image.classList.remove('hidden');
+                    } else {
+                        elements.image.classList.add('hidden');
+                    }
                     
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${site.coordinates[0]},${site.coordinates[1]}&travelmode=walking`;
 
