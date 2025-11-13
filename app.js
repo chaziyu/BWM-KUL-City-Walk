@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         maxZoom: 20
     }).addTo(map);
 
-    // --- HERITAGE ZONE POLYGON (Updated from your KML) ---
+    // --- HERITAGE ZONE POLYGON (Grey Area) ---
     const heritageZoneCoords = [
         [3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399],
         [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994],
@@ -195,11 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     L.polygon(heritageZoneCoords, {
-        color: '#666',          // Grey outline
-        fillColor: '#333',      // Dark fill
-        fillOpacity: 0.15,      // 15% Transparent
+        color: '#666',          
+        fillColor: '#333',      
+        fillOpacity: 0.15,      
         weight: 2,
-        dashArray: '5, 5'       // Dotted Line
+        dashArray: '5, 5'       
     }).addTo(map);
 
     // -----------------------------------------------
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.architects.textContent = site.architects || "N/A";
                     elements.info.textContent = site.info;
                     
-                    // --- IMAGE LOGIC ---
+                    // --- IMAGE LOGIC (Re-added) ---
                     if (site.image) {
                         elements.img.src = site.image;
                         elements.imgContainer.classList.remove('hidden');
