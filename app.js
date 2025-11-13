@@ -5,7 +5,7 @@ const ADMIN_PASSWORD = "BWM";
 // YOUR API KEY (Integrated)
 const GEMINI_API_KEY = "AIzaSyDJdiq3SRAl4low1-VW-msp4A1ZD_5bymw";
 
-// --- KNOWLEDGE BASE (Extracted from BWM Document PDF) ---
+// --- KNOWLEDGE BASE ---
 const PDF_KNOWLEDGE_BASE = `
 SOURCE MATERIAL: "This Kul City: Discover Kwala Lumpur" by Badan Warisan Malaysia.
 
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         maxZoom: 20
     }).addTo(map);
 
-    // --- KML HERITAGE ZONE ROUTE (CORRECTED) ---
+    // --- KML HERITAGE ZONE ROUTE ---
     const heritageZoneCoords = [
         [3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399],
         [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994],
@@ -312,13 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
 
-                    // 3. AI Logic
+                    // 3. AI Logic (Reset)
                     aiText.textContent = "";
                     aiText.classList.add('hidden');
                     aiBtn.disabled = false;
                     aiBtn.innerHTML = "Tell me a secret fact!";
                     aiBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
+                    // Clone to clear old listeners
                     const newAiBtn = aiBtn.cloneNode(true);
                     aiBtn.parentNode.replaceChild(newAiBtn, aiBtn);
 
@@ -329,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         aiText.textContent = "Reading the historical records...";
                         aiText.classList.remove('hidden');
 
-                        // Expanded Prompt to handle "Not Found" cases
                         const prompt = `
                         CONTEXT: You are a fun, expert historian guide for Kuala Lumpur.
                         SOURCE MATERIAL: ${PDF_KNOWLEDGE_BASE}
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         TASK: Tell me a "Hidden Secret" or interesting fact about the CURRENT SITE based on the SOURCE MATERIAL.
                         
-                        IMPORTANT FALLBACK: If this specific site is not mentioned in the SOURCE MATERIAL, ignore the source material and use your own general historical knowledge to provide a fun, accurate fact about "${site.name}" in Kuala Lumpur. Do NOT say "I couldn't find it". Just give the fact.
+                        IMPORTANT: If this site is not in the source material, use your general knowledge to provide a fun fact.
                         
                         STYLE: Short (max 2 sentences). Exciting.
                         `;
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     contents: [{ parts: [{ text: prompt }] }],
-                                    // SAFETY SETTINGS: Prevent blocking valid historical facts
+                                    // Safety Settings: Block None
                                     safetySettings: [
                                         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                                         { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -360,17 +360,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ]
                                 })
                             });
+                            
+                            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                            
                             const data = await response.json();
                             
                             if(data.candidates && data.candidates.length > 0) {
                                 const aiResult = data.candidates[0].content.parts[0].text;
                                 aiText.textContent = aiResult;
                             } else {
+                                console.error("Empty Candidates", data);
                                 aiText.textContent = "The historian is speechless! (No data found)";
                             }
                         } catch (error) {
-                            console.error(error);
-                            aiText.textContent = "The historian is on a coffee break. (Connection Error)";
+                            console.error("AI Fetch Error:", error);
+                            aiText.textContent = "Connection failed. (Check Console)";
                         } finally {
                             newAiBtn.innerHTML = "✨ Ask Another";
                             newAiBtn.disabled = false;
