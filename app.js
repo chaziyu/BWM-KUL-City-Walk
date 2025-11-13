@@ -167,8 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
     updateGameProgress(); 
 
     const map = L.map('map').setView([3.1483, 101.6938], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
+    
+    // CartoDB Voyager Style (Clean & Tourist Friendly)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
     }).addTo(map);
 
     // --- HERITAGE ZONE POLYGON ---
