@@ -239,16 +239,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.info.textContent = site.info;
                     
                     // --- IMAGE LOGIC (Restored) ---
+
                     if (site.image) {
                         elements.img.src = site.image;
                         elements.imgContainer.classList.remove('hidden');
                     } else {
                         elements.imgContainer.classList.add('hidden');
                     }
-
+                    
+                    // CORRECTED LINE BELOW:
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${site.coordinates[0]},${site.coordinates[1]}&travelmode=walking`;
-
+                    
                     const isNumberedSite = !isNaN(site.id);
+                    // ... rest of code
                     if (!isNumberedSite) {
                         btnCollect.style.display = 'none'; 
                     } else {
