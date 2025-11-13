@@ -1,6 +1,7 @@
 // --- CONFIGURATION ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtyJ200uEv2yu24C-DesB5g57iBX9CpO_qp8mAQCKX1LYrS_S8BnZGtfVDq_9LqnJ7HO6nbXpu8J4/pub?gid=0&single=true&output=csv"; 
 const ADMIN_PASSWORD = "BWM"; 
+const GEMINI_API_KEY = "AIzaSyDJdiq3SRAl4low1-VW-msp4A1ZD_5bymw"; // Your provided API Key
 
 // --- GAME STATE ---
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
@@ -186,66 +187,33 @@ document.addEventListener('DOMContentLoaded', () => {
         maxZoom: 20
     }).addTo(map);
 
-    // --- KML HERITAGE ZONE POLYGON ---
-    // --- KML HERITAGE ZONE POLYGON (CORRECTED) ---
+    // --- KML HERITAGE ZONE ROUTE (CORRECTED) ---
     const heritageZoneCoords = [
-        [3.148934, 101.694228],
-        [3.148012, 101.694051],
-        [3.147936, 101.694399],
-        [3.147164, 101.694292],
-        [3.147067, 101.695104],
-        [3.146902, 101.695994],
-        [3.146215, 101.695884],
-        [3.146004, 101.69586],
-        [3.145961, 101.695897],
-        [3.145896, 101.69616],
-        [3.145642, 101.696179],
-        [3.145672, 101.696616],
-        [3.145883, 101.696592],
-        [3.145982, 101.696922],
-        [3.146416, 101.69667],
-        [3.146694, 101.696546],
-        [3.146828, 101.696584],
-        [3.146903, 101.69689],
-        [3.147075, 101.697169],
-        [3.147541, 101.697517],
-        [3.147889, 101.697807],
-        [3.147969, 101.697872],
-        [3.148366, 101.697491],
-        [3.149041, 101.696868],
-        [3.14933, 101.696632],
-        [3.149549, 101.696718],
-        [3.150106, 101.697303],
-        [3.15038, 101.697576],
-        [3.150439, 101.697668],
-        [3.150733, 101.697576],
-        [3.151065, 101.697694],
-        [3.151467, 101.697791],
-        [3.15181, 101.698011],
-        [3.152051, 101.698306],
-        [3.152158, 101.698413],
-        [3.152485, 101.698435],
-        [3.152586, 101.698413],
-        [3.151802, 101.697252],
-        [3.151796, 101.697171],
-        [3.152102, 101.696968],
-        [3.151684, 101.696683],
-        [3.151914, 101.69627],
-        [3.151298, 101.695889],
-        [3.151581, 101.695549],
-        [3.150951, 101.695173],
-        [3.150238, 101.694712],
-        [3.149922, 101.69451],
-        [3.148934, 101.694228]
+        [3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399],
+        [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994],
+        [3.146215, 101.695884], [3.146004, 101.69586], [3.145961, 101.695897],
+        [3.145896, 101.69616], [3.145642, 101.696179], [3.145672, 101.696616],
+        [3.145883, 101.696592], [3.145982, 101.696922], [3.146416, 101.69667],
+        [3.146694, 101.696546], [3.146828, 101.696584], [3.146903, 101.69689],
+        [3.147075, 101.697169], [3.147541, 101.697517], [3.147889, 101.697807],
+        [3.147969, 101.697872], [3.148366, 101.697491], [3.149041, 101.696868],
+        [3.14933, 101.696632], [3.149549, 101.696718], [3.150106, 101.697303],
+        [3.15038, 101.697576], [3.150439, 101.697668], [3.150733, 101.697576],
+        [3.151065, 101.697694], [3.151467, 101.697791], [3.15181, 101.698011],
+        [3.152051, 101.698306], [3.152158, 101.698413], [3.152485, 101.698435],
+        [3.152586, 101.698413], [3.151802, 101.697252], [3.151796, 101.697171],
+        [3.152102, 101.696968], [3.151684, 101.696683], [3.151914, 101.69627],
+        [3.151298, 101.695889], [3.151581, 101.695549], [3.150951, 101.695173],
+        [3.150238, 101.694712], [3.149922, 101.69451], [3.148934, 101.694228]
     ];
 
-    // Use Polyline (Line) instead of Polygon (Shape) for better visuals on a "Walk"
+    // Use Polyline for Route - Interactive: False is KEY to clicking pins
     L.polyline(heritageZoneCoords, {
-        color: '#ff6b6b',       // Nice Red color for the route
-        weight: 4,              // Thicker line
+        color: '#ff6b6b',       
+        weight: 4,              
         opacity: 0.7,
-        dashArray: '10, 10',    // Dashed line effect
-        interactive: false      // Keeps it unclickable so you can click pins below it
+        dashArray: '10, 10',    
+        interactive: false      
     }).addTo(map);
 
     // -----------------------------------------------
@@ -258,6 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeReward = document.getElementById('closeReward');
     const btnShare = document.getElementById('btnShare');
     const btnRecenter = document.getElementById('btnRecenter');
+
+    // AI UI Elements
+    const aiText = document.getElementById('aiResponse');
+    const aiBtn = document.getElementById('btnAskAI');
 
     const elements = {
         title: document.getElementById('modalTitle'),
@@ -272,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(sites => {
             sites.forEach(site => {
-                // FIX: Parse coordinates as floats to ensure they work correctly
+                // Parse coordinates
                 const lat = parseFloat(site.coordinates[0]);
                 const lng = parseFloat(site.coordinates[1]);
 
@@ -283,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 marker.on('click', () => {
+                    // 1. Update Standard UI
                     elements.title.textContent = `${site.id}. ${site.name}`;
                     elements.built.textContent = site.built || "N/A";
                     elements.architects.textContent = site.architects || "N/A";
@@ -295,9 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         elements.imgContainer.classList.add('hidden');
                     }
 
-                    // Fix Google Maps URL
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
 
+                    // 2. Update Collection Button
                     const isNumberedSite = !isNaN(site.id);
                     if (!isNumberedSite) {
                         btnCollect.style.display = 'none'; 
@@ -317,6 +290,54 @@ document.addEventListener('DOMContentLoaded', () => {
                             };
                         }
                     }
+
+                    // 3. Setup AI Logic (Reset & Attach)
+                    aiText.textContent = "";
+                    aiText.classList.add('hidden');
+                    aiBtn.disabled = false;
+                    aiBtn.innerHTML = "Tell me a secret fact!";
+                    aiBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                    // Clone button to remove old listeners
+                    const newAiBtn = aiBtn.cloneNode(true);
+                    aiBtn.parentNode.replaceChild(newAiBtn, aiBtn);
+
+                    newAiBtn.addEventListener('click', async () => {
+                        newAiBtn.innerHTML = "Thinking... 🤖";
+                        newAiBtn.disabled = true;
+                        newAiBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        aiText.textContent = "Consulting the history books...";
+                        aiText.classList.remove('hidden');
+
+                        // AI Prompt
+                        const prompt = `I am a tourist at ${site.name} in Kuala Lumpur. 
+                        The official info says: "${site.info}".
+                        Act as a passionate local historian. Tell me one short, fascinating, "hidden" fact or ghost story about this specific place that isn't in the standard guide. 
+                        Keep it under 2 sentences. Make it exciting.`;
+
+                        // Call Gemini API
+                        try {
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }]
+                                })
+                            });
+                            const data = await response.json();
+                            const aiResult = data.candidates[0].content.parts[0].text;
+                            aiText.textContent = aiResult;
+                        } catch (error) {
+                            console.error(error);
+                            aiText.textContent = "The historian is on a coffee break. (Error connecting to AI)";
+                        } finally {
+                            newAiBtn.innerHTML = "✨ Ask Another";
+                            newAiBtn.disabled = false;
+                            newAiBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    });
+
                     siteModal.classList.remove('hidden');
                 });
             });
