@@ -1,5 +1,4 @@
 // --- CONFIGURATION ---
-// 🔴 YOUR SPECIFIC GOOGLE SHEET LINK IS HERE 🔴
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtyJ200uEv2yu24C-DesB5g57iBX9CpO_qp8mAQCKX1LYrS_S8BnZGtfVDq_9LqnJ7HO6nbXpu8J4/pub?gid=0&single=true&output=csv"; 
 const ADMIN_PASSWORD = "BWM"; 
 
@@ -168,15 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = L.map('map').setView([3.1483, 101.6938], 16);
     
-    // Use the Clean "Voyager" Map Style
+    // Using Voyager Map Style (Clean)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
 
-    // --- ADD HERITAGE ZONE (GREY AREA) ---
-    // This draws the exact shape from your friend's map
+    // --- HERITAGE ZONE POLYGON (Updated from your KML) ---
     const heritageZoneCoords = [
         [3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399],
         [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994],
