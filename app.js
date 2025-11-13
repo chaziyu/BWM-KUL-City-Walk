@@ -168,21 +168,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = L.map('map').setView([3.1483, 101.6938], 16);
     
-    // CartoDB Voyager Style (Clean & Tourist Friendly)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-    }).addTo(map);
-    
-    // CartoDB Voyager Style (Clean & Tourist Friendly)
+    // Use the Clean "Voyager" Map Style
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
 
-    // --- HERITAGE ZONE POLYGON ---
+    // --- ADD HERITAGE ZONE (GREY AREA) ---
+    // This draws the exact shape from your friend's map
     const heritageZoneCoords = [
         [3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399],
         [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994],
@@ -205,9 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
     L.polygon(heritageZoneCoords, {
         color: '#666',          // Grey outline
         fillColor: '#333',      // Dark fill
-        fillOpacity: 0.1,       // Very transparent (10%)
+        fillOpacity: 0.15,      // 15% Transparent
         weight: 2,
-        dashArray: '5, 5'       // Dashed line for "Zone" look
+        dashArray: '5, 5'       // Dotted Line
     }).addTo(map);
 
     // -----------------------------------------------
@@ -226,7 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         built: document.getElementById('modalBuilt'),
         architects: document.getElementById('modalArchitects'),
         info: document.getElementById('modalInfo'),
-        image: document.getElementById('modalImage')
+        img: document.getElementById('modalImage'),
+        imgContainer: document.getElementById('modalImageContainer')
     };
 
     fetch('data.json')
@@ -244,15 +239,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     elements.built.textContent = site.built || "N/A";
                     elements.architects.textContent = site.architects || "N/A";
                     elements.info.textContent = site.info;
-
-                    // Selects Image
-                    if (site.image) {
-                        elements.image.src = site.image;
-                        elements.image.classList.remove('hidden');
-                    } else {
-                        elements.image.classList.add('hidden');
-                    }
                     
+                    // --- IMAGE LOGIC ---
+                    if (site.image) {
+                        elements.img.src = site.image;
+                        elements.imgContainer.classList.remove('hidden');
+                    } else {
+                        elements.imgContainer.classList.add('hidden');
+                    }
+
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${site.coordinates[0]},${site.coordinates[1]}&travelmode=walking`;
 
                     const isNumberedSite = !isNaN(site.id);
@@ -311,14 +306,14 @@ document.addEventListener('DOMContentLoaded', () => {
         progressText.textContent = `${count}/${TOTAL_SITES} Sites`;
     }
 
-    // --- NEW BUTTON LOGIC ---
+    // --- BUTTON LOGIC ---
     
-    // Recenter Button: Resets view to Dataran Merdeka (Centre of Zone)
+    // Recenter Button
     btnRecenter.addEventListener('click', () => {
         map.setView([3.1483, 101.6938], 16);
     });
 
-    // Share Button: Opens WhatsApp with victory message
+    // Share Button
     btnShare.addEventListener('click', () => {
         const text = "I just became an Official Explorer by visiting all 13 Heritage Sites in Kuala Lumpur! 🇲🇾✨ Try the Jejak Warisan challenge here: #ThisKulCity #BadanWarisanMalaysia";
         const url = "https://jejak-warisan.vercel.app";
