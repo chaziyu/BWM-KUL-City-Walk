@@ -4,72 +4,64 @@ export default async function handler(request, response) {
         return response.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { userQuery, context } = request.body;
-    const GEMINI_API_KEY = process.env.MY_GEMINI_KEY; // <-- Your secret key
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-    const systemPrompt = `You are 'Jejak Warisan AI', a helpful and friendly tour guide for the Kuala Lumpur heritage walk.
-    Your knowledge is STRICTLY LIMITED to the document provided.
-    Answer the user's question based ONLY on the following text.
-    Do not use any outside knowledge. If the answer is not in the text, say "I'm sorry, that information is not in the BWM document."
-
-    --- DOCUMENT START ---
-    ${context}
-    --- DOCUMENT END ---
-    `;
+    // --- START: ULTIMATE DEBUGGING CODE ---
 
     try {
+        const { userQuery, context } = request.body;
+        const GEMINI_API_KEY = process.env.MY_GEMINI_KEY;
+        
+        if (!GEMINI_API_KEY) {
+            console.error("CRITICAL: MY_GEMINI_KEY environment variable is not set!");
+            return response.status(500).json({ reply: "Server configuration error: API key is missing." });
+        }
+
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        const systemPrompt = `You are an AI tour guide. Your knowledge is limited to the following text. Answer the user's question based ONLY on this text. If the answer is not in the text, say "I'm sorry, that information is not in the BWM document." --- DOCUMENT START --- ${context} --- DOCUMENT END ---`;
+
         const apiResponse = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [
-                    {
-                        role: "user",
-                        parts: [{ text: systemPrompt + "\n\nUser Question: " + userQuery }]
-                    }
-                ],
-                safetySettings: [
-                    { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH" },
-                    { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH" },
-                ]
+                contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nUser Question: " + userQuery }] }]
             })
         });
+        
+        // Log the basic status first, as this will never fail.
+        console.log(`Google API Response Status: ${apiResponse.status} ${apiResponse.statusText}`);
 
-        // --- START OF NEW DEBUGGING CODE ---
+        // Safely get the raw text body, which works even if it's not JSON.
+        const rawBody = await apiResponse.text();
+        
+        // Log the entire raw response. THIS IS THE MOST IMPORTANT LOG.
+        console.log('RAW RESPONSE BODY FROM GOOGLE:', rawBody);
 
-        // Check if the API request itself was successful (e.g., not a 400 or 500 error)
-        if (!apiResponse.ok) {
-            const errorText = await apiResponse.text();
-            console.error('Gemini API Error:', apiResponse.status, errorText);
-            // Send a user-friendly error back to the app
-            return response.status(500).json({ reply: 'Sorry, the AI guide is having trouble connecting. The API returned an error.' });
+        // Now, safely try to parse the body as JSON.
+        let data;
+        try {
+            data = JSON.parse(rawBody);
+        } catch (parseError) {
+            console.error('Failed to parse Google response as JSON.', parseError);
+            return response.status(500).json({ reply: 'The AI service returned a malformed response.' });
         }
 
-        const data = await apiResponse.json();
+        // Check for errors within the valid JSON response from Google.
+        if (data.error) {
+             console.error('Google API returned an error object:', JSON.stringify(data.error, null, 2));
+             return response.status(500).json({ reply: `API Error: ${data.error.message}` });
+        }
 
-        // Log the entire response from Google to see its structure
-        console.log('Full Gemini API Response:', JSON.stringify(data, null, 2));
-
-        // Check if the 'candidates' array is missing or empty
         if (!data.candidates || data.candidates.length === 0) {
-            console.error('API returned no candidates. This could be due to safety filters or an invalid request.');
-             // Check for a specific error message within the response
-            if (data.promptFeedback && data.promptFeedback.blockReason) {
-                 console.error('Prompt blocked. Reason:', data.promptFeedback.blockReason);
-                 return response.status(200).json({ reply: 'My apologies, your request could not be processed due to the safety filter. Please rephrase your question.' });
-            }
-            return response.status(500).json({ reply: 'Sorry, the AI guide did not provide a valid response.' });
+            console.error('API returned no candidates. This is likely due to safety filters.', JSON.stringify(data.promptFeedback, null, 2));
+            return response.status(200).json({ reply: 'My apologies, your request could not be processed due to the safety filter. Please try rephrasing.' });
         }
         
-        // --- END OF NEW DEBUGGING CODE ---
-
-        // Send the AI's clean text response back to your app
         const aiResponse = data.candidates[0].content.parts[0].text;
-        response.status(200).json({ reply: aiResponse });
+        return response.status(200).json({ reply: aiResponse });
 
     } catch (error) {
-        console.error('Error in chat handler:', error);
-        response.status(500).json({ error: 'Failed to fetch from Gemini API' });
+        console.error('FATAL ERROR in chat handler:', error);
+        return response.status(500).json({ reply: 'A fatal error occurred on the server.' });
     }
+    // --- END: ULTIMATE DEBUGGING CODE ---
 }
