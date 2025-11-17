@@ -1,4 +1,5 @@
-// This imports the knowledge file directly on the server.
+// This imports the new Google AI package
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BWM_KNOWLEDGE } from '../knowledge.js';
 
 // This is NOT client-side code. This runs on Vercel's servers.
@@ -8,16 +9,19 @@ export default async function handler(request, response) {
     }
 
     try {
-        const { userQuery } = request.body;
-        // 1. Read the new Cohere API key
-        const COHERE_API_KEY = process.env.MY_COHERE_KEY;
-
-        if (!COHERE_API_KEY) {
-            console.error("CRITICAL: MY_COHERE_KEY environment variable is not set!");
+        // --- 1. Get the new Google Key ---
+        const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+        if (!GOOGLE_API_KEY) {
+            console.error("CRITICAL: GOOGLE_API_KEY environment variable is not set!");
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
 
-        // --- THIS IS THE UPDATED SYSTEM PROMPT (FOR IDEA 3) ---
+        // --- 2. Get data from the client (app.js) ---
+        // We now receive the new query AND the previous chat history
+        const { userQuery, history } = request.body;
+
+        // --- 3. This is the same System Prompt for the AI ---
+        // It includes the "Smart AI" (Idea 3) instructions
         const systemPrompt = `You are an AI tour guide for the Jejak Warisan (Heritage Walk) in Kuala Lumpur. Your knowledge is limited to the BWM Document provided below.
 
 --- MAIN TASK ---
@@ -40,37 +44,28 @@ The user will send you 'memory' messages like "I have just collected the stamp f
 --- DOCUMENT START ---
 ${BWM_KNOWLEDGE}
 --- DOCUMENT END ---`;
-        // --- END OF UPDATED PROMPT ---
 
-        // 3. Call the Cohere API
-        const apiResponse = await fetch("https://api.cohere.com/v1/chat", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${COHERE_API_KEY}` // Use Cohere key
-            },
-            body: JSON.stringify({
-                model: "command-a-03-2025", // The correct model from your list
-                message: userQuery, // The user's query
-                preamble: systemPrompt // The system prompt
-            })
+        // --- 4. Initialize the Google AI Client ---
+        const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            systemInstruction: systemPrompt,
         });
 
-        console.log(`Cohere API Response Status: ${apiResponse.status} ${apiResponse.statusText}`);
-        const data = await apiResponse.json();
+        // --- 5. Start a chat session with the previous history ---
+        const chat = model.startChat({
+            history: history || [], // Start with the history from app.js
+        });
 
-        // 4. Check for errors from Cohere
-        if (!apiResponse.ok) {
-            console.error('Cohere API returned an error object:', data);
-            return response.status(500).json({ reply: `API Error: ${data.message}` });
-        }
+        // --- 6. Send the new user query ---
+        const result = await chat.sendMessage(userQuery);
+        const aiResponse = result.response;
+        const text = aiResponse.text();
 
-        // 5. Get the response text (Cohere's format is data.text)
-        const aiResponse = data.text;
-        return response.status(200).json({ reply: aiResponse });
+        return response.status(200).json({ reply: text });
 
     } catch (error) {
-        console.error('FATAL ERROR in chat handler:', error);
+        console.error('FATAL ERROR in Google chat handler:', error);
         return response.status(500).json({ reply: 'A fatal error occurred on the server.' });
     }
 }
