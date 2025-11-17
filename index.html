@@ -72,10 +72,14 @@
         📍
     </button>
 
-    <button id="btnChat" class="fixed bottom-6 left-4 bg-white p-3 rounded-full shadow-xl z-[1000] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">
-    💬
-</button>
-
+    <div class="fixed bottom-6 left-4 z-[1000] flex flex-col gap-3">
+        <button id="btnPassport" class="bg-white p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">
+            🛂
+        </button>
+        <button id="btnChat" class="bg-white p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">
+            💬
+        </button>
+    </div>
     <div id="siteModal" class="fixed inset-0 bg-black bg-opacity-70 z-[3000] hidden flex justify-center items-end md:items-center p-4">
         <div class="bg-white rounded-t-xl md:rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col animate-bounce-up">
             
@@ -133,34 +137,47 @@
         </div>
     </div>
 
+    <div id="chatModal" class="fixed inset-0 bg-black bg-opacity-50 z-[4000] hidden flex justify-center items-end p-4">
+        <div class="bg-white rounded-t-xl shadow-2xl w-full max-w-lg max-h-[70vh] flex flex-col animate-bounce-up">
+
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-xl font-bold text-gray-800">Ask the Guide 💬</h2>
+                <button id="closeChatModal" class="text-gray-400 hover:text-gray-800 text-3xl leading-none">×</button>
+            </div>
+
+            <div id="chatMessages" class="p-6 flex-1 overflow-y-auto space-y-4">
+                <div class="flex">
+                    <div class="bg-gray-200 text-gray-800 p-3 rounded-lg max-w-xs">
+                        <p>Hi! I'm your AI tour guide. Ask me any question about the history of the sites from the BWM document.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-white">
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="e.g., 'Who designed Panggong Bandaraya?'" class="flex-1 border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500">
+                    <button id="chatSendBtn" class="bg-blue-600 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-700 transition">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="passportModal" class="fixed inset-0 bg-black bg-opacity-70 z-[4000] hidden flex justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col animate-bounce-up">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-xl font-bold text-gray-800">My Stamp Passport 🛂</h2>
+                <button id="closePassportModal" class="text-gray-400 hover:text-gray-800 text-3xl leading-none">×</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-gray-600 mb-4">You have collected <span id="passportCount" class="font-bold">0</span> out of 13 stamps.</p>
+                <div id="passportGrid" class="grid grid-cols-4 gap-4">
+                    </div>
+            </div>
+        </div>
+    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
     
     <script src="app.js"></script>
-
-    <div id="chatModal" class="fixed inset-0 bg-black bg-opacity-50 z-[4000] hidden flex justify-center items-end p-4">
-    <div class="bg-white rounded-t-xl shadow-2xl w-full max-w-lg max-h-[70vh] flex flex-col animate-bounce-up">
-
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-            <h2 class="text-xl font-bold text-gray-800">Ask the Guide 💬</h2>
-            <button id="closeChatModal" class="text-gray-400 hover:text-gray-800 text-3xl leading-none">×</button>
-        </div>
-
-        <div id="chatMessages" class="p-6 flex-1 overflow-y-auto space-y-4">
-            <div class="flex">
-                <div class="bg-gray-200 text-gray-800 p-3 rounded-lg max-w-xs">
-                    <p>Hi! I'm your AI tour guide. Ask me any question about the history of the sites from the BWM document.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-4 border-t bg-white">
-            <div class="flex gap-2">
-                <input type="text" id="chatInput" placeholder="e.g., 'Who designed Panggong Bandaraya?'" class="flex-1 border-2 border-gray-200 p-3 rounded-lg focus:outline-none focus:border-blue-500">
-                <button id="chatSendBtn" class="bg-blue-600 text-white font-bold py-3 px-5 rounded-lg hover:bg-blue-700 transition">Send</button>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
