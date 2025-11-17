@@ -2,88 +2,61 @@
 body, html {
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Prevents scrolling on the main page */
+    overflow: hidden;
 }
-
 #map { 
     width: 100vw; 
     height: 100vh; 
-    height: 100dvh; /* FIX: Prevents address bar glitches on mobile */
+    height: 100dvh;
     z-index: 1; 
     position: absolute;
     top: 0;
     left: 0;
 }
 
-
 /* --- 2. UI LAYER INTERACTION (DEFINITIVE FIX) --- */
-
-/* 
-  By default, #game-ui is a normal container. It does NOT have pointer-events: none.
-  This ensures it does not interfere with the landing page or modals.
-*/
+/* By default, #game-ui is a normal container and does not interfere with the landing page. */
 #game-ui {
     position: absolute;
-    inset: 0;      /* Full screen */
-    z-index: 100;  /* Above the map */
+    inset: 0;
+    z-index: 100;
 }
-
-/*
-  This is the specific class we add to the #game-ui container in index.html.
-  It makes the container itself "transparent" to clicks, allowing you to interact with the map.
-*/
+/* This class, applied to #game-ui in index.html, makes it "transparent" to clicks. */
 .ui-passthrough {
     pointer-events: none;
 }
-
-/* 
-  This rule then re-enables clicks for all important elements *inside* the passthrough container.
-  This allows the user to click the progress bar, modals, etc.
-*/
+/* This re-enables clicks for all important elements *inside* the passthrough container. */
 .ui-passthrough button,
 .ui-passthrough input,
 .ui-passthrough a,
-.ui-passthrough .bg-white, /* Makes modal cards and the progress bar bg clickable */
-.ui-passthrough .pointer-events-auto { /* Catches any other elements needing clicks */
+.ui-passthrough .bg-white,
+.ui-passthrough .pointer-events-auto {
     pointer-events: auto;
 }
-
-/*
-  These buttons are OUTSIDE the #game-ui container, so we also ensure
-  they are always clickable. This is a safeguard.
-*/
-#btnRecenter,
-#btnPassport,
-#btnChat {
+/* These buttons are OUTSIDE the #game-ui container, so we also ensure they are always clickable. */
+#btnRecenter, #btnPassport, #btnChat {
     pointer-events: auto;
 }
-
 
 /* --- 3. TRANSITIONS & MODALS --- */
-
 #gatekeeper, #staff-screen, #rewardModal, #siteModal { 
     transition: opacity 0.3s ease; 
-    z-index: 2000; /* Ensure Modals are always on TOP of everything */
+    z-index: 2000;
 }
 
 /* --- 4. ANIMATIONS --- */
-
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .animate-bounce-up { animation: slideUp 0.3s ease-out; }
-
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
-
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slide-up { opacity: 0; animation: slideUpFade 0.8s ease-out 0.3s forwards; }
 
 /* --- 5. GAMIFICATION STYLES --- */
-
 .marker-visited {
     filter: hue-rotate(140deg) brightness(1.2) saturate(3);
     transition: filter 0.5s ease;
 }
-
 #rewardModal .text-6xl {
     animation: pulse 1s infinite;
 }
@@ -93,7 +66,6 @@ body, html {
 }
 
 /* --- 6. SPECIFIC ELEMENTS --- */
-
 #btnChat, #btnPassport, #btnRecenter {
     z-index: 1000;
 }
