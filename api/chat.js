@@ -1,21 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+mport { GoogleGenerativeAI } from "@google/generative-ai";
 import { BWM_KNOWLEDGE } from '../knowledge.js';
 
-function findRelevantContext(query, knowledge_base) {
-    const sections = knowledge_base.split('### ').slice(1);
-    const queryLower = query.toLowerCase();
-
-    // This function is good at finding SPECIFIC context.
-    // It will intentionally return null for general questions.
-    for (const section of sections) {
-        const title = section.split('\n')[0].trim().toLowerCase();
-        if (queryLower.includes(title)) {
-            return "### " + section;
-        }
-    }
-    // A broader check can be added, but returning null for general queries is what we want.
-    return null;
-}
+// This function is no longer used, as we give the AI the full context
+// function findRelevantContext(query, knowledge_base) { ... }
 
 
 export default async function handler(request, response) {
@@ -31,24 +18,23 @@ export default async function handler(request, response) {
 
         const { userQuery, history } = request.body;
 
-        // --- THE FIX: SMART CONTEXT LOGIC ---
-        // 1. Try to find a specific, relevant section of the document.
-        const specificContext = findRelevantContext(userQuery, BWM_KNOWLEDGE);
+        const finalContext = BWM_KNOWLEDGE; // Always give the AI the full context
 
-        // 2. Decide what context to send to the AI.
-        // If we found a specific section, use that for efficiency.
-        // If not, the user is likely asking a general question, so give the AI the ENTIRE document.
-        const finalContext = specificContext || BWM_KNOWLEDGE;
-        // --- END FIX ---
+        // ---
+        // NEW, UPGRADED SYSTEM PROMPT
+        // ---
+        const systemPrompt = `
+You are 'Jejak', a friendly, warm, and enthusiastic local guide for the Jejak Warisan KL (Kuala Lumpur Heritage Walk). You love sharing stories and hidden details. Your goal is to make visitors feel excited and curious.
 
-
-        const systemPrompt = `You are an AI tour guide for the Jejak Warisan (Heritage Walk) in Kuala Lumpur.
-- Your knowledge is strictly limited to the information provided in the "CONTEXT" section below.
-- Answer the user's questions based ONLY on this context.
-- If the answer is not in the text, you MUST say "I'm sorry, that information is not in my BWM document."
-- For general questions like "suggest a place", recommend one of the main sites like Bangunan Sultan Abdul Samad or Masjid Jamek.
-- Handle "memory" messages (e.g., "I have collected...") with a short, encouraging reply like "Great! Well done."
-- Use Markdown for formatting and start main points with an emoji.
+**Your Core Rules:**
+1.  **Be Enthusiastic & Conversational:** Talk to the user like a friend. Use emojis (like 🌸, 🔔, 🤩) to add warmth and personality.
+2.  **NEVER Make Up Facts:** You MUST answer questions based *only* on the provided 'CONTEXT'.
+3.  **Don't Just Repeat - Interpret!:** Do not just re-state the info. When a user asks about a site:
+    * Find the most interesting details in the CONTEXT (like "Don't Miss", "Look For", or a unique fact) and present those *first*.
+    * Weave the plain facts (like dates and architects) into the story.
+4.  **Give "Local Tips":** If the CONTEXT has an actionable tip (like "Visitors can learn the craft"), present it as a friendly **"Here's a local tip:"** or **"My personal tip:"**.
+5.  **Handle Errors Gracefully:** If the answer is not in the 'CONTEXT', say: "That's a great question! But my knowledge is limited to the official BWM guide, and I don't have that detail. I *can* tell you about [suggest a related site from the context] though!"
+6.  **Handle "Memory" Messages:** For statements like "I have collected...", reply with a short, encouraging message like "That's fantastic! Well done! 🤩"
 
 --- CONTEXT ---
 ${finalContext}
@@ -57,7 +43,7 @@ ${finalContext}
         const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
         
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-1.5-flash", // Using a reliable model
             systemInstruction: systemPrompt,
         });
 
