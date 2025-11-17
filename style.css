@@ -8,7 +8,7 @@ body, html {
     width: 100vw; 
     height: 100vh; 
     height: 100dvh;
-    z-index: 1; /* Map is the base layer */
+    z-index: 1;
     position: absolute;
     top: 0;
     left: 0;
@@ -22,7 +22,7 @@ body, html {
     pointer-events: auto;
 }
 #btnChat, #btnPassport, #btnRecenter {
-    z-index: 1000; /* Ensure buttons are above the map */
+    z-index: 1000;
 }
 
 /* --- 3. TRANSITIONS & ANIMATIONS --- */
@@ -31,27 +31,22 @@ body, html {
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slide-up { opacity: 0; animation: slideUpFade 0.8s ease-out 0.3s forwards; }
 
-/* --- 4. NEW "CLASSIC" MODAL STYLE --- */
-/* This is the new style for Site & Passport modals */
+/* --- 4. "CLASSIC" MODAL STYLE (Site & Passport) --- */
 .classic-modal-backdrop {
-    /* A simple, non-blurred dark background */
     background-color: rgba(0, 0, 0, 0.6);
     z-index: 2000;
 }
 .classic-modal-content {
-    /* This replicates the simple, centered white box */
     background: #ffffff;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-width: 500px; /* 500px wide */
+    max-width: 500px;
     width: 90%;
     overflow: hidden;
-    /* This uses the simple slide-up animation from the landing page */
     animation: slideUpFade 0.3s ease-out forwards;
 }
 
-/* --- 5. MODERN CHAT MODAL STYLE --- */
-/* This style remains unchanged, as you requested */
+/* --- 5. "MODERN" MODAL STYLE (Chatbox) --- */
 .modern-modal-backdrop {
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
@@ -73,4 +68,35 @@ body, html {
 .marker-visited {
     filter: hue-rotate(140deg) brightness(1.2) saturate(3);
     transition: filter 0.5s ease;
+}
+
+/* --- 7. NEW PASSPORT GRID STYLES --- */
+.passport-stamp {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #eee;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.passport-stamp img {
+    display: block;
+    width: 100%;
+    height: 80px; /* Small square-ish image */
+    object-fit: cover;
+}
+.passport-stamp p {
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(255,255,255,0.9);
+    padding: 4px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    color: #333;
+}
+/* This is the "grayed out" effect */
+.grayscale {
+    filter: grayscale(100%);
+    opacity: 0.6;
 }
