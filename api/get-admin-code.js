@@ -1,14 +1,17 @@
-// File: /api/get-admin-code.js
-// SECURE VERSION: This endpoint now authenticates the admin and returns a temporary access token.
-
 import crypto from 'crypto';
 
-// In-memory storage for the temporary token.
-// NOTE: For a multi-server production environment, use a shared store like Vercel KV or Redis instead.
+// This is a simplified in-memory store for the token.
+// It will not work across multiple serverless instances. For production, use Vercel KV or another shared DB.
 let tempAdminToken = {
     token: null,
     expiry: null,
 };
+
+// This is a trick to allow the other API route to access the same in-memory token.
+// Vercel may run each API route in a separate process, so this is NOT guaranteed.
+// A real database (Vercel KV, Redis) is the robust solution.
+global._tempAdminToken = tempAdminToken;
+
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -23,21 +26,16 @@ export default async function handler(request, response) {
              return response.status(500).json({ error: 'Server misconfigured: Admin password not set.' });
         }
         
-        // 1. Check the password
         if (password !== correctPassword) {
             return response.status(401).json({ error: 'Wrong password' });
         }
 
-        // 2. If password is correct, generate a secure, single-use token
         const token = crypto.randomBytes(32).toString('hex');
         
-        // 3. Store the token with a short expiry (e.g., 5 minutes)
-        tempAdminToken = {
-            token: token,
-            expiry: Date.now() + 5 * 60 * 1000, // Token is valid for 5 minutes
-        };
+        // Store the token with a 5-minute expiry
+        global._tempAdminToken.token = token;
+        global._tempAdminToken.expiry = Date.now() + 5 * 60 * 1000;
 
-        // 4. Return the temporary token to the client
         return response.status(200).json({ success: true, token: token });
 
     } catch (error) {
