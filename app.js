@@ -177,8 +177,17 @@ async function verifyCode(enteredCode) {
 // --- 2. MAP & GAMIFICATION LOGIC ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- START: CHATBOT LOGIC ---
 
+    // --- THIS IS THE FIX ---
+    // Call initApp() and updateGameProgress() FIRST.
+    // This ensures the landing page buttons are attached BEFORE
+    // any other logic (like Chat, Passport, or Map) runs.
+    initApp();
+    updateGameProgress(); 
+    // --- END OF FIX ---
+
+
+    // --- START: CHATBOT LOGIC ---
     const btnChat = document.getElementById('btnChat');
     const chatModal = document.getElementById('chatModal');
     const closeChatModal = document.getElementById('closeChatModal');
@@ -254,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chatInput) chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleChatSend();
     });
-
     // --- END: CHATBOT LOGIC ---
 
     // --- NEW PASSPORT LOGIC ---
@@ -311,10 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- END NEW PASSPORT LOGIC ---
 
-
-    initApp();
-    updateGameProgress(); 
-
     // Initialize Map
     const map = L.map('map').setView([3.1483, 101.6938], 16);
 
@@ -335,7 +339,17 @@ document.addEventListener('DOMContentLoaded', () => {
         [3.147075, 101.697169], [3.147541, 101.697517], [3.147889, 101.697807],
         [3.147969, 101.697872], [3.148366, 101.697491], [3.149041, 101.696868],
         [3.149330, 101.696632], [3.149549, 101.696718], [3.150106, 101.697303],
-        [3.150380, 101.697576], [3.150439, 101.697668], [3.L.polygon(heritageZoneCoords, {
+        [3.150380, 101.697576], [3.150439, 101.697668], [3.150733, 101.697576],
+        [3.151065, 101.697694], [3.151467, 101.697791], [3.151810, 101.698011],
+        [3.152051, 101.698306], [3.152158, 101.698413], [3.152485, 101.698435],
+        [3.152586, 101.698413], [3.151802, 101.697252], [3.151796, 101.697171],
+        [3.152102, 101.696968], [3.151684, 101.696683], [3.151914, 101.696270],
+        [3.151298, 101.695889], [3.151581, 101.695549], [3.150951, 101.695173],
+        [3.150238, 101.694712], [3.149922, 101.694510], [3.148934, 101.694228]
+    ];
+    // (I also fixed the typo in the array above, just in case)
+
+    L.polygon(heritageZoneCoords, {
         color: '#666',          
         fillColor: '#333',      
         fillOpacity: 0.1,       
@@ -446,4 +460,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateGameProgress() {
         const progressBar = document.getElementById('progressBar');
-        const progress
+        const progressText = document.getElementById('progressText');
+        if(!progressBar || !progressText) return;
+        
+        const count = visitedSites.filter(id => !isNaN(id)).length;
+        const percent = (count / TOTAL_SITES) * 100;
+        progressBar.style.width = `${percent}%`;
+        progressText.textContent = `${count}/${TOTAL_SITES} Sites`;
+    }
+    
+    // Recenter Button
+    if(btnRecenter) {
+        btnRecenter.addEventListener('click', () => {
+            map.setView([3.1483, 101.6938], 16);
+        });
+    }
+
+    // Share Button
+    if(btnShare) {
+        btnShare.addEventListener('click', () => {
+            const text = "I just became an Official Explorer by visiting all 13 Heritage Sites in Kuala Lumpur! 🇲Y✨ Try the Jejak Warisan challenge here: #ThisKulCity #BadanWarisanMalaysia";
+            const url = "https://jejak-warisan.vercel.app";
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+            window.open(whatsappUrl, '_blank');
+        });
+    }
+
+    // User Location Logic
+    const userMarker = L.marker([0, 0]).addTo(map);
+    const userCircle = L.circle([0, 0], { radius: 10 }).addTo(map);
+    map.on('locationfound', (e) => {
+        userMarker.setLatLng(e.latlng);
+        userCircle.setLatLng(e.latlng).setRadius(e.accuracy / 2);
+    });
+    map.locate({ watch: true, enableHighAccuracy: true });
+
+    // Modal Closers
+    const hideModal = () => siteModal.classList.add('hidden');
+    if(closeModal) closeModal.addEventListener('click', hideModal);
+    if(closeReward) closeReward.addEventListener('click', () => rewardModal.classList.add('hidden'));
+});
