@@ -8,40 +8,26 @@ body, html {
     width: 100vw; 
     height: 100vh; 
     height: 100dvh;
-    z-index: 1; 
+    z-index: 1; /* Map is the base layer */
     position: absolute;
     top: 0;
     left: 0;
 }
 
-/* --- 2. UI LAYER INTERACTION (DEFINITIVE FIX) --- */
-/* By default, #game-ui is a normal container and does not interfere with the landing page. */
-#game-ui {
-    position: absolute;
-    inset: 0;
-    z-index: 100;
+/* --- 2. UI LAYOUT (DEFINITIVE FIX) --- */
+/* All UI elements now simply sit on top of the map layer. No more complex pointer-events. */
+
+#progress-container {
+    pointer-events: none; /* The container itself is not clickable */
 }
-/* This class, applied to #game-ui in index.html, makes it "transparent" to clicks. */
-.ui-passthrough {
-    pointer-events: none;
-}
-/* This re-enables clicks for all important elements *inside* the passthrough container. */
-.ui-passthrough button,
-.ui-passthrough input,
-.ui-passthrough a,
-.ui-passthrough .bg-white,
-.ui-passthrough .pointer-events-auto {
-    pointer-events: auto;
-}
-/* These buttons are OUTSIDE the #game-ui container, so we also ensure they are always clickable. */
-#btnRecenter, #btnPassport, #btnChat {
-    pointer-events: auto;
+#progress-container > div {
+    pointer-events: auto; /* But the progress bar inside it IS clickable/hoverable if needed */
 }
 
 /* --- 3. TRANSITIONS & MODALS --- */
-#gatekeeper, #staff-screen, #rewardModal, #siteModal { 
+#gatekeeper, #staff-screen, #rewardModal, #siteModal, #chatModal, #passportModal, #quizModal { 
     transition: opacity 0.3s ease; 
-    z-index: 2000;
+    z-index: 2000; /* Modals are always on top */
 }
 
 /* --- 4. ANIMATIONS --- */
@@ -67,5 +53,5 @@ body, html {
 
 /* --- 6. SPECIFIC ELEMENTS --- */
 #btnChat, #btnPassport, #btnRecenter {
-    z-index: 1000;
+    z-index: 1000; /* Ensure buttons are above the map */
 }
