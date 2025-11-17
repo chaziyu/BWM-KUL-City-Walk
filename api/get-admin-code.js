@@ -1,13 +1,16 @@
 // File: /api/get-admin-code.js
-// Simplified, single-call secure version.
 
+// --- THIS FUNCTION IS NOW FIXED ---
 function getTodayString() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // Get the date string for the 'Asia/Kuala_Lumpur' timezone
+    // The 'en-CA' (Canadian English) locale formats the date as YYYY-MM-DD.
+    const todayStr = now.toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Kuala_Lumpur'
+    });
+    return todayStr;
 }
+// --- END OF FIX ---
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -26,7 +29,6 @@ export default async function handler(request, response) {
             return response.status(401).json({ error: 'Wrong password' });
         }
 
-        // If password is correct, fetch the Google Sheet directly.
         const SHEET_URL = process.env.GOOGLE_SHEET_URL;
         if (!SHEET_URL) {
             return response.status(500).json({ error: 'Server error: Sheet URL missing' });
@@ -39,7 +41,7 @@ export default async function handler(request, response) {
         
         const data = await sheetResponse.text();
         const rows = data.split('\n');
-        const todayStr = getTodayString();
+        const todayStr = getTodayString(); // This will now be "2025-11-18"
         let todayCode = "NOT FOUND";
 
         for (let i = 1; i < rows.length; i++) {
@@ -50,7 +52,6 @@ export default async function handler(request, response) {
             }
         }
         
-        // Return the code directly to the authenticated admin.
         return response.status(200).json({ success: true, passkey: todayCode, date: todayStr });
 
     } catch (error) {
