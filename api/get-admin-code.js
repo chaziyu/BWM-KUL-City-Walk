@@ -1,17 +1,13 @@
-import crypto from 'crypto';
+// File: /api/get-admin-code.js
+// Simplified, single-call secure version.
 
-// This is a simplified in-memory store for the token.
-// It will not work across multiple serverless instances. For production, use Vercel KV or another shared DB.
-let tempAdminToken = {
-    token: null,
-    expiry: null,
-};
-
-// This is a trick to allow the other API route to access the same in-memory token.
-// Vercel may run each API route in a separate process, so this is NOT guaranteed.
-// A real database (Vercel KV, Redis) is the robust solution.
-global._tempAdminToken = tempAdminToken;
-
+function getTodayString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -30,16 +26,35 @@ export default async function handler(request, response) {
             return response.status(401).json({ error: 'Wrong password' });
         }
 
-        const token = crypto.randomBytes(32).toString('hex');
+        // If password is correct, fetch the Google Sheet directly.
+        const SHEET_URL = process.env.GOOGLE_SHEET_URL;
+        if (!SHEET_URL) {
+            return response.status(500).json({ error: 'Server error: Sheet URL missing' });
+        }
         
-        // Store the token with a 5-minute expiry
-        global._tempAdminToken.token = token;
-        global._tempAdminToken.expiry = Date.now() + 5 * 60 * 1000;
+        const sheetResponse = await fetch(SHEET_URL);
+        if (!sheetResponse.ok) {
+            return response.status(500).json({ error: 'Failed to fetch Google Sheet' });
+        }
+        
+        const data = await sheetResponse.text();
+        const rows = data.split('\n');
+        const todayStr = getTodayString();
+        let todayCode = "NOT FOUND";
 
-        return response.status(200).json({ success: true, token: token });
+        for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i].split(',');
+            if (cols.length >= 2 && cols[0].trim() === todayStr) {
+                todayCode = cols[1].trim();
+                break;
+            }
+        }
+        
+        // Return the code directly to the authenticated admin.
+        return response.status(200).json({ success: true, passkey: todayCode, date: todayStr });
 
     } catch (error) {
         console.error("Error in /api/get-admin-code:", error.message);
-        return response.status(500).json({ error: 'Server error during authentication.' });
+        return response.status(500).json({ error: 'Server error during passkey fetch.' });
     }
 }
