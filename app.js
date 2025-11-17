@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-const SHEET_URL = "[https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtyJ200uEv2yu24C-DesB5g57iBX9CpO_qp8mAQCKX1LYrS_S8BnZGtfVDq_9LqnJ7HO6nbXpu8J4/pub?gid=0&single=true&output=csv](https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtyJ200uEv2yu24C-DesB5g57iBX9CpO_qp8mAQCKX1LYrS_S8BnZGtfVDq_9LqnJ7HO6nbXpu8J4/pub?gid=0&single=true&output=csv)"; 
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtyJ200uEv2yu24C-DesB5g57iBX9CpO_qp8mAQCKX1LYrS_S8BnZGtfVDq_9LqnJ7HO6nbXpu8J4/pub?gid=0&single=true&output=csv"; 
 const ADMIN_PASSWORD = "BWM"; 
 
 // --- GAME STATE ---
@@ -45,16 +45,14 @@ function setupLandingPage() {
     const closeStaffScreen = document.getElementById('closeStaffScreen');
     const staffScreen = document.getElementById('staff-screen');
 
-    // --- THIS IS THE FIX ---
-    // The visitor button must show the 'gatekeeper' div.
+    // This is the fix: btnVisitor now correctly opens 'gatekeeper'
     if(btnVisitor) {
         btnVisitor.addEventListener('click', () => {
             landingPage.classList.add('hidden');
-            gatekeeper.classList.remove('hidden'); // <-- This must be 'gatekeeper'
+            gatekeeper.classList.remove('hidden'); // Corrected from staffScreen
         });
     }
 
-    // The staff button must show the 'staffScreen' div.
     if(btnStaff) {
         btnStaff.addEventListener('click', async () => {
             const pass = prompt("👮 BWM STAFF LOGIN\nPlease enter your password:");
@@ -272,14 +270,13 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
     const map = L.map('map').setView([3.1483, 101.6938], 16);
 
     // USE THIS CLEAN STYLE (CartoDB Positron)
-    L.tileLayer('https://{s}[.basemaps.cartocdn.com/light_all/](https://.basemaps.cartocdn.com/light_all/){z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="[https://www.openstreetmap.org/copyright](https://www.openstreetmap.org/copyright)">OpenStreetMap</a> contributors © <a href="[https://carto.com/attributions](https://carto.com/attributions)">CARTO</a>',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
 
     // --- KML HERITAGE ZONE POLYGON ---
-    // Coordinates extracted from your KML and swapped to [Lat, Lng] for Leaflet
     const heritageZoneCoords = [
         [3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399],
         [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994],
@@ -305,7 +302,7 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
         fillOpacity: 0.1,       
         weight: 2,
         dashArray: '5, 5',
-        interactive: false // <--- FIX: Allows clicks to pass through the shape to markers
+        interactive: false
     }).addTo(map);
 
     // -----------------------------------------------
@@ -332,7 +329,6 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
         .then(res => res.json())
         .then(sites => {
             sites.forEach(site => {
-                // FIX: Parse coordinates as floats to ensure they work correctly
                 const lat = parseFloat(site.coordinates[0]);
                 const lng = parseFloat(site.coordinates[1]);
 
@@ -355,6 +351,7 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
                         elements.imgContainer.classList.add('hidden');
                     }
                     
+                    // This is the fix for the directions link
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
 
                     const isNumberedSite = !isNaN(site.id);
@@ -382,7 +379,6 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
         })
         .catch(err => {
             console.error("Error loading Map Data:", err);
-            // Add a user-facing error
             alert("Fatal Error: Could not load heritage site data. Please check your internet connection and refresh the page.");
         });
 
@@ -430,28 +426,7 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
     if(btnShare) {
         btnShare.addEventListener('click', () => {
             const text = "I just became an Official Explorer by visiting all 13 Heritage Sites in Kuala Lumpur! 🇲🇾✨ Try the Jejak Warisan challenge here: #ThisKulCity #BadanWarisanMalaysia";
-            const url = "[https://jejak-warisan.vercel.app](https://jejak-warisan.vercel.app)";
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
-            window.open(whatsappUrl, '_blank');
-        });
-    }
-
-    // User Location Logic
-    const userMarker = L.marker([0, 0]).addTo(map);
-    const userCircle = L.circle([0, 0], { radius: 10 }).addTo(map);
-    map.on('locationfound', (e) => {
-        userMarker.setLatLng(e.latlng);
-        userCircle.setLatLng(e.latlng).setRadius(e.accuracy / 2);
-    });
-    map.locate({ watch: true, enableHighAccuracy: true });
-
-    // Modal Closers
-    const hideModal = () => siteModal.classList.add('hidden');
-    if(closeModal) closeModal.addEventListener('click', hideModal);
-    if(closeReward) closeReward.addEventListener('click', () => rewardModal.classList.add('hidden'));
-});
-city #BadanWarisanMalaysia";
-            const url = "[https://jejak-warisan.vercel.app](https://jejak-warisan.vercel.app)";
+            const url = "https://jejak-warisan.vercel.app";
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
             window.open(whatsappUrl, '_blank');
         });
