@@ -14,24 +14,24 @@ export default async function handler(request, response) {
     }
     
     try {
-        // --- NEW LOGGING ---
+        // --- LOGGING ---
         console.log("Staff login API endpoint was triggered.");
         
         const { password } = request.body;
         const correctPassword = process.env.ADMIN_PASSWORD;
 
-        // --- NEW LOGGING ---
+        // --- LOGGING ---
         console.log(`Password received from client: '${password}'`);
         console.log(`Is ADMIN_PASSWORD variable set on server? ${!!correctPassword}`);
         
         // 1. Check the password
         if (password !== correctPassword) {
-            // --- NEW LOGGING ---
+            // --- LOGGING ---
             console.error("Password check FAILED. Client password did not match server password.");
             return response.status(401).json({ error: 'Wrong password' });
         }
 
-        // --- NEW LOGGING ---
+        // --- LOGGING ---
         console.log("Password check SUCCESSFUL. Fetching Google Sheet...");
 
         // 2. If password is correct, fetch the Google Sheet
@@ -60,7 +60,7 @@ export default async function handler(request, response) {
             }
         }
         
-        // --- NEW LOGGING ---
+        // --- LOGGING ---
         console.log(`Found passkey for ${todayStr}: ${todayCode}`);
         
         // 3. Return the code to the admin
