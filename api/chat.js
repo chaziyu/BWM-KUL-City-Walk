@@ -28,7 +28,9 @@ export default async function handler(request, response) {
                 'Authorization': `Bearer ${COHERE_API_KEY}` // Use Cohere key
             },
             body: JSON.stringify({
-                model: "command-r", // Use Cohere's 'command-r' model
+                // --- THIS IS THE FIX ---
+                // Swapped the deprecated 'command-r' for the new 'Live' model
+                model: "command-a-03-2025", 
                 message: userQuery, // The user's query
                 preamble: systemPrompt // The system prompt
             })
