@@ -108,3 +108,34 @@ body, html {
     filter: grayscale(100%);
     opacity: 0.6;
 }
+
+/* ---
+8. NEW USER LOCATION PIN
+---
+*/
+.user-location-pin {
+    background-color: #10B981; /* Green */
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    
+    /* Pulsing animation */
+    animation: pulse-animation 1.5s infinite;
+}
+
+@keyframes pulse-animation {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.4);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
