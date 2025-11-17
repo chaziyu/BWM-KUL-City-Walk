@@ -1,13 +1,5 @@
 // File: /api/verify-passkey.js
-
-// This function is copied from your app.js
-function getTodayString() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
+// --- THIS IS A TEMPORARY DEBUGGING FILE ---
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -15,46 +7,16 @@ export default async function handler(request, response) {
     }
 
     try {
+        // We are not checking the passkey. We are just
+        // logging that the request was received and sending success.
         const { passkey } = request.body;
-        if (!passkey) {
-            return response.status(400).json({ error: 'Passkey required' });
-        }
+        console.log(`DEBUG: Received passkey ${passkey}. Sending success.`);
 
-        // 1. Get the secret URL from Environment Variables
-        const SHEET_URL = process.env.GOOGLE_SHEET_URL;
-        if (!SHEET_URL) {
-            return response.status(500).json({ error: 'Server misconfigured: Sheet URL missing' });
-        }
-
-        // 2. Fetch the Google Sheet *from the server*
-        const sheetResponse = await fetch(SHEET_URL);
-        if (!sheetResponse.ok) {
-            return response.status(500).json({ error: 'Could not connect to passkey sheet' });
-        }
-        
-        const data = await sheetResponse.text();
-        const rows = data.split('\n');
-        const todayStr = getTodayString();
-        let validCode = null;
-
-        // 3. This is your exact logic from app.js
-        for (let i = 1; i < rows.length; i++) {
-            const cols = rows[i].split(',');
-            if (cols.length >= 2 && cols[0].trim() === todayStr) {
-                validCode = cols[1].trim();
-                break;
-            }
-        }
-
-        // 4. Compare the codes and send a secure response
-        if (validCode && passkey.trim().toUpperCase() === validCode.toUpperCase()) {
-            return response.status(200).json({ success: true, message: 'Passkey valid' });
-        } else {
-            return response.status(401).json({ error: 'Invalid or expired passkey' });
-        }
+        // Immediately return success
+        return response.status(200).json({ success: true, message: 'Passkey valid (DEBUG)' });
 
     } catch (error) {
-        console.error('Error in passkey verification:', error);
+        console.error('DEBUG Error:', error);
         return response.status(500).json({ error: 'Server error' });
     }
 }
