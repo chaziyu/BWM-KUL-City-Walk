@@ -220,7 +220,7 @@ POM     * [FIXED] This function was MISSING.
                 // SUCCESS: Create session and start game
                 localStorage.setItem('jejak_session', JSON.stringify({
                     valid: true,
-                    start: Date.Mnow()
+                    start: Date.now()
                 }));
 
                 document.getElementById('gatekeeper').style.opacity = 0;
