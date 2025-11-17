@@ -1,6 +1,7 @@
 // --- CONFIGURATION ---
 const HISTORY_WINDOW_SIZE = 10;
 const MAX_MESSAGES_PER_SESSION = 15;
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 // --- GAME STATE ---
 let map = null;
@@ -25,13 +26,13 @@ function initializeGameAndMap() {
 
     fetch('data.json').then(res => res.json()).then(sites => {
         allSiteData = sites;
-        updatePassport();
+        // updatePassport(); // This function is also missing, so I've commented it out
         sites.forEach(site => {
             const marker = L.marker(site.coordinates).addTo(map);
             if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
                 marker._icon.classList.add('marker-visited');
             }
-            marker.on('click', () => handleMarkerClick(site, marker));
+            // marker.on('click', () => handleMarkerClick(site, marker)); // This function is also missing
         });
     }).catch(err => console.error("Error loading Map Data:", err));
 
@@ -44,9 +45,14 @@ function initializeGameAndMap() {
     map.locate({ watch: true, enableHighAccuracy: true });
 }
 
-// --- GLOBAL UI HANDLERS (Unchanged from your working structure) ---
-// ... (handleMarkerClick, openQuizModal, checkQuizAnswer, collectStamp, updatePassport, etc.) ...
-// --- ALL THE CODE IN THIS SECTION IS THE SAME AS THE LAST WORKING `app.js` I PROVIDED ---
+// --- GLOBAL UI HANDLERS (STUBS) ---
+// These functions were referenced but not defined. I've added empty
+// versions so the app doesn't crash. You can add their logic back.
+function updatePassport() { console.log("updatePassport called"); }
+function handleMarkerClick(site, marker) { console.log("handleMarkerClick called", site.name); }
+function updateGameProgress() { console.log("updateGameProgress called"); }
+function updateChatUIWithCount() { console.log("updateChatUIWithCount called"); }
+function disableChatUI(flag) { console.log("disableChatUI called", flag); }
 
 // --- APP STARTUP & LANDING PAGE LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,12 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const landingPage = document.getElementById('landing-page');
         const gatekeeper = document.getElementById('gatekeeper');
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-        const SESSION_DURATION = 24 * 60 * 60 * 1000;
         
         if (sessionData && sessionData.valid && (Date.now() - sessionData.start < SESSION_DURATION)) {
+            // Session is VALID: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
-            document.getElementById('progress-container').classList.remove('hidden'); // Show progress bar
+            document.getElementById('progress-container').classList.remove('hidden');
             initializeGameAndMap();
             updateGameProgress();
             updateChatUIWithCount();
@@ -67,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 disableChatUI(true);
             }
         } else {
+            // Session is INVALID or EXPIRED: Show landing page
             localStorage.removeItem('jejak_message_count');
             userMessageCount = 0;
             localStorage.removeItem('jejak_session');
@@ -75,40 +82,123 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupLandingPage() {
-        // This is now safe because the map doesn't exist yet.
         document.getElementById('btnVisitor').addEventListener('click', () => {
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('gatekeeper').classList.remove('hidden');
         });
+        
+        // This was calling a missing function. Now it shows the staff screen.
+        // NOTE: Your 'staff-screen' HTML is missing. I am assuming it has an ID of 'staff-screen'.
+        // If your staff login modal has a different ID, change '#staff-screen' below.
         document.getElementById('btnStaff').addEventListener('click', () => {
             document.getElementById('landing-page').classList.add('hidden');
-            showAdminCode();
+            const staffScreen = document.getElementById('staff-screen');
+            if(staffScreen) {
+                staffScreen.classList.remove('hidden');
+                // You will need to add logic here to handle the admin password submission
+                // e.g., setupAdminLoginLogic();
+            } else {
+                console.error("Staff screen element not found!");
+                // Fallback: go back home if staff screen is missing
+                document.getElementById('landing-page').classList.remove('hidden');
+            }
         });
+
         document.getElementById('backToHome').addEventListener('click', () => {
             document.getElementById('gatekeeper').classList.add('hidden');
             document.getElementById('landing-page').classList.remove('hidden');
         });
+        
+        // This was calling a missing function.
+        // I've commented it out for now. If you have a 'closeStaffScreen' button,
+        // you'll need to re-add its listener and make it show the landing-page.
+        /*
         document.getElementById('closeStaffScreen').addEventListener('click', () => {
             document.getElementById('staff-screen').classList.add('hidden');
             document.getElementById('landing-page').classList.remove('hidden');
         });
+        */
+        
         setupGatekeeperLogic();
     }
 
-    async function verifyCode(enteredCode) {
-        // ... (logic is the same, but the final action is updated)
-        // on success:
-        setTimeout(() => {
-            document.getElementById('gatekeeper').remove();
-            document.getElementById('landing-page').remove();
-            document.getElementById('progress-container').classList.remove('hidden'); // Show progress bar
-            initializeGameAndMap();
-            updateGameProgress();
-        }, 500);
-        // ...
+    //
+    // --- THIS IS THE MISSING LOGIC ---
+    //
+
+    /**
+     * [FIXED] Attaches the event listener to the visitor passkey "Unlock" button.
+     */
+    function setupGatekeeperLogic() {
+        const unlockBtn = document.getElementById('unlockBtn');
+        const passcodeInput = document.getElementById('passcodeInput');
+
+        unlockBtn.addEventListener('click', async () => {
+            const enteredCode = passcodeInput.value;
+            if (!enteredCode) return;
+            
+            // Disable button to prevent double-clicks
+            unlockBtn.disabled = true;
+            unlockBtn.textContent = 'Verifying...';
+            
+            await verifyCode(enteredCode); // Call the verification function
+            
+            // Re-enable button if verification fails
+            if (!localStorage.getItem('jejak_session')) {
+                 unlockBtn.disabled = false;
+                 unlockBtn.textContent = 'Verify & Unlock';
+            }
+        });
     }
 
-    // ... (All other functions and event listeners from the last working version)
+    /**
+     * [FIXED] Verifies the visitor passkey against the server API.
+     */
+    async function verifyCode(enteredCode) {
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.classList.add('hidden'); // Hide old errors
+
+        try {
+            const response = await fetch('/api/verify-passkey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ passkey: enteredCode })
+            });
+
+            if (response.ok) {
+                // SUCCESS: Create session and start game
+                localStorage.setItem('jejak_session', JSON.stringify({
+                    valid: true,
+                    start: Date.now()
+                }));
+
+                // Animate out and start map
+                document.getElementById('gatekeeper').style.opacity = 0;
+                document.getElementById('landing-page').style.opacity = 0;
+
+                setTimeout(() => {
+                    document.getElementById('gatekeeper').remove();
+                    document.getElementById('landing-page').remove();
+                    document.getElementById('progress-container').classList.remove('hidden');
+                    initializeGameAndMap();
+                    updateGameProgress();
+                }, 500); // Wait for fade-out
+
+            } else {
+                // FAILURE: Show error message
+                const data = await response.json();
+                console.error('Passkey error:', data.error);
+                errorMsg.textContent = data.error || 'Invalid or expired passkey.';
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error during passkey verification:', error);
+            errorMsg.textContent = 'Network error. Please try again.';
+            errorMsg.classList.remove('hidden');
+        }
+    }
+    
+    // --- END MISSING LOGIC ---
     
     initApp();
 });
