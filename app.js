@@ -45,18 +45,22 @@ function setupLandingPage() {
     const closeStaffScreen = document.getElementById('closeStaffScreen');
     const staffScreen = document.getElementById('staff-screen');
 
-    // This is the fix: btnVisitor now correctly opens 'gatekeeper'
+    // --- FIX 1 ---
+    // The VISITOR button must show the 'gatekeeper' div.
     if(btnVisitor) {
         btnVisitor.addEventListener('click', () => {
             landingPage.classList.add('hidden');
-            gatekeeper.classList.remove('hidden'); // Corrected from staffScreen
+            gatekeeper.classList.remove('hidden'); // This is the fix.
         });
     }
 
+    // --- FIX 2 ---
+    // The STAFF button must also hide the 'landingPage'.
     if(btnStaff) {
         btnStaff.addEventListener('click', async () => {
             const pass = prompt("👮 BWM STAFF LOGIN\nPlease enter your password:");
             if (pass === ADMIN_PASSWORD) {
+                landingPage.classList.add('hidden'); // This is the fix.
                 await showAdminCode();
             } else if (pass !== null) {
                 alert("❌ Wrong password");
@@ -351,7 +355,6 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
                         elements.imgContainer.classList.add('hidden');
                     }
                     
-                    // This is the fix for the directions link
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
 
                     const isNumberedSite = !isNaN(site.id);
@@ -442,7 +445,7 @@ if (chatInput) chatInput.addEventListener('keypress', (e) => {
     map.locate({ watch: true, enableHighAccuracy: true });
 
     // Modal Closers
-    const hideModal = () => siteModal.classList.add('hidden');
+    const hideModal = () => siteModal.classList..add('hidden');
     if(closeModal) closeModal.addEventListener('click', hideModal);
     if(closeReward) closeReward.addEventListener('click', () => rewardModal.classList.add('hidden'));
 });
