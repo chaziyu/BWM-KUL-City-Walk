@@ -47,7 +47,8 @@ ${BWM_KNOWLEDGE}
         const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
         const model = genAI.getGenerativeModel({
             // --- THIS IS THE FIX ---
-            model: "gemini-1.0-pro", // Changed to the most stable v1 model
+            // This is the new, stable model from your changelog (June 17, 2025)
+            model: "gemini-2.5-flash",
             // --- END OF FIX ---
             systemInstruction: systemPrompt,
         });
