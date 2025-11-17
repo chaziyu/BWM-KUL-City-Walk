@@ -3,6 +3,10 @@
 
 // --- GAME STATE ---
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
+// --- NEW ---
+// This new list will store the "Discovery" points (A, B, C...)
+let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
+// --- END NEW ---
 const TOTAL_SITES = 13; 
 
 // --- 1. APP NAVIGATION & SECURITY ---
@@ -178,13 +182,10 @@ async function verifyCode(enteredCode) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- THIS IS THE FIX ---
-    // Call initApp() and updateGameProgress() FIRST.
-    // This ensures the landing page buttons are attached BEFORE
-    // any other logic (like Chat, Passport, or Map) runs.
+    // --- Button Bug Fix: Call these first! ---
     initApp();
     updateGameProgress(); 
-    // --- END OF FIX ---
+    // --- End Button Bug Fix ---
 
 
     // --- START: CHATBOT LOGIC ---
@@ -265,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     // --- END: CHATBOT LOGIC ---
 
-    // --- NEW PASSPORT LOGIC ---
+    // --- PASSPORT LOGIC ---
     const btnPassport = document.getElementById('btnPassport');
     const passportModal = document.getElementById('passportModal');
     const closePassportModal = document.getElementById('closePassportModal');
@@ -278,14 +279,12 @@ document.addEventListener('DOMContentLoaded', () => {
         passportGrid.innerHTML = ''; // Clear the grid
         let collectedCount = 0;
 
-        // Loop from 1 to 13 (TOTAL_SITES)
         for (let i = 1; i <= TOTAL_SITES; i++) {
-            const siteId = String(i); // Site IDs are strings
+            const siteId = String(i); 
             const stampEl = document.createElement('div');
             stampEl.classList.add('flex', 'flex-col', 'items-center', 'justify-center', 'w-16', 'h-16', 'md:w-20', 'md:h-20', 'border', 'rounded-lg', 'shadow-sm', 'transition-all');
 
             if (visitedSites.includes(siteId)) {
-                // Collected stamp
                 stampEl.classList.add('bg-green-100', 'border-green-300');
                 stampEl.innerHTML = `
                     <div class="text-3xl">✅</div>
@@ -293,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 collectedCount++;
             } else {
-                // Locked stamp
                 stampEl.classList.add('bg-gray-100', 'border-gray-200', 'opacity-60');
                 stampEl.innerHTML = `
                     <div class="text-3xl">🔒</div>
@@ -308,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnPassport) {
         btnPassport.addEventListener('click', () => {
-            updatePassport(); // Update stamps every time it's opened
+            updatePassport(); 
             passportModal.classList.remove('hidden');
         });
     }
@@ -317,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             passportModal.classList.add('hidden');
         });
     }
-    // --- END NEW PASSPORT LOGIC ---
+    // --- END PASSPORT LOGIC ---
 
     // Initialize Map
     const map = L.map('map').setView([3.1483, 101.6938], 16);
@@ -347,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
         [3.151298, 101.695889], [3.151581, 101.695549], [3.150951, 101.695173],
         [3.150238, 101.694712], [3.149922, 101.694510], [3.148934, 101.694228]
     ];
-    // (I also fixed the typo in the array above, just in case)
 
     L.polygon(heritageZoneCoords, {
         color: '#666',          
@@ -406,11 +403,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     btnDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
 
+                    // --- NEW LOGIC FOR IDEA 3 (Smart AI Button) ---
+                    const btnAskAI = document.getElementById('btnAskAI');
+                    btnAskAI.onclick = (e) => {
+                        e.preventDefault();
+                        const siteName = site.name;
+                        siteModal.classList.add('hidden');
+                        chatModal.classList.remove('hidden');
+                        chatInput.value = `Tell me more about the ${siteName}.`;
+                    };
+                    // --- END NEW LOGIC FOR IDEA 3 ---
+
+
+                    // --- NEW LOGIC FOR IDEA 2 (Stamps & Discoveries) ---
                     const isNumberedSite = !isNaN(site.id);
-                    if (!isNumberedSite) {
-                        btnCollect.style.display = 'none'; 
-                    } else {
-                        btnCollect.style.display = 'flex';
+                    btnCollect.style.display = 'flex'; // Always show the button
+
+                    if (isNumberedSite) {
+                        // It's a "Stamp" (1-13)
                         if (visitedSites.includes(site.id)) {
                             btnCollect.innerHTML = "✅ Stamp Collected";
                             btnCollect.classList.add('opacity-50', 'cursor-not-allowed');
@@ -422,9 +432,32 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             btnCollect.onclick = () => {
                                 collectStamp(site.id, marker, btnCollect);
+Src`;
+                            };
+                        }
+                    } else {
+                        // It's a "Discovery" (A-M)
+                        if (discoveredSites.includes(site.id)) {
+                            btnCollect.innerHTML = "✅ Discovered!";
+                            btnCollect.classList.add('opacity-50', 'cursor-not-allowed');
+                            btnCollect.disabled = true;
+                        } else {
+                            btnCollect.innerHTML = "💡 Discover this Point";
+                            btnCollect.classList.remove('opacity-50', 'cursor-not-allowed');
+                            btnCollect.disabled = false;
+                            
+                            btnCollect.onclick = () => {
+                                discoveredSites.push(site.id);
+                                localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
+                                btnCollect.innerHTML = "✅ Discovered!";
+                                btnCollect.classList.add('opacity-50', 'cursor-not-allowed');
+                                btnCollect.disabled = true;
+                                // Optional: You could add a different sound here
                             };
                         }
                     }
+                    // --- END NEW LOGIC FOR IDEA 2 ---
+
                     siteModal.classList.remove('hidden');
                 });
             });
@@ -436,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function collectStamp(siteId, marker, btn) {
         if (!visitedSites.includes(siteId)) {
-            // (Audio removed as requested)
+            // (Audio removed)
             
             visitedSites.push(siteId);
             localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
