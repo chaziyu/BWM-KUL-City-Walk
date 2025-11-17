@@ -5,7 +5,12 @@
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
 let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
 const TOTAL_SITES = 13; 
-let allSiteData = []; // --- NEW: Stores all site data after fetching
+let allSiteData = []; 
+
+// --- NEW (FOR IDEA 3: SMART AI) ---
+// This array will store the chat history to give the AI a memory
+let chatHistory = [];
+// --- END NEW ---
 
 // --- 1. APP NAVIGATION & SECURITY ---
 
@@ -206,13 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NEW: handleChatSend is modified for "silent" messages ---
+    // --- UPDATED: handleChatSend (for Idea 3) ---
     async function handleChatSend(query, isSilent = false) {
-        // If the query is passed in, use it. Otherwise, get it from the input.
         const userQuery = query || chatInput.value.trim();
         if (!userQuery) return;
 
-        // Only add the user's message to chat if it's NOT silent
         if (!isSilent) {
             addChatMessage(userQuery, 'user');
         }
@@ -222,17 +225,18 @@ document.addEventListener('DOMContentLoaded', () => {
         chatSendBtn.textContent = '...';
 
         try {
+            // --- NEW: Send the history AND the new query ---
             const response = await fetch('/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userQuery: userQuery // Use the query from the variable
+                    userQuery: userQuery,
+                    history: chatHistory // Send the full history
                 })
             });
+            // --- END NEW ---
 
             const data = await response.json();
-            
-            // We always add the bot's response
             addChatMessage(data.reply, 'bot');
 
         } catch (error) {
@@ -243,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- UPDATED: addChatMessage (for Idea 3) ---
     function addChatMessage(message, sender) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('flex');
@@ -264,29 +269,35 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.innerHTML = innerHtml;
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // --- NEW: Add the message to our history array ---
+        // We must format it for the Google API (role: 'user' or 'model')
+        chatHistory.push({
+            role: (sender === 'user' ? 'user' : 'model'),
+            parts: [{ text: message }]
+        });
+        // --- END NEW ---
     }
 
-    if (chatSendBtn) chatSendBtn.addEventListener('click', () => handleChatSend()); // Updated to call with no args
+    if (chatSendBtn) chatSendBtn.addEventListener('click', () => handleChatSend());
     if (chatInput) chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleChatSend(); // Updated to call with no args
+        if (e.key === 'Enter') handleChatSend();
     });
     // --- END: CHATBOT LOGIC ---
 
-    // --- PASSPORT LOGIC (Updated for Idea 1) ---
+    // --- PASSPORT LOGIC (Idea 1) ---
     const btnPassport = document.getElementById('btnPassport');
     const passportModal = document.getElementById('passportModal');
     const closePassportModal = document.getElementById('closePassportModal');
     const passportGrid = document.getElementById('passportGrid');
     const passportCount = document.getElementById('passportCount');
 
-    // --- NEW: This function is now async to fetch data ---
     async function updatePassport() {
         if (!passportGrid || !passportCount) return;
 
-        passportGrid.innerHTML = 'Loading stamps...'; // Clear the grid
+        passportGrid.innerHTML = 'Loading stamps...'; 
         let collectedCount = 0;
 
-        // If allSiteData is empty, fetch it. Otherwise, use the cached version.
         if (allSiteData.length === 0) {
             try {
                 const response = await fetch('data.json');
@@ -298,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const mainSites = allSiteData.filter(site => !isNaN(site.id));
-        passportGrid.innerHTML = ''; // Clear "Loading"
+        passportGrid.innerHTML = ''; 
 
         mainSites.forEach(site => {
             const stampEl = document.createElement('div');
@@ -307,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCollected = visitedSites.includes(site.id);
             
             if (isCollected) {
-                // Collected stamp (Full color)
                 stampEl.classList.add('bg-green-100', 'border-green-300');
                 stampEl.innerHTML = `
                     <img src="${site.image}" alt="${site.name}" class="w-full h-full object-cover">
@@ -318,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 collectedCount++;
             } else {
-                // Locked stamp (Grayscale)
                 stampEl.classList.add('bg-gray-100', 'border-gray-200');
                 stampEl.innerHTML = `
                     <img src="${site.image}" alt="${site.name}" class="w-full h-full object-cover filter grayscale opacity-60">
@@ -346,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- END PASSPORT LOGIC ---
 
-    // --- NEW QUIZ LOGIC (for Idea 2) ---
+    // --- QUIZ LOGIC (Idea 2) ---
     const quizModal = document.getElementById('quizModal');
     const closeQuizModal = document.getElementById('closeQuizModal');
     const quizTitle = document.getElementById('quizTitle');
@@ -356,14 +365,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizError = document.getElementById('quizError');
 
     function openQuizModal(site, marker, btnCollect) {
-        siteModal.classList.add('hidden'); // Close site modal
+        siteModal.classList.add('hidden'); 
         quizTitle.textContent = `Quiz for: ${site.name}`;
         quizQuestion.textContent = site.quiz.q;
         quizInput.value = '';
-        quizError.classList.add('hidden'); // Hide old errors
+        quizError.classList.add('hidden'); 
         quizModal.classList.remove('hidden');
 
-        // We set onclick here to pass the site data
         quizSubmitBtn.onclick = () => {
             checkQuizAnswer(site, marker, btnCollect);
         };
@@ -380,16 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const correctAnswer = site.quiz.a;
 
         if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-            // Correct!
             quizModal.classList.add('hidden');
             collectStamp(site.id, marker, btnCollect, site.name); // Pass name for AI
         } else {
-            // Wrong
             quizError.textContent = "Not quite! Try reading the info again.";
             quizError.classList.remove('hidden');
         }
     }
-    // --- END NEW QUIZ LOGIC ---
+    // --- END QUIZ LOGIC ---
 
 
     // Initialize Map
@@ -451,12 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     fetch('data.json')
-        .then(res => {
-            // --- NEW: Store data in our global var ---
-            allSiteData = res.clone().json(); // Store for passport
-            return res.json();
-            // --- END NEW ---
-        })
+        .then(res => res.json())
         .then(sites => {
             allSiteData = sites; // Store data
             sites.forEach(site => {
@@ -496,9 +497,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     // --- End Logic for Idea 3 ---
 
 
-                    // --- UPDATED LOGIC (Ideas 2) ---
+                    // --- UPDATED LOGIC (Ideas 1 & 2) ---
                     const isNumberedSite = !isNaN(site.id);
-                    btnCollect.style.display = 'flex'; // Always show the button
+                    btnCollect.style.display = 'flex'; 
 
                     if (isNumberedSite) {
                         // It's a "Stamp" (1-13)
