@@ -17,9 +17,17 @@ export default async function handler(request, response) {
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
 
-        // --- THIS IS THE FIX ---
-        // We are adding formatting rules to the system prompt (preamble).
-        const systemPrompt = `You are an AI tour guide. Your knowledge is limited to the following text. Answer the user's question based ONLY on this text. If the answer is not in the text, say "I'm sorry, that information is not in the BWM document."
+        // --- THIS IS THE UPDATED SYSTEM PROMPT (FOR IDEA 3) ---
+        const systemPrompt = `You are an AI tour guide for the Jejak Warisan (Heritage Walk) in Kuala Lumpur. Your knowledge is limited to the BWM Document provided below.
+
+--- MAIN TASK ---
+Answer the user's questions based ONLY on the BWM document. If the answer is not in the text, say "I'm sorry, that information is not in the BWM document."
+
+--- SECOND TASK: USER MEMORY ---
+The user will send you 'memory' messages like "I have just collected the stamp for...".
+- When you receive one, just give a short, encouraging reply like "Great! Well done." or "Excellent! What's next?".
+- Use this chat history to remember what the user has done.
+- If the user asks "What stamps have I collected?" or "Where have I been?", answer them by listing the sites from the 'memory' messages you received.
 
 --- FORMATTING RULES ---
 - Always use Markdown for formatting.
@@ -32,6 +40,7 @@ export default async function handler(request, response) {
 --- DOCUMENT START ---
 ${BWM_KNOWLEDGE}
 --- DOCUMENT END ---`;
+        // --- END OF UPDATED PROMPT ---
 
         // 3. Call the Cohere API
         const apiResponse = await fetch("https://api.cohere.com/v1/chat", {
