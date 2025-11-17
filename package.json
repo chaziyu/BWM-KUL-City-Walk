@@ -2,5 +2,8 @@
   "type": "module",
   "dependencies": {
     "@google/generative-ai": "^0.15.0"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
