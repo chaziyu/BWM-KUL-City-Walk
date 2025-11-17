@@ -2,7 +2,7 @@
 const HISTORY_WINDOW_SIZE = 10;
 
 // --- GAME STATE ---
-let map = null; // Map is not initialized on page load to allow landing page buttons to work.
+let map = null; // IMPORTANT: Map is not initialized on page load to allow landing page buttons to work.
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
 let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
 const TOTAL_SITES = 13; 
@@ -11,7 +11,7 @@ let chatHistory = [];
 
 
 // --- CORE GAME & MAP INITIALIZATION ---
-// This function will be called ONLY after the user gets past the landing page.
+// This function will now be called ONLY after the user gets past the landing page.
 function initializeGameAndMap() {
     if (map) return; // Prevent re-initializing
 
@@ -61,7 +61,6 @@ function initializeGameAndMap() {
 
 function handleMarkerClick(site, marker) {
     const siteModal = document.getElementById('siteModal');
-    // ... (populate modal content) ...
     document.getElementById('modalTitle').textContent = `${site.id}. ${site.name}`;
     document.getElementById('modalBuilt').textContent = site.built || "N/A";
     document.getElementById('modalArchitects').textContent = site.architects || "N/A";
@@ -107,7 +106,6 @@ function handleMarkerClick(site, marker) {
                 marker._icon.classList.add('marker-visited');
                 btnCollect.innerHTML = "✅ Discovered!";
                 btnCollect.disabled = true;
-                btnCollect.classList.add('opacity-50', 'cursor-not-allowed');
                 updatePassport(); // Bug Fix: Update passport after discovery
             };
         }
@@ -261,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupLandingPage() {
-        // ... (This function is now simple and just sets up listeners)
         document.getElementById('btnVisitor').addEventListener('click', () => {
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('gatekeeper').classList.remove('hidden');
@@ -362,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Set up listeners for in-game buttons
+    // Set up listeners for in-game buttons that are always present
     document.getElementById('btnChat').addEventListener('click', () => document.getElementById('chatModal').classList.remove('hidden'));
     document.getElementById('closeChatModal').addEventListener('click', () => document.getElementById('chatModal').classList.add('hidden'));
     document.getElementById('chatSendBtn').addEventListener('click', () => handleChatSend());
