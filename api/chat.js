@@ -17,8 +17,21 @@ export default async function handler(request, response) {
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
 
-        // 2. Define the system prompt (Preamble for Cohere)
-        const systemPrompt = `You are an AI tour guide. Your knowledge is limited to the following text. Answer the user's question based ONLY on this text. If the answer is not in the text, say "I'm sorry, that information is not in the BWM document." --- DOCUMENT START --- ${BWM_KNOWLEDGE} --- DOCUMENT END ---`;
+        // --- THIS IS THE FIX ---
+        // We are adding formatting rules to the system prompt (preamble).
+        const systemPrompt = `You are an AI tour guide. Your knowledge is limited to the following text. Answer the user's question based ONLY on this text. If the answer is not in the text, say "I'm sorry, that information is not in the BWM document."
+
+--- FORMATTING RULES ---
+- Always use Markdown for formatting.
+- When you need to list items (like locations, suggestions, or steps), use bullet points (*), not numbered lists.
+- For each main bullet point, add a one-line description.
+- If a main bullet point has specific examples (like building names), list them as indented sub-bullets (  *).
+- Always use newlines (\n) to separate items. DO NOT output a single run-on paragraph.
+- Use an appropriate emoji at the start of each main bullet point.
+
+--- DOCUMENT START ---
+${BWM_KNOWLEDGE}
+--- DOCUMENT END ---`;
 
         // 3. Call the Cohere API
         const apiResponse = await fetch("https://api.cohere.com/v1/chat", {
@@ -28,9 +41,7 @@ export default async function handler(request, response) {
                 'Authorization': `Bearer ${COHERE_API_KEY}` // Use Cohere key
             },
             body: JSON.stringify({
-                // --- THIS IS THE FIX ---
-                // Swapped the deprecated 'command-r' for the new 'Live' model
-                model: "command-a-03-2025", 
+                model: "command-a-03-2025", // The correct model from your list
                 message: userQuery, // The user's query
                 preamble: systemPrompt // The system prompt
             })
