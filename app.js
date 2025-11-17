@@ -78,6 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (gatekeeper) gatekeeper.remove();
             document.getElementById('progress-container').classList.remove('hidden');
             initializeGameAndMap(); // This is safe now because the map fix is inside
+            
+            // --- FIX ADDED HERE ---
+            setupGameUIListeners(); // Connect in-game buttons
+            // --- END FIX ---
+
             updateGameProgress();
             updateChatUIWithCount();
             if (userMessageCount >= MAX_MESSAGES_PER_SESSION) {
@@ -99,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('gatekeeper').classList.remove('hidden');
         });
         
-        // This was the broken part. It now calls the NEW function below
         document.getElementById('btnStaff').addEventListener('click', () => {
             showAdminCode();
         });
@@ -109,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('landing-page').classList.remove('hidden');
         });
         
-        // Listener for the new "close" button on the staff screen
         document.getElementById('closeStaffScreen').addEventListener('click', () => {
             document.getElementById('staff-screen').classList.add('hidden');
             document.getElementById('landing-page').classList.remove('hidden');
@@ -120,12 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     //
-    // --- ALL THE MISSING FUNCTIONS ARE ADDED BELOW ---
+    // --- ALL LOGIN/MODAL FUNCTIONS ---
     //
 
     /**
-     * [FIXED] This function was MISSING.
-     * It shows the staff login modal.
+     * Shows the staff login modal.
      */
     function showAdminCode() {
         document.getElementById('landing-page').classList.add('hidden');
@@ -133,8 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * [FIXED] This function was MISSING.
-     * It attaches the event listener to the admin login button.
+     * Attaches the event listener to the admin login button.
      */
     function setupAdminLoginLogic() {
         document.getElementById('adminLoginBtn').addEventListener('click', async () => {
@@ -178,8 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * [FIXED] This function was MISSING.
-     * It attaches the event listener to the visitor passkey "Unlock" button.
+     * Attaches the event listener to the visitor passkey "Unlock" button.
      */
     function setupGatekeeperLogic() {
         const unlockBtn = document.getElementById('unlockBtn');
@@ -202,8 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * [FIXED] This function was MISSING.
-     * It verifies the visitor passkey against the server API.
+     * Verifies the visitor passkey against the server API.
      */
     async function verifyCode(enteredCode) {
         const errorMsg = document.getElementById('errorMsg');
@@ -221,13 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // SUCCESS: Create session and start game
                 localStorage.setItem('jejak_session', JSON.stringify({
                     valid: true,
-                    //
-                    // --- THIS IS THE FIX ---
-                    //
-                    start: Date.now() // Was Date.Mnow()
-                    //
-                    // --- END FIX ---
-                    //
+                    start: Date.now() // Corrected typo
                 }));
 
                 document.getElementById('gatekeeper').style.opacity = 0;
@@ -237,7 +230,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('gatekeeper').remove();
                     document.getElementById('landing-page').remove();
                     document.getElementById('progress-container').classList.remove('hidden');
-                    initializeGameAndMap(); // This call is now safe
+                    initializeGameAndMap();
+                    
+                    // --- FIX ADDED HERE ---
+                    setupGameUIListeners(); // Connect in-game buttons
+                    // --- END FIX ---
+                    
                     updateGameProgress();
                 }, 500); // Wait for fade-out
 
@@ -256,6 +254,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    /**
+     * [NEW FUNCTION]
+     * Attaches click listeners to the in-game UI buttons.
+     */
+    function setupGameUIListeners() {
+        // 1. Recenter Button
+        document.getElementById('btnRecenter').addEventListener('click', () => {
+            // This re-centers the map to the starting point
+            if (map) {
+                map.setView([3.1483, 101.6938], 16);
+            }
+        });
+
+        // 2. Chat Button
+        document.getElementById('btnChat').addEventListener('click', () => {
+            // This shows your chat modal
+            const chatModal = document.getElementById('chatModal');
+            if (chatModal) {
+                chatModal.classList.remove('hidden');
+            } else {
+                console.error('Chat modal element not found');
+            }
+        });
+
+        // 3. Passport Button
+        document.getElementById('btnPassport').addEventListener('click', () => {
+            // This shows your passport modal
+            const passportModal = document.getElementById('passportModal');
+            if (passportModal) {
+                passportModal.classList.remove('hidden');
+            } else {
+                console.error('Passport modal element not found');
+            }
+        });
+
+        // 4. Logic to close the modals (by clicking the background)
+        // NOTE: Your modals are currently empty. You will need to add content
+        // and proper close buttons inside them.
+        const chatModal = document.getElementById('chatModal');
+        if (chatModal) {
+            chatModal.addEventListener('click', (e) => {
+                if (e.target.id === 'chatModal') { // Click on background
+                    e.target.classList.add('hidden');
+                }
+            });
+        }
+        
+        const passportModal = document.getElementById('passportModal');
+        if (passportModal) {
+            passportModal.addEventListener('click', (e) => {
+                if (e.target.id === 'passportModal') { // Click on background
+                    e.target.classList.add('hidden');
+                }
+            });
+        }
+    }
+
     // --- Run the app ---
     initApp();
 });
