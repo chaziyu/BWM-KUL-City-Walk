@@ -15,30 +15,38 @@ body, html {
     left: 0;
 }
 
-/* --- 2. UI LAYER INTERACTION (CRITICAL FIX) --- */
+/* --- 2. UI LAYER INTERACTION (CORRECTED FIX) --- */
 /* This ensures you can click the Map PINS even though the UI is on top */
-/* Add this to section 2 of your style.css */
+
+/* 
+  NEW: Create a specific class for the click-through effect.
+  We will apply this ONLY to the main game UI container.
+*/
+.ui-passthrough {
+    pointer-events: none;
+}
+
+/* 
+  Re-enable clicking for ALL buttons and clickable elements inside
+  any container that has the ui-passthrough class. This is more robust.
+*/
+.ui-passthrough button,
+.ui-passthrough input,
+.ui-passthrough a,
+.ui-passthrough .bg-white { /* Makes modal cards clickable */
+    pointer-events: auto;
+}
+
+/*
+  These buttons are OUTSIDE the main game UI, so we must ensure
+  they are always clickable, as they are not affected by the rule above.
+*/
+#btnRecenter,
+#btnPassport,
 #btnChat {
-    pointer-events: auto; 
+    pointer-events: auto;
 }
 
-
-
-#game-ui {
-    position: absolute;
-    inset: 0;      /* Full screen */
-    z-index: 100;  /* Above the map */
-    pointer-events: none; /* <--- MAGICAL LINE: Lets clicks pass through to Map */
-}
-
-/* Re-enable clicking for Buttons and Inputs inside the UI */
-#game-ui button, 
-#game-ui input, 
-#game-ui a,
-#game-ui .bg-white, /* Makes the card backgrounds clickable */
-#btnRecenter {
-    pointer-events: auto; 
-}
 
 /* --- 3. TRANSITIONS & MODALS --- */
 
@@ -76,14 +84,6 @@ body, html {
 }
 
 /* --- 6. SPECIFIC ELEMENTS --- */
-
-/* Optional: Add to section 6 for layout */
-#btnChat {
+#btnChat, #btnPassport, #btnRecenter {
     z-index: 1000; /* Above map, below modals */
-}
-
-/* Recenter Button */
-#btnRecenter {
-    z-index: 1000; /* Above map, below modals */
-    /* Ensure it has pointer-events: auto (handled in section 2, but good to double check) */
 }
