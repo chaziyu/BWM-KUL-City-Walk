@@ -1,14 +1,32 @@
-// This imports the new Google AI package
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BWM_KNOWLEDGE } from '../knowledge.js';
+import { kv } from '@vercel/kv';
 
-// This is NOT client-side code. This runs on Vercel's servers.
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
+        // --- RATE LIMITING LOGIC (Stops Abuse) ---
+        const ip = request.ip || '127.0.0.1';
+        const key = `rate_limit_${ip}`;
+        
+        let count = await kv.get(key);
+        if (count === null) {
+            await kv.set(key, 1, { ex: 60 });
+            count = 1;
+        } else {
+            if (count > 10) {
+                console.warn(`Rate limit exceeded for IP: ${ip}`);
+                return response.status(429).json({ reply: "You are sending messages too fast. Please try again in a minute." });
+            }
+            await kv.incr(key);
+            count++;
+        }
+        // --- END OF RATE LIMITING LOGIC ---
+
+
         // --- 1. Get the new Google Key ---
         const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
         if (!GOOGLE_API_KEY) {
@@ -46,26 +64,40 @@ ${BWM_KNOWLEDGE}
         // --- 4. Initialize the Google AI Client ---
         const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
         const model = genAI.getGenerativeModel({
-            // --- THIS IS THE FIX ---
-            // Let's try the stable "Pro" model, it might be less busy.
             model: "gemini-2.5-pro",
-            // --- END OF FIX ---
             systemInstruction: systemPrompt,
         });
 
         // --- 5. Start a chat session with the previous history ---
         const chat = model.startChat({
-            history: history || [], // Start with the history from app.js
+            history: history || [], 
         });
 
         // --- 6. Send the new user query ---
-        const result = await chat.sendMessage(userQuery);
-        const aiResponse = result.response;
-        const text = aiResponse.text();
+        // --- THIS IS THE NEW FIX ---
+        try {
+            const result = await chat.sendMessage(userQuery);
+            const aiResponse = result.response;
+            const text = aiResponse.text();
+            
+            // This is the normal, successful response
+            return response.status(200).json({ reply: text });
 
-        return response.status(200).json({ reply: text });
+        } catch (error) {
+            // Check if it's the 503 "Overloaded" error
+            if (error.status === 503) {
+                console.warn("Google AI model is overloaded (503). Sending friendly error.");
+                // Send a NORMAL 200 response, but with a friendly error message
+                return response.status(200).json({ reply: "I'm sorry, the AI guide is very busy right now. Please try asking again in a moment." });
+            } else {
+                // If it's a *different* error, we still want to know about it
+                throw error;
+            }
+        }
+        // --- END OF FIX ---
 
     } catch (error) {
+        // This will now only catch *other* fatal errors (like the API key being wrong)
         console.error('FATAL ERROR in Google chat handler:', error);
         return response.status(500).json({ reply: 'A fatal error occurred on the server.' });
     }
