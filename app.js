@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 const HISTORY_WINDOW_SIZE = 10;
-const MAX_MESSAGES_PER_SESSION = 10; // <-- MODIFIED: Changed from 15 to 10
+const MAX_MESSAGES_PER_SESSION = 10;
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 // --- GAME STATE ---
@@ -13,21 +13,42 @@ let chatHistory = [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
 let currentModalSite = null; // To track the currently open pin
 let currentModalMarker = null; // To track the currently open marker
+let userMarker = null; // Make userMarker global for proximity pulse
+let solvedRiddle = JSON.parse(localStorage.getItem('jejak_solved_riddle')) || {};
+
+// --- ADDED: DAILY RIDDLE DATABASE ---
+const allRiddles = [
+    { q: "My 41-meter clock tower houses a one-ton bell that first chimed for Queen Victoria's birthday. What am I?", a: "1" },
+    { q: "I was designed by A.B. Hubback to perfectly match my famous neighbor, the Sultan Abdul Samad Building.", a: "2" },
+    { q: "I am a 6-storey Art Deco building named after a famous tin tycoon, Loke Yew.", a: "3" },
+    { q: "I sit at the 'muddy confluence' of two rivers, the very birthplace of Kuala Lumpur.", a: "4" },
+    { q: "My Art Deco clock tower was built in 1937 to commemorate the coronation of King George VI.", a: "5" },
+    { q: "I am KL's oldest Chinese temple, and I am uniquely angled to follow Feng Shui principles.", a: "6" },
+    { q: "I am an unusual triangular building with no 'five-foot way' and whimsical garlic-shaped finials on my roof.", a: "7" },
+    { q: "I am a traditional medicine shop, a 'living museum' for over 30 years, where you can still buy herbs.", a: "8" },
+    { q: "In 1932, I was the tallest building in KL, standing at 85 feet. I also housed Radio Malaya.", a: "9" },
+    { q: "I am not a building, but a fragrant stop where artisans weave fresh flower garlands.", a: "10" },
+    { q: "My prayer services are held in both Arabic and Tamil, a unique feature for a mosque in this area.", a: "11" },
+    { q: "I am Malaysia's oldest existing jewellers, founded by a man who was shipwrecked!", a: "12" },
+    { q: "I was KL's only theatre, but I was heavily damaged by a major fire in the 1980s.", a: "13" }
+];
 
 // --- DOM Elements ---
-let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn;
+let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn;
 let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
 let passportModal, closePassportModal, passportInfo, passportGrid;
-let welcomeModal, closeWelcomeModal; // ADDED: Welcome Modal elements
+let welcomeModal, closeWelcomeModal;
+let congratsModal, closeCongratsModal, shareWhatsAppBtn;
+let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challengeResult;
+let chaChingSound;
 
 // --- CORE GAME & MAP INITIALIZATION ---
 function initializeGameAndMap() {
     if (map) return;
     map = L.map('map').setView([3.1483, 101.6938], 16);
     
-    // MODIFIED: Reverted to the original map style
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors © CARTO',
+    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.png', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 20
     }).addTo(map);
 
@@ -35,7 +56,6 @@ function initializeGameAndMap() {
 
     const heritageZoneCoords = [[3.148934,101.694228],[3.148012,101.694051],[3.147936,101.694399],[3.147164,101.694292],[3.147067,101.695104],[3.146902,101.695994],[3.146215,101.695884],[3.146004,101.69586],[3.145961,101.695897],[3.145896,101.69616],[3.145642,101.696179],[3.145672,101.696616],[3.145883,101.696592],[3.145982,101.696922],[3.146416,101.69667],[3.146694,101.696546],[3.146828,101.696584],[3.146903,101.69689],[3.147075,101.697169],[3.147541,101.697517],[3.147889,101.697807],[3.147969,101.697872],[3.148366,101.697491],[3.149041,101.696868],[3.14933,101.696632],[3.149549,101.696718],[3.150106,101.697303],[3.15038,101.697576],[3.150439,101.697668],[3.150733,101.697576],[3.151065,101.697694],[3.151467,101.697791],[3.15181,101.698011],[3.152051,101.698306],[3.152158,101.698413],[3.152485,101.698435],[3.152586,101.698413],[3.151802,101.697252],[3.151796,101.697171],[3.152102,101.696968],[3.151684,101.696683],[3.151914,101.69627],[3.151298,101.695889],[3.151581,101.695549],[3.150951,101.695173],[3.150238,101.694712],[3.149922,101.69451],[3.148934,101.694228]];
     
-    // Restored original heritage zone polygon
     L.polygon(heritageZoneCoords, { 
         color: '#666', 
         fillColor: '#333', 
@@ -46,15 +66,14 @@ function initializeGameAndMap() {
     }).addTo(map);
 
     fetch('data.json').then(res => res.json()).then(sites => {
-        allSiteData = sites;
+        allSiteData = sites; // This makes it available for proximity check
         sites.forEach(site => {
-            // Added .bindTooltip() for hover effect
             const marker = L.marker(site.coordinates)
                 .addTo(map)
                 .bindTooltip(site.name, {
-                    permanent: false, // Only show on hover
-                    direction: 'top',   // Position above the pin
-                    sticky: true        // Follows the mouse
+                    permanent: false, 
+                    direction: 'top', 
+                    sticky: true 
                 });
                 
             if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
@@ -74,7 +93,8 @@ function initializeGameAndMap() {
         iconAnchor: [10, 10]
     });
     
-    const userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
+    // Make userMarker global
+    userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
 
     const userCircle = L.circle([0, 0], {
         radius: 10,
@@ -87,10 +107,14 @@ function initializeGameAndMap() {
     map.on('locationfound', (e) => {
         userMarker.setLatLng(e.latlng);
         userCircle.setLatLng(e.latlng).setRadius(e.accuracy / 2);
+        
+        // --- ADDED: Proximity Feature Logic ---
+        if (allSiteData.length > 0) {
+            updateProximityPulse(e.latlng);
+        }
     });
     map.locate({ watch: true, enableHighAccuracy: true });
     
-    // ADDED: Show Welcome Modal logic (at the end of map init)
     if (!sessionStorage.getItem('jejak_welcome_shown')) {
         document.getElementById('welcomeModal').classList.remove('hidden');
         sessionStorage.setItem('jejak_welcome_shown', 'true');
@@ -98,6 +122,59 @@ function initializeGameAndMap() {
 }
 
 // --- GAME LOGIC FUNCTIONS ---
+
+// ADDED: Proximity Pulse Function
+function updateProximityPulse(userLatLng) {
+    if (!userMarker || !userMarker._icon) return;
+
+    let closestDist = Infinity;
+    const undiscoveredSites = allSiteData.filter(site => 
+        !visitedSites.includes(site.id) && !discoveredSites.includes(site.id)
+    );
+
+    undiscoveredSites.forEach(site => {
+        const siteLatLng = L.latLng(site.coordinates[0], site.coordinates[1]);
+        const dist = userLatLng.distanceTo(siteLatLng);
+        if (dist < closestDist) {
+            closestDist = dist;
+        }
+    });
+
+    const pinElement = userMarker._icon;
+    pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
+
+    if (closestDist < 75) { // Under 75 meters
+        pinElement.classList.add('pulse-fast');
+    } else if (closestDist < 250) { // Under 250 meters
+        pinElement.classList.add('pulse-medium');
+    } else { // Far away
+        pinElement.classList.add('pulse-slow');
+    }
+}
+
+// ADDED: Get Day of Year Function
+function getDayOfYear() {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay);
+}
+
+// ADDED: Update Daily Challenge Modal Function
+function updateChallengeModal() {
+    const dayOfYear = getDayOfYear();
+    const riddleIndex = dayOfYear % allRiddles.length;
+    const todayRiddle = allRiddles[riddleIndex];
+    
+    challengeRiddle.textContent = `"${todayRiddle.q}"`;
+    
+    if (solvedRiddle.day === dayOfYear && solvedRiddle.id === todayRiddle.a) {
+        challengeResult.textContent = "You've already solved today's challenge. Well done!";
+    } else {
+        challengeResult.textContent = "Find the heritage site that matches this riddle and click 'Solve Challenge' in its pop-up!";
+    }
+}
 
 function handleMarkerClick(site, marker) {
     if (!siteModal) {
@@ -146,6 +223,13 @@ function handleMarkerClick(site, marker) {
                     marker._icon.classList.add('marker-visited');
                     updateGameProgress();
                     updatePassport();
+                    
+                    // --- ADDED: Play Sound & Check for Completion ---
+                    chaChingSound.play();
+                    
+                    if (visitedSites.length === TOTAL_SITES) {
+                        congratsModal.classList.remove('hidden');
+                    }
                 }
             } else {
                 siteModalQuizResult.textContent = "Not quite, try again!";
@@ -171,6 +255,18 @@ function handleMarkerClick(site, marker) {
             siteModalCheckInBtn.classList.remove('bg-gray-400', 'hover:bg-gray-400');
             siteModalCheckInBtn.classList.add('bg-purple-600', 'hover:bg-purple-700');
         }
+    }
+
+    // --- ADDED: Daily Challenge Button Logic ---
+    const dayOfYear = getDayOfYear();
+    const riddleIndex = dayOfYear % allRiddles.length;
+    const todayRiddle = allRiddles[riddleIndex];
+    
+    // Check if riddle is unsolved AND this is the correct site
+    if (solvedRiddle.day !== dayOfYear && currentModalSite.id === todayRiddle.a) {
+        siteModalSolveChallengeBtn.style.display = 'block';
+    } else {
+        siteModalSolveChallengeBtn.style.display = 'none';
     }
 
     siteModal.classList.remove('hidden');
@@ -249,7 +345,7 @@ async function handleSendMessage() {
 
 function addChatMessage(role, text) {
     const messageEl = document.createElement('div');
-    const name = (role === 'user')? 'You' : 'AI Guide';
+    const name = (role === 'user') ? 'You' : 'AI Guide';
     const align = (role === 'user') ? 'self-end' : 'self-start';
     const bg = (role === 'user') ? 'bg-white' : 'bg-blue-100';
     const textCol = (role === 'user') ? 'text-gray-900' : 'text-blue-900';
@@ -345,14 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             initializeGameAndMap();
             setupGameUIListeners(); 
-            
-            // ADDED: Logic to show/hide welcome modal
-            if (!sessionStorage.getItem('jejak_welcome_shown')) {
-                document.getElementById('welcomeModal').classList.remove('hidden');
-                sessionStorage.setItem('jejak_welcome_shown', 'true');
-            } else {
-                document.getElementById('welcomeModal').classList.add('hidden');
-            }
             
             if (chatLimitText) { 
                 if (userMessageCount >= MAX_MESSAGES_PER_SESSION) {
@@ -494,12 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     initializeGameAndMap();
                     setupGameUIListeners();
                     
-                    // ADDED: Show welcome modal on first login
-                    if (!sessionStorage.getItem('jejak_welcome_shown')) {
-                        document.getElementById('welcomeModal').classList.remove('hidden');
-                        sessionStorage.setItem('jejak_welcome_shown', 'true');
-                    }
-                    
                 }, 500);
 
             } else {
@@ -533,7 +615,8 @@ document.addEventListener('DOMContentLoaded', () => {
         closeSiteModal = document.getElementById('closeSiteModal');
         siteModalAskAI = document.getElementById('siteModalAskAI');
         siteModalDirections = document.getElementById('siteModalDirections');
-        siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn'); // New
+        siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn');
+        siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
         
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
@@ -547,9 +630,19 @@ document.addEventListener('DOMContentLoaded', () => {
         passportInfo = document.getElementById('passportInfo');
         passportGrid = document.getElementById('passportGrid');
         
-        // ADDED: Welcome Modal elements
         welcomeModal = document.getElementById('welcomeModal');
         closeWelcomeModal = document.getElementById('closeWelcomeModal');
+        
+        // ADDED: New Modal Elements
+        congratsModal = document.getElementById('congratsModal');
+        closeCongratsModal = document.getElementById('closeCongratsModal');
+        shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+        challengeModal = document.getElementById('challengeModal');
+        closeChallengeModal = document.getElementById('closeChallengeModal');
+        btnChallenge = document.getElementById('btnChallenge');
+        challengeRiddle = document.getElementById('challengeRiddle');
+        challengeResult = document.getElementById('challengeResult');
+        chaChingSound = document.getElementById('chaChingSound');
         
         // --- Attach Listeners ---
 
@@ -604,9 +697,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const lat = currentModalSite.coordinates[0];
             const lon = currentModalSite.coordinates[1];
             
-            // === CRITICAL FIX ===
+            // --- CRITICAL FIX ---
             // Replaced broken URL with the correct Google Maps URL
-            const url = `https://maps.google.com/maps?q=${lat},${lon}&travelmode=walking`;
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
             
             window.open(url, '_blank');
         });
@@ -614,12 +707,48 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
         siteModalCheckInBtn.addEventListener('click', handleCheckIn);
         
-        // --- ADDED: NEW LISTENER FOR "WELCOME MODAL" BUTTON ---
+        // --- ADDED: NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
             closeWelcomeModal.addEventListener('click', () => {
                 welcomeModal.classList.add('hidden');
             });
         }
+        
+        closeCongratsModal.addEventListener('click', () => {
+            congratsModal.classList.add('hidden');
+        });
+        
+        shareWhatsAppBtn.addEventListener('click', () => {
+            const whatsappMsg = encodeURIComponent("I've collected all 13 heritage stamps on the Jejak Warisan KL app!");
+            window.open(`https://wa.me/?text=${whatsappMsg}`, '_blank');
+        });
+        
+        btnChallenge.addEventListener('click', () => {
+            updateChallengeModal();
+            challengeModal.classList.remove('hidden');
+        });
+        
+        closeChallengeModal.addEventListener('click', () => {
+            challengeModal.classList.add('hidden');
+        });
+        
+        siteModalSolveChallengeBtn.addEventListener('click', () => {
+            const dayOfYear = getDayOfYear();
+            const riddleIndex = dayOfYear % allRiddles.length;
+            const todayRiddle = allRiddles[riddleIndex];
+            
+            // Mark as solved
+            solvedRiddle = { day: dayOfYear, id: todayRiddle.a };
+            localStorage.setItem('jejak_solved_riddle', JSON.stringify(solvedRiddle));
+            
+            // Hide button in site modal
+            siteModalSolveChallengeBtn.style.display = 'none';
+            siteModal.classList.add('hidden');
+            
+            // Show result in challenge modal
+            updateChallengeModal();
+            challengeModal.classList.remove('hidden');
+        });
     }
 
     // --- Run the app ---
