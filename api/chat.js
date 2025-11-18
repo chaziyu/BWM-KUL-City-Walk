@@ -1,42 +1,67 @@
+// File: /api/chat.js
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { BWM_KNOWLEDGE } = require('../knowledge.js'); // Use require
+const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js'); // 1. Import general info
+const fs = require('fs');
+const path = require('path');
 
-module.exports = async (request, response) => { // Use module.exports
+/**
+ * Reads the master data.json file and builds a context string
+ * containing only the site-specific AI knowledge.
+ */
+function buildSiteContext() {
+    try {
+        // Resolve the path to data.json in the root directory
+        const jsonPath = path.resolve(process.cwd(), 'data.json');
+        const jsonData = fs.readFileSync(jsonPath, 'utf8');
+        const sites = JSON.parse(jsonData);
+
+        let siteContext = "\n--- HERITAGE SITES ---";
+        
+        // Loop through all sites and add their ai_context
+        for (const site of sites) {
+            // Use the "ai_context" field if it exists, otherwise fallback to "info"
+            const context = site.ai_context || site.info;
+            if (context) {
+                siteContext += `\n\n### ${site.name} (ID: ${site.id})\n${context}`;
+            }
+        }
+        return siteContext;
+
+    } catch (error) {
+        console.error('Error reading data.json for AI context:', error);
+        // Return a minimal context string on error
+        return "\n--- HERITAGE SITES ---\nError: Could not load site data.\n";
+    }
+}
+
+module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+        // Use the original GOOGLE_API_KEY from your Vercel env
+        const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
         if (!GOOGLE_API_KEY) {
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
 
         const { userQuery, history } = request.body;
 
-        const finalContext = BWM_KNOWLEDGE;
+        // 3. Dynamically combine general knowledge + site knowledge
+        const siteContext = buildSiteContext();
+        // We prepend GENERAL_KNOWLEDGE to add the persona, rules, and history
+        const finalContext = GENERAL_KNOWLEDGE + siteContext;
 
+        // The system prompt now just injects the combined context
         const systemPrompt = `
-You are 'Jejak', a friendly, warm, and enthusiastic local guide for the Jejak Warisan KL (Kuala Lumpur Heritage Walk). You love sharing stories and hidden details. Your goal is to make visitors feel excited and curious.
-
-**Your Core Rules:**
-1.  **Be Enthusiastic & Conversational:** Talk to the user like a friend. Use emojis (like 🌸, 🔔, 🤩) to add warmth and personality.
-2.  **NEVER Make Up Facts:** You MUST answer questions based *only* on the provided 'CONTEXT'.
-3.  **Don't Just Repeat - Interpret!:** Do not just re-state the info. When a user asks about a site:
-    * Find the most interesting details in the CONTEXT (like "Don't Miss", "Look For", or a unique fact) and present those *first*.
-    * Weave the plain facts (like dates and architects) into the story.
-4.  **Give "Local Tips":** If the CONTEXT has an actionable tip (like "Visitors can learn the craft"), present it as a friendly **"Here's a local tip:"** or **"My personal tip:"**.
-5.  **Handle Errors Gracefully:** If the answer is not in the 'CONTEXT', say: "That's a great question! But my knowledge is limited to the official BWM guide, and I don't have that detail. I *can* tell you about [suggest a related site from the context] though!"
-6.  **Handle "Memory" Messages:** For statements like "I have collected...", reply with a short, encouraging message like "That's fantastic! Well done! 🤩"
-
---- CONTEXT ---
 ${finalContext}
 --- END CONTEXT ---`;
 
         const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
         
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-2.5-flash-lite", // Using your original model name
             systemInstruction: systemPrompt,
         });
 
