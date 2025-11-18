@@ -141,12 +141,32 @@ body, html {
 }
 
 /* --- 9. NEW UI ADDITIONS --- */
+/* MODIFIED: This now styles the new logo box */
 #logoOverlay {
     position: fixed;
-    top: 15px;
+    top: 15px; 
     right: 15px;
-    width: 100px; /* Adjust as needed */
-    z-index: 1000; /* Above map, below modals */
-    pointer-events: none; /* So it doesn't block map clicks */
-    opacity: 0.8;
+    z-index: 1000;
+    pointer-events: none;
+    
+    /* New Styles for the box */
+    background-color: white;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    width: 120px; 
+}
+#logoOverlay img {
+    width: 80px; /* Control logo size */
+    height: 80px;
+    display: block;
+    margin: 0 auto 8px auto; /* Center it and add space below */
+}
+#logoOverlay p {
+    font-size: 10px;
+    font-weight: 600; /* Semi-bold */
+    color: #333;
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
 }
