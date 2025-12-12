@@ -7,14 +7,15 @@ const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 let map = null;
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
 let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
-const TOTAL_SITES = 13; 
-let allSiteData = []; 
+const TOTAL_SITES = 13;
+let allSiteData = [];
 let chatHistory = [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
 let currentModalSite = null; // To track the currently open pin
 let currentModalMarker = null; // To track the currently open marker
 let userMarker = null; // Make userMarker global for proximity pulse
 let solvedRiddle = JSON.parse(localStorage.getItem('jejak_solved_riddle')) || {};
+let currentPulseState = 'pulse-slow'; // Track pulse state to avoid DOM thrashing
 
 // --- ADDED: DAILY RIDDLE DATABASE ---
 const allRiddles = [
@@ -46,7 +47,7 @@ let chaChingSound;
 function initializeGameAndMap() {
     if (map) return;
     map = L.map('map').setView([3.1483, 101.6938], 16);
-    
+
     // MODIFIED: Reverted to the original map style
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '© OpenStreetMap contributors © CARTO',
@@ -55,16 +56,16 @@ function initializeGameAndMap() {
 
     setTimeout(() => { map.invalidateSize(); }, 100);
 
-    const heritageZoneCoords = [[3.148934,101.694228],[3.148012,101.694051],[3.147936,101.694399],[3.147164,101.694292],[3.147067,101.695104],[3.146902,101.695994],[3.146215,101.695884],[3.146004,101.69586],[3.145961,101.695897],[3.145896,101.69616],[3.145642,101.696179],[3.145672,101.696616],[3.145883,101.696592],[3.145982,101.696922],[3.146416,101.69667],[3.146694,101.696546],[3.146828,101.696584],[3.146903,101.69689],[3.147075,101.697169],[3.147541,101.697517],[3.147889,101.697807],[3.147969,101.697872],[3.148366,101.697491],[3.149041,101.696868],[3.14933,101.696632],[3.149549,101.696718],[3.150106,101.697303],[3.15038,101.697576],[3.150439,101.697668],[3.150733,101.697576],[3.151065,101.697694],[3.151467,101.697791],[3.15181,101.698011],[3.152051,101.698306],[3.152158,101.698413],[3.152485,101.698435],[3.152586,101.698413],[3.151802,101.697252],[3.151796,101.697171],[3.152102,101.696968],[3.151684,101.696683],[3.151914,101.69627],[3.151298,101.695889],[3.151581,101.695549],[3.150951,101.695173],[3.150238,101.694712],[3.149922,101.69451],[3.148934,101.694228]];
-    
+    const heritageZoneCoords = [[3.148934, 101.694228], [3.148012, 101.694051], [3.147936, 101.694399], [3.147164, 101.694292], [3.147067, 101.695104], [3.146902, 101.695994], [3.146215, 101.695884], [3.146004, 101.69586], [3.145961, 101.695897], [3.145896, 101.69616], [3.145642, 101.696179], [3.145672, 101.696616], [3.145883, 101.696592], [3.145982, 101.696922], [3.146416, 101.69667], [3.146694, 101.696546], [3.146828, 101.696584], [3.146903, 101.69689], [3.147075, 101.697169], [3.147541, 101.697517], [3.147889, 101.697807], [3.147969, 101.697872], [3.148366, 101.697491], [3.149041, 101.696868], [3.14933, 101.696632], [3.149549, 101.696718], [3.150106, 101.697303], [3.15038, 101.697576], [3.150439, 101.697668], [3.150733, 101.697576], [3.151065, 101.697694], [3.151467, 101.697791], [3.15181, 101.698011], [3.152051, 101.698306], [3.152158, 101.698413], [3.152485, 101.698435], [3.152586, 101.698413], [3.151802, 101.697252], [3.151796, 101.697171], [3.152102, 101.696968], [3.151684, 101.696683], [3.151914, 101.69627], [3.151298, 101.695889], [3.151581, 101.695549], [3.150951, 101.695173], [3.150238, 101.694712], [3.149922, 101.69451], [3.148934, 101.694228]];
+
     // Original heritage zone polygon
-    L.polygon(heritageZoneCoords, { 
-        color: '#666', 
-        fillColor: '#333', 
-        fillOpacity: 0.1, 
-        weight: 2, 
-        dashArray: '5, 5', 
-        interactive: false 
+    L.polygon(heritageZoneCoords, {
+        color: '#666',
+        fillColor: '#333',
+        fillOpacity: 0.1,
+        weight: 2,
+        dashArray: '5, 5',
+        interactive: false
     }).addTo(map);
 
     fetch('data.json').then(res => res.json()).then(sites => {
@@ -73,28 +74,28 @@ function initializeGameAndMap() {
             const marker = L.marker(site.coordinates)
                 .addTo(map)
                 .bindTooltip(site.name, {
-                    permanent: false, 
-                    direction: 'top', 
-                    sticky: true 
+                    permanent: false,
+                    direction: 'top',
+                    sticky: true
                 });
-                
+
             if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
                 marker._icon.classList.add('marker-visited');
             }
             marker.on('click', () => handleMarkerClick(site, marker));
         });
         updateGameProgress();
-        updatePassport(); 
+        updatePassport();
     }).catch(err => console.error("Error loading Map Data:", err));
 
-    
+
     // --- Custom User Location Pin ---
     const userIcon = L.divIcon({
         className: 'user-location-pin',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
-    
+
     // Make userMarker global
     userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
 
@@ -105,18 +106,18 @@ function initializeGameAndMap() {
         fillOpacity: 0.1,
         weight: 1
     }).addTo(map);
-    
+
     map.on('locationfound', (e) => {
         userMarker.setLatLng(e.latlng);
         userCircle.setLatLng(e.latlng).setRadius(e.accuracy / 2);
-        
+
         // --- ADDED: Proximity Feature Logic ---
         if (allSiteData.length > 0) {
             updateProximityPulse(e.latlng);
         }
     });
     map.locate({ watch: true, enableHighAccuracy: true });
-    
+
     if (!sessionStorage.getItem('jejak_welcome_shown')) {
         document.getElementById('welcomeModal').classList.remove('hidden');
         sessionStorage.setItem('jejak_welcome_shown', 'true');
@@ -130,7 +131,7 @@ function updateProximityPulse(userLatLng) {
     if (!userMarker || !userMarker._icon) return;
 
     let closestDist = Infinity;
-    const undiscoveredSites = allSiteData.filter(site => 
+    const undiscoveredSites = allSiteData.filter(site =>
         !visitedSites.includes(site.id) && !discoveredSites.includes(site.id)
     );
 
@@ -143,14 +144,20 @@ function updateProximityPulse(userLatLng) {
     });
 
     const pinElement = userMarker._icon;
-    pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
 
-    if (closestDist < 75) { // Under 75 meters
-        pinElement.classList.add('pulse-fast');
-    } else if (closestDist < 250) { // Under 250 meters
-        pinElement.classList.add('pulse-medium');
-    } else { // Far away
-        pinElement.classList.add('pulse-slow');
+
+    // Optimized: Only touch DOM if state changes
+    let newState = 'pulse-slow';
+    if (closestDist < 75) {
+        newState = 'pulse-fast';
+    } else if (closestDist < 250) {
+        newState = 'pulse-medium';
+    }
+
+    if (currentPulseState !== newState) {
+        pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
+        pinElement.classList.add(newState);
+        currentPulseState = newState;
     }
 }
 
@@ -168,9 +175,9 @@ function updateChallengeModal() {
     const dayOfYear = getDayOfYear();
     const riddleIndex = dayOfYear % allRiddles.length;
     const todayRiddle = allRiddles[riddleIndex];
-    
+
     challengeRiddle.textContent = `"${todayRiddle.q}"`;
-    
+
     if (solvedRiddle.day === dayOfYear && solvedRiddle.id === todayRiddle.a) {
         challengeResult.textContent = "You've already solved today's challenge. Well done!";
     } else {
@@ -181,7 +188,7 @@ function updateChallengeModal() {
 function handleMarkerClick(site, marker) {
     if (!siteModal) {
         console.error("Site modal is not initialized!");
-        return; 
+        return;
     }
 
     currentModalSite = site;
@@ -191,9 +198,9 @@ function handleMarkerClick(site, marker) {
     siteModalTitle.textContent = site.name;
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
-    
+
     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
-    
+
     // Show "Ask AI" and "Directions" for ALL sites
     siteModalDirections.style.display = 'block';
     siteModalAskAI.style.display = 'block';
@@ -202,33 +209,33 @@ function handleMarkerClick(site, marker) {
         // This is a main site (1-13)
         siteModalQuizArea.style.display = 'block';
         siteModalCheckInBtn.style.display = 'none'; // Hide Check-in button
-        
+
         siteModalQuizQ.textContent = site.quiz.q;
         siteModalQuizInput.value = "";
         siteModalQuizResult.classList.add('hidden');
-        
+
         const newQuizBtn = siteModalQuizBtn.cloneNode(true);
         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
-        siteModalQuizBtn = newQuizBtn; 
-        
+        siteModalQuizBtn = newQuizBtn;
+
         siteModalQuizBtn.addEventListener('click', () => {
             const userAnswer = siteModalQuizInput.value.trim().toLowerCase();
             const correctAnswer = site.quiz.a.trim().toLowerCase();
-            
+
             if (userAnswer === correctAnswer) {
                 siteModalQuizResult.textContent = "Correct! Well done!";
                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
-                
+
                 if (!visitedSites.includes(site.id)) {
                     visitedSites.push(site.id);
                     localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
                     marker._icon.classList.add('marker-visited');
                     updateGameProgress();
                     updatePassport();
-                    
+
                     // --- ADDED: Play Sound & Check for Completion ---
                     chaChingSound.play();
-                    
+
                     if (visitedSites.length === TOTAL_SITES) {
                         congratsModal.classList.remove('hidden');
                     }
@@ -244,7 +251,7 @@ function handleMarkerClick(site, marker) {
         // This is a "discovery" pin (A, B, C...)
         siteModalQuizArea.style.display = 'none'; // Hide Quiz
         siteModalCheckInBtn.style.display = 'block'; // Show Check-in button
-        
+
         // Set the state of the Check-in button
         if (discoveredSites.includes(site.id)) {
             siteModalCheckInBtn.disabled = true;
@@ -263,7 +270,7 @@ function handleMarkerClick(site, marker) {
     const dayOfYear = getDayOfYear();
     const riddleIndex = dayOfYear % allRiddles.length;
     const todayRiddle = allRiddles[riddleIndex];
-    
+
     // Check if riddle is unsolved AND this is the correct site
     if (solvedRiddle.day !== dayOfYear && currentModalSite.id === todayRiddle.a) {
         siteModalSolveChallengeBtn.style.display = 'block';
@@ -279,15 +286,15 @@ function handleMarkerClick(site, marker) {
  */
 function handleCheckIn() {
     if (!currentModalSite || !currentModalMarker) return;
-    
+
     // Add to discovered list if not already there
     if (!discoveredSites.includes(currentModalSite.id)) {
         discoveredSites.push(currentModalSite.id);
         localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
-        
+
         // Update the marker icon to "visited" (red)
         currentModalMarker._icon.classList.add('marker-visited');
-        
+
         // Update the button state
         siteModalCheckInBtn.disabled = true;
         siteModalCheckInBtn.textContent = 'Visited';
@@ -306,14 +313,14 @@ async function handleSendMessage() {
 
     addChatMessage('user', userQuery);
     const thinkingEl = addChatMessage('ai', '...');
-    
+
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 userQuery: userQuery,
-                history: chatHistory.slice(-HISTORY_WINDOW_SIZE) 
+                history: chatHistory.slice(-HISTORY_WINDOW_SIZE)
             })
         });
 
@@ -322,15 +329,15 @@ async function handleSendMessage() {
         }
 
         const data = await response.json();
-        
+
         chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
         chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-        
+
         userMessageCount++;
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
-        
-        thinkingEl.querySelector('p').innerHTML = data.reply; 
+
+        thinkingEl.querySelector('p').innerHTML = data.reply;
 
     } catch (error) {
         console.error("Chat error:", error);
@@ -351,10 +358,10 @@ function addChatMessage(role, text) {
     const align = (role === 'user') ? 'self-end' : 'self-start';
     const bg = (role === 'user') ? 'bg-white' : 'bg-blue-100';
     const textCol = (role === 'user') ? 'text-gray-900' : 'text-blue-900';
-    
+
     messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align}`;
     messageEl.innerHTML = `<p class="font-bold text-sm">${name}</p><p>${text}</p>`;
-    
+
     chatHistoryEl.appendChild(messageEl);
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
     return messageEl;
@@ -365,7 +372,7 @@ function addChatMessage(role, text) {
 function updateGameProgress() {
     const visitedCount = visitedSites.length;
     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
-    
+
     if (document.getElementById('progressBar') && document.getElementById('progressText')) {
         const percent = (visitedCount / mainSitesTotal) * 100;
         document.getElementById('progressBar').style.width = `${percent}%`;
@@ -400,25 +407,26 @@ function updatePassport() {
 
     const mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
     const visitedCount = visitedSites.length;
-    
+
     passportInfo.textContent = `You have collected ${visitedCount} of the ${mainSites.length} stamps.`;
     passportGrid.innerHTML = "";
 
     mainSites.forEach(site => {
         const stamp = document.createElement('div');
         stamp.className = 'passport-stamp';
-        
+
         const isVisited = visitedSites.includes(site.id);
         if (!isVisited) {
             stamp.classList.add('grayscale');
         }
 
         const img = document.createElement('img');
+        img.loading = 'lazy'; // Efficiency: Lazy load images
         img.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=?';
         img.alt = site.name;
 
         const name = document.createElement('p');
-        name.textContent = `${site.id}. ${site.name}`; 
+        name.textContent = `${site.id}. ${site.name}`;
 
         stamp.appendChild(img);
         stamp.appendChild(name);
@@ -429,22 +437,22 @@ function updatePassport() {
 
 // --- APP STARTUP & LANDING PAGE LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     function initApp() {
         const landingPage = document.getElementById('landing-page');
         const gatekeeper = document.getElementById('gatekeeper');
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-        
+
         if (sessionData && sessionData.valid && (Date.now() - sessionData.start < SESSION_DURATION)) {
             // Session is VALID: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
             document.getElementById('progress-container').classList.remove('hidden');
-            
+
             initializeGameAndMap();
-            setupGameUIListeners(); 
-            
-            if (chatLimitText) { 
+            setupGameUIListeners();
+
+            if (chatLimitText) {
                 if (userMessageCount >= MAX_MESSAGES_PER_SESSION) {
                     disableChatUI(true);
                 } else {
@@ -466,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('gatekeeper').classList.remove('hidden');
         });
-        
+
         document.getElementById('btnStaff').addEventListener('click', () => {
             showAdminCode();
         });
@@ -475,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('gatekeeper').classList.add('hidden');
             document.getElementById('landing-page').classList.remove('hidden');
         });
-        
+
         const closeStaffBtn = document.getElementById('closeStaffScreen');
         if (closeStaffBtn) {
             closeStaffBtn.addEventListener('click', () => {
@@ -483,9 +491,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('landing-page').classList.remove('hidden');
             });
         }
-        
+
         setupGatekeeperLogic();
-        setupAdminLoginLogic(); 
+        setupAdminLoginLogic();
     }
 
 
@@ -543,15 +551,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const passcodeInput = document.getElementById('passcodeInput');
             const enteredCode = passcodeInput.value;
             if (!enteredCode) return;
-            
+
             unlockBtn.disabled = true;
             unlockBtn.textContent = 'Verifying...';
-            
+
             await verifyCode(enteredCode);
-            
+
             if (!localStorage.getItem('jejak_session')) {
-                 unlockBtn.disabled = false;
-                 unlockBtn.textContent = 'Verify & Unlock';
+                unlockBtn.disabled = false;
+                unlockBtn.textContent = 'Verify & Unlock';
             }
         });
     }
@@ -561,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.add('hidden');
 
         try {
-            const response = await fetch('/api/check-passkey', { 
+            const response = await fetch('/api/check-passkey', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ passkey: enteredCode })
@@ -580,10 +588,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('gatekeeper').remove();
                     document.getElementById('landing-page').remove();
                     document.getElementById('progress-container').classList.remove('hidden');
-                    
+
                     initializeGameAndMap();
                     setupGameUIListeners();
-                    
+
                 }, 500);
 
             } else {
@@ -598,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMsg.classList.remove('hidden');
         }
     }
-    
+
     /**
      * Finds all DOM elements and attaches all in-game listeners.
      */
@@ -619,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         siteModalDirections = document.getElementById('siteModalDirections');
         siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn');
         siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
-        
+
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
         chatHistoryEl = document.getElementById('chatHistory');
@@ -631,10 +639,10 @@ document.addEventListener('DOMContentLoaded', () => {
         closePassportModal = document.getElementById('closePassportModal');
         passportInfo = document.getElementById('passportInfo');
         passportGrid = document.getElementById('passportGrid');
-        
+
         welcomeModal = document.getElementById('welcomeModal');
         closeWelcomeModal = document.getElementById('closeWelcomeModal');
-        
+
         // ADDED: New Modal Elements
         congratsModal = document.getElementById('congratsModal');
         closeCongratsModal = document.getElementById('closeCongratsModal');
@@ -645,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
         challengeRiddle = document.getElementById('challengeRiddle');
         challengeResult = document.getElementById('challengeResult');
         chaChingSound = document.getElementById('chaChingSound');
-        
+
         // --- Attach Listeners ---
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
@@ -660,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeChatModal.addEventListener('click', () => {
             chatModal.classList.add('hidden');
         });
-        
+
         document.getElementById('btnPassport').addEventListener('click', () => {
             updatePassport();
             passportModal.classList.remove('hidden');
@@ -683,71 +691,71 @@ document.addEventListener('DOMContentLoaded', () => {
         siteModalAskAI.addEventListener('click', () => {
             const siteName = siteModalTitle.textContent;
             if (!siteName || siteName === "Site Title") return;
-            
+
             const question = `Tell me more about ${siteName}.`;
-            
+
             siteModal.classList.add('hidden');
             chatModal.classList.remove('hidden');
-            
+
             chatInput.value = question;
             handleSendMessage();
         });
-        
+
         siteModalDirections.addEventListener('click', () => {
             if (!currentModalSite) return;
-            
+
             const lat = currentModalSite.coordinates[0];
             const lon = currentModalSite.coordinates[1];
-            
+
             // === CRITICAL FIX ===
             // This is the correct, universal URL for Google Maps directions
             const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
-            
+
             window.open(url, '_blank');
         });
-        
+
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
         siteModalCheckInBtn.addEventListener('click', handleCheckIn);
-        
+
         // --- ADDED: NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
             closeWelcomeModal.addEventListener('click', () => {
                 welcomeModal.classList.add('hidden');
             });
         }
-        
+
         closeCongratsModal.addEventListener('click', () => {
             congratsModal.classList.add('hidden');
         });
-        
+
         shareWhatsAppBtn.addEventListener('click', () => {
             const message = "🎉 Mission Accomplished! I've collected all 13 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
             const whatsappMsg = encodeURIComponent(message);
             window.open(`https://wa.me/?text=${whatsappMsg}`, '_blank');
         });
-        
+
         btnChallenge.addEventListener('click', () => {
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
         });
-        
+
         closeChallengeModal.addEventListener('click', () => {
             challengeModal.classList.add('hidden');
         });
-        
+
         siteModalSolveChallengeBtn.addEventListener('click', () => {
             const dayOfYear = getDayOfYear();
             const riddleIndex = dayOfYear % allRiddles.length;
             const todayRiddle = allRiddles[riddleIndex];
-            
+
             // Mark as solved
             solvedRiddle = { day: dayOfYear, id: todayRiddle.a };
             localStorage.setItem('jejak_solved_riddle', JSON.stringify(solvedRiddle));
-            
+
             // Hide button in site modal
             siteModalSolveChallengeBtn.style.display = 'none';
             siteModal.classList.add('hidden');
-            
+
             // Show result in challenge modal
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
