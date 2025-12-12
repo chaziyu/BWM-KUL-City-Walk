@@ -109,19 +109,22 @@ h3,
 
 .classic-modal-content,
 .modern-modal-content {
-    background: rgba(255, 255, 255, 0.85);
-    /* Frosted Glass */
+    background: rgba(255, 255, 255, 0.95);
+    /* High Contrast / Almost Opaque */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    /* Deeper shadow */
     width: 90%;
     max-width: 500px;
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     /* Springy pop */
     position: relative;
     overflow: hidden;
+    color: #1a202c;
+    /* Ensure dark text */
 }
 
 .modern-modal-content {
@@ -146,7 +149,8 @@ h3,
 /* --- 5. BOMBASTIC LANDING PAGE --- */
 #landing-page {
     /* High-contrast, moody background */
-    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=2560&auto=format&fit=crop');
+    /* OPTIMIZED: Smaller WebP Image (w=1080) & Darker Overlay for Contrast */
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=75&w=1080&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
     color: white;
@@ -164,9 +168,10 @@ h3,
 
 /* Glass-morphic Cards for Buttons on Landing */
 .glass-card-btn {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    /* More visible */
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
     color: white !important;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     transition: all 0.3s ease;
