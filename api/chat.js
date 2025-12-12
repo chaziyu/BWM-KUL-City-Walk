@@ -1,8 +1,7 @@
 // File: /api/chat.js
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js'); // 1. Import general info
-const fs = require('fs');
-const path = require('path');
+
 
 /**
  * Reads the master data.json file and builds a context string
@@ -11,9 +10,8 @@ const path = require('path');
 function buildSiteContext() {
     try {
         // Resolve the path to data.json in the root directory
-        const jsonPath = path.resolve(process.cwd(), 'data.json');
-        const jsonData = fs.readFileSync(jsonPath, 'utf8');
-        const sites = JSON.parse(jsonData);
+        // Use require to ensure Vercel bundles the file
+        const sites = require('../data.json');
 
         let siteContext = "\n--- HERITAGE SITES ---";
         
