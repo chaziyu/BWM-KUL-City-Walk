@@ -36,7 +36,7 @@ const allRiddles = [
 ];
 
 // --- DOM Elements ---
-let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn;
+let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalHintBtn, siteModalHintText;
 let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
 let passportModal, closePassportModal, passportInfo, passportGrid;
 let welcomeModal, closeWelcomeModal;
@@ -228,6 +228,19 @@ function handleMarkerClick(site, marker) {
         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
         siteModalQuizBtn = newQuizBtn;
 
+        // --- NEW: Quiz Hint Logic ---
+        siteModalHintText.textContent = site.quiz.hint || "No hint available.";
+        siteModalHintText.classList.add('hidden'); // Reset to hidden
+
+        // Remove old listener to prevent duplicates (cloning for button above handles that, but link needs care)
+        const newHintBtn = siteModalHintBtn.cloneNode(true);
+        siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
+        siteModalHintBtn = newHintBtn;
+
+        siteModalHintBtn.addEventListener('click', () => {
+            siteModalHintText.classList.toggle('hidden');
+        });
+
         siteModalQuizBtn.addEventListener('click', () => {
             // SMART GRADING: Normalization Function
             const normalize = (val) => {
@@ -259,6 +272,30 @@ function handleMarkerClick(site, marker) {
 
                     if (visitedSites.length === TOTAL_SITES) {
                         congratsModal.classList.remove('hidden');
+                        // BOMBASTIC: Trigger Confetti!
+                        if (typeof confetti === 'function') {
+                            const duration = 3 * 1000;
+                            const end = Date.now() + duration;
+
+                            (function frame() {
+                                confetti({
+                                    particleCount: 5,
+                                    angle: 60,
+                                    spread: 55,
+                                    origin: { x: 0 }
+                                });
+                                confetti({
+                                    particleCount: 5,
+                                    angle: 120,
+                                    spread: 55,
+                                    origin: { x: 1 }
+                                });
+
+                                if (Date.now() < end) {
+                                    requestAnimationFrame(frame);
+                                }
+                            }());
+                        }
                     }
                 }
             } else {
@@ -657,6 +694,8 @@ document.addEventListener('DOMContentLoaded', () => {
         siteModalDirections = document.getElementById('siteModalDirections');
         siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn');
         siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
+        siteModalHintBtn = document.getElementById('siteModalHintBtn');
+        siteModalHintText = document.getElementById('siteModalHintText');
 
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
@@ -789,6 +828,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show result in challenge modal
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
+            // BOMBASTIC: Trigger Small Confetti Burst!
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
         });
     }
 

@@ -93,48 +93,90 @@ h3,
     animation: slideUpFade 0.8s ease-out 0.3s forwards;
 }
 
-/* --- 4. "CLASSIC" MODAL STYLE (Site & Passport) --- */
-.classic-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.classic-modal-content {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: 500px;
-    width: 90%;
-    overflow: hidden;
-    animation: slideUpFade 0.3s ease-out forwards;
-    position: relative;
-}
-
-/* --- 5. "MODERN" MODAL STYLE (Chatbox) --- */
+/* --- 4. UNIFIED "HERITAGE GLASS" MODAL STYLE --- */
+.classic-modal-backdrop,
 .modern-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Lighter dark overlay */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
-    transition: opacity 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.5s ease;
+}
+
+.classic-modal-content,
+.modern-modal-content {
+    background: rgba(255, 255, 255, 0.85);
+    /* Frosted Glass */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    /* Springy pop */
+    position: relative;
+    overflow: hidden;
 }
 
 .modern-modal-content {
     height: 70vh;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: 500px;
-    width: 90%;
-    animation: slideUpFade 0.3s ease-out forwards;
     display: flex;
     flex-direction: column;
+}
+
+/* --- BOMBASTIC ANIMATIONS --- */
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* --- 5. BOMBASTIC LANDING PAGE --- */
+#landing-page {
+    /* High-contrast, moody background */
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=2560&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    color: white;
+}
+
+#landing-page h1 {
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    font-weight: 800;
+}
+
+#landing-page p {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Glass-morphic Cards for Buttons on Landing */
+.glass-card-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: all 0.3s ease;
+}
+
+.glass-card-btn:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* --- 6. GAMIFICATION STYLES --- */
