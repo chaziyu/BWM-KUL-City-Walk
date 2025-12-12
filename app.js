@@ -229,10 +229,21 @@ function handleMarkerClick(site, marker) {
         siteModalQuizBtn = newQuizBtn;
 
         siteModalQuizBtn.addEventListener('click', () => {
-            const userAnswer = siteModalQuizInput.value.trim().toLowerCase();
-            const correctAnswer = site.quiz.a.trim().toLowerCase();
+            // SMART GRADING: Normalization Function
+            const normalize = (val) => {
+                if (!val) return '';
+                // 1. Lowercase & Remove all non-alphanumeric chars (spaces, commas, dots, dashes)
+                let s = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            if (userAnswer === correctAnswer) {
+                // 2. Map Number Words to Digits (common cases)
+                const numMap = {
+                    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+                    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
+                };
+                return numMap[s] || s;
+            };
+
+            if (normalize(siteModalQuizInput.value) === normalize(site.quiz.a)) {
                 siteModalQuizResult.textContent = "Correct! Well done!";
                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
 
