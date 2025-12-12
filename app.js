@@ -312,7 +312,9 @@ async function handleSendMessage() {
     chatSendBtn.disabled = true;
 
     addChatMessage('user', userQuery);
-    const thinkingEl = addChatMessage('ai', '...');
+    addChatMessage('user', userQuery);
+    // Modified: Use skeleton loader instead of "..."
+    const thinkingEl = addChatMessage('ai', '<span class="skeleton text-xs px-8 rounded">Loading...</span>');
 
     try {
         const response = await fetch('/api/chat', {
@@ -337,11 +339,11 @@ async function handleSendMessage() {
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
 
-        thinkingEl.querySelector('p').innerHTML = data.reply;
+        thinkingEl.querySelector('p:last-child').innerHTML = data.reply; // Select the content paragraph
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('p').textContent = "Sorry, I couldn't connect. Please try again.";
+        thinkingEl.querySelector('p:last-child').textContent = "Sorry, I couldn't connect. Please try again.";
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
@@ -418,6 +420,9 @@ function updatePassport() {
         const isVisited = visitedSites.includes(site.id);
         if (!isVisited) {
             stamp.classList.add('grayscale');
+        } else {
+            // ADDED: Stamp animation for visited sites
+            stamp.querySelector('img')?.classList.add('stamp-animate'); // Optional: animate the image or the whole stamp
         }
 
         const img = document.createElement('img');
