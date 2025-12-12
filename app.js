@@ -1,7 +1,8 @@
 // --- CONFIGURATION ---
 const HISTORY_WINDOW_SIZE = 10;
 const MAX_MESSAGES_PER_SESSION = 10;
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+// const SESSION_DURATION = 24 * 60 * 60 * 1000; // REMOVED: No longer using 24h window
 
 // --- GAME STATE ---
 let map = null;
@@ -168,6 +169,15 @@ function getDayOfYear() {
     const diff = now - start;
     const oneDay = 1000 * 60 * 60 * 24;
     return Math.floor(diff / oneDay);
+}
+
+// NEW: Helper to get Today's Date String (YYYY-MM-DD) for Session Validation
+function getTodayDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // ADDED: Update Daily Challenge Modal Function
@@ -448,8 +458,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const gatekeeper = document.getElementById('gatekeeper');
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
 
-        if (sessionData && sessionData.valid && (Date.now() - sessionData.start < SESSION_DURATION)) {
-            // Session is VALID: Go straight to map
+
+        const todayStr = getTodayDateString();
+
+        // Modified: Check if session exists AND matches TODAY'S date
+        if (sessionData && sessionData.valid && sessionData.date === todayStr) {
+            // Session is VALID for TODAY: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
             document.getElementById('progress-container').classList.remove('hidden');
@@ -583,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 localStorage.setItem('jejak_session', JSON.stringify({
                     valid: true,
-                    start: Date.now()
+                    date: getTodayDateString() // Store today's date instead of timestamp
                 }));
 
                 document.getElementById('gatekeeper').style.opacity = 0;
