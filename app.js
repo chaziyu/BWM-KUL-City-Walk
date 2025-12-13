@@ -1,3 +1,6 @@
+//PROBLEM: Kedai Ubat Kwong Ban Heng is not there anymore!!!
+//The garden flower stall is also not there anymore. Only the teochew association
+
 // --- CONFIGURATION ---
 const HISTORY_WINDOW_SIZE = 10;
 const MAX_MESSAGES_PER_SESSION = 10;
@@ -15,6 +18,19 @@ let currentModalSite = null; // To track the currently open pin
 let currentModalMarker = null; // To track the currently open marker
 let userMarker = null; // Make userMarker global for proximity pulse
 let solvedRiddle = JSON.parse(localStorage.getItem('jejak_solved_riddle')) || {};
+// Get or Create a unique Device ID for this browser
+let markersLayer = null;  // New: Layer group for markers
+let polygonsLayer = null; // New: Layer group for polygons
+const ZOOM_THRESHOLD = 18; // New: Define the zoom level where the switch happens
+let allMarkers = {}; // NEW: Global object to store all Leaflet marker objects by site ID.
+let allPolygons = {}; // NEW: Global object to store all Leaflet polygon objects by site ID.
+const VISITED_POLYGON_COLOR = '#007bff'; // Blue color for visited polygons
+// --- END NEW FIXES ---
+let deviceId = localStorage.getItem('bwm_device_id');
+if (!deviceId) {
+    deviceId = 'device-' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('bwm_device_id', deviceId);
+}
 
 // --- ADDED: DAILY RIDDLE DATABASE ---
 const allRiddles = [
@@ -42,11 +58,96 @@ let congratsModal, closeCongratsModal, shareWhatsAppBtn;
 let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challengeResult;
 let chaChingSound;
 
+//BUG FIX
+// --- UTILITY FUNCTION FOR SAFELY MANAGING MARKER STATE ---
+function safelyUpdateMarkerVisitedState(marker, isVisited) {
+    // 1. Persist state on the Leaflet object (Custom Property)
+    marker.options.isVisited = isVisited;
+
+    // 2. Safely apply the CSS class to the icon (if currently rendered)
+    if (marker && marker._icon) {
+        if (isVisited) {
+            marker._icon.classList.add('marker-visited');
+        } else {
+            marker._icon.classList.remove('marker-visited');
+        }
+    }
+}
+
+// NEW HELPER: Safely updates the polygon's color
+function safelyUpdatePolygonVisitedState(siteId, isVisited) {
+    const polygon = allPolygons[siteId];
+    if (polygon) {
+        if (isVisited) {
+            polygon.setStyle({
+                color: VISITED_POLYGON_COLOR, // Blue Outline
+                fillColor: VISITED_POLYGON_COLOR, // Blue Fill
+                fillOpacity: 0.2 // Reduced opacity for visited
+            });
+        } else {
+            // Logic to revert to original colors if needed (for completeness)
+            const site = allSiteData.find(s => s.id === siteId);
+            if (site) {
+                const { markerColor, fillColor } = getSiteColors(site);
+                polygon.setStyle({
+                    color: markerColor,
+                    fillColor: fillColor,
+                    fillOpacity: 0.5 
+                });
+            }
+        }
+    }
+}
+
+//MAP LOGIC
+// 2. The Switcher Function (No "site" variable needed here!)
+// --- MAP VISIBILITY TOGGLE ---
+function updateVisibility() {
+    // Safety check: ensure map and layers are initialized before proceeding
+    if (!map || !markersLayer || !polygonsLayer) return;
+
+    const currentZoom = map.getZoom();
+
+    if (currentZoom >= ZOOM_THRESHOLD) {
+        // Zoomed in: Show Polygons, Hide Markers
+        if (map.hasLayer(markersLayer)) map.removeLayer(markersLayer);
+        if (!map.hasLayer(polygonsLayer)) map.addLayer(polygonsLayer);
+    } else {
+        // Zoomed out: Show Markers, Hide Polygons
+        if (map.hasLayer(polygonsLayer)) map.removeLayer(polygonsLayer);
+        if (!map.hasLayer(markersLayer)) map.addLayer(markersLayer);
+    }
+}
+
+// --- UTILITY FUNCTION FOR COLOR CODING BASED ON ID ---
+function getSiteColors(site) {
+    const isMainLocation = /^\d+$/.test(site.id); // Checks if ID is a number (1, 2, 3...)
+
+    if (isMainLocation) {
+        // Colors for Main Heritage Sites (Numerical ID: 1, 2, 3...)
+        const markerColor = "#A0522D"; // Sienna Brown
+        const fillColor = "#DEB887";   // Light Tan for polygon fill
+        const className = 'main-marker-pin';
+        return { markerColor, fillColor, className };
+    } else {
+        // Colors for Checkpoints/Bonus Sites (Alphabetical ID: A, B, M...)
+        const markerColor = "#4CAF50"; // Green for checkpoint/bonus sites
+        const fillColor = "#635b5bff";   // Light Green for polygon fill
+        const className = 'bonus-marker-pin';
+        return { markerColor, fillColor, className };
+    }
+}
+
 // --- CORE GAME & MAP INITIALIZATION ---
 function initializeGameAndMap() {
     if (map) return;
+    
+    // 1. Initialize the map object FIRST
     map = L.map('map').setView([3.1483, 101.6938], 16);
     
+    // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
+    map.on('zoomend', updateVisibility); // <--- FIX IS HERE
+
     // MODIFIED: Reverted to the original map style
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '© OpenStreetMap contributors © CARTO',
@@ -55,33 +156,143 @@ function initializeGameAndMap() {
 
     setTimeout(() => { map.invalidateSize(); }, 100);
 
-    const heritageZoneCoords = [[3.148934,101.694228],[3.148012,101.694051],[3.147936,101.694399],[3.147164,101.694292],[3.147067,101.695104],[3.146902,101.695994],[3.146215,101.695884],[3.146004,101.69586],[3.145961,101.695897],[3.145896,101.69616],[3.145642,101.696179],[3.145672,101.696616],[3.145883,101.696592],[3.145982,101.696922],[3.146416,101.69667],[3.146694,101.696546],[3.146828,101.696584],[3.146903,101.69689],[3.147075,101.697169],[3.147541,101.697517],[3.147889,101.697807],[3.147969,101.697872],[3.148366,101.697491],[3.149041,101.696868],[3.14933,101.696632],[3.149549,101.696718],[3.150106,101.697303],[3.15038,101.697576],[3.150439,101.697668],[3.150733,101.697576],[3.151065,101.697694],[3.151467,101.697791],[3.15181,101.698011],[3.152051,101.698306],[3.152158,101.698413],[3.152485,101.698435],[3.152586,101.698413],[3.151802,101.697252],[3.151796,101.697171],[3.152102,101.696968],[3.151684,101.696683],[3.151914,101.69627],[3.151298,101.695889],[3.151581,101.695549],[3.150951,101.695173],[3.150238,101.694712],[3.149922,101.69451],[3.148934,101.694228]];
+    const heritageZoneCoords = [
+      [3.147975450896226, 101.69407218460753],
+      [3.147875669801323, 101.69457723912365],
+      [3.147127721948337, 101.6944130737071],
+      [3.1470551688521766, 101.69489184188524],
+      [3.147040581431142, 101.6953510702482],
+      [3.146910977360818, 101.69596787508766],
+      [3.146040219660293, 101.69582514844836],
+      [3.1459295524663276, 101.69591377737044],
+      [3.1458637739165027, 101.69617940300776],
+      [3.145620507639194, 101.69619754843524],
+      [3.1454236958548734, 101.69644408495282],
+      [3.1454269210279193, 101.69664152594663],
+      [3.145876457674504, 101.69661151752189],
+      [3.145989111582452, 101.69696174751328],
+      [3.1461807892438145, 101.6967713155949],
+      [3.146446040826959, 101.69663637886669],
+      [3.1466857109719655, 101.69655305879348],
+      [3.1468060604896664, 101.69655801223007],
+      [3.146937297155233, 101.69705182258997],
+      [3.1479001753267966, 101.69784272570865],
+      [3.1487399967401046, 101.69704196933861],
+      [3.1491752105470994, 101.69664523897148],
+      [3.149414835714637, 101.69667637206499],
+      [3.1496467598275046, 101.69679166205447],
+      [3.150331101888554, 101.69749987377344],
+      [3.1504978321912773, 101.69782269435706],
+      [3.1511062051509526, 101.69778453086059],
+      [3.151545588948821, 101.69793104810935],
+      [3.1518111265568223, 101.69815387102346],
+      [3.1520067804815, 101.69841858672044],
+      [3.152150698997616, 101.69845017521152],
+      [3.152608986205081, 101.69846133998499],
+      [3.1518050329278964, 101.6972225224726],
+      [3.1518256789736085, 101.69716162454762],
+      [3.152118750930242, 101.696964832047],
+      [3.1512956011897018, 101.69643352266093],
+      [3.1510097545517226, 101.69612397196687],
+      [3.1513137554572097, 101.69585324808077],
+      [3.151576527436319, 101.6955174573178],
+      [3.150015739068621, 101.69453740808854],
+      [3.147974025683567, 101.69407485071252]
+    ];
     
     // Original heritage zone polygon
-    L.polygon(heritageZoneCoords, { 
-        color: '#666', 
-        fillColor: '#333', 
-        fillOpacity: 0.1, 
-        weight: 2, 
-        dashArray: '5, 5', 
-        interactive: false 
+    L.polyline(heritageZoneCoords, {
+        color: '#8B4513',
+        weight: 4,
+        dashArray: '20, 10', // Key: Sets a dashed line pattern
+        interactive: false,
+        className: 'animated-trail' // Key: Assign a CSS class
     }).addTo(map);
+    
+    // 3. Initialize the Layer Groups
+    markersLayer = L.layerGroup().addTo(map); // Add markers layer to map (visible by default)
+    polygonsLayer = L.layerGroup();           // Do NOT add polygons layer to map yet
+
+    markersLayer.on('add', () => {
+        markersLayer.eachLayer(layer => {
+            // Check the state we saved on the marker object
+            if (layer.options.isVisited) {
+                safelyUpdateMarkerVisitedState(layer, true);
+            }
+        });
+    });
 
     fetch('data.json').then(res => res.json()).then(sites => {
-        allSiteData = sites; // This makes it available for proximity check
+        allSiteData = sites; 
         sites.forEach(site => {
-            const marker = L.marker(site.coordinates)
-                .addTo(map)
+            
+            // 1. FIX: DEFINE THE VARIABLE HERE!
+            const isSiteVisited = visitedSites.includes(site.id) || discoveredSites.includes(site.id); // <--- FIX IS HERE
+
+            // 1. Get Colors and Classes based on ID (Numerical vs. Alphabetical)
+            const { markerColor, fillColor, className } = getSiteColors(site);
+
+            // --- Determine Coordinates ---
+            let latlng = Array.isArray(site.coordinates) ? site.coordinates : site.coordinates?.marker;
+            if (!latlng) return; 
+
+            // 2. Create the Custom Div Icon using the calculated color
+            /*
+            const customIcon = L.divIcon({
+                className: 'custom-map-pin ' + className,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                // Use inline style for the color block of the pin
+                html: `<div style="background-color: ${markerColor};" class="pin-head"></div><div class="pin-shadow"></div>`
+            });
+            */
+            // 3. Create the Marker
+            const marker = L.marker(latlng)
                 .bindTooltip(site.name, {
                     permanent: false, 
                     direction: 'top', 
                     sticky: true 
                 });
                 
+            // NEW: Store the marker globally
+            allMarkers[site.id] = marker; 
+            
+            // FIX: Use the 'add' event and the helper to safely apply the class
             if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
-                marker._icon.classList.add('marker-visited');
+                // Set the state on the marker object itself for persistence
+                marker.options.isVisited = true;
+                
+                // Use the 'add' event to guarantee the icon is in the DOM when we try to style it
+                marker.on('add', (e) => {
+                    safelyUpdateMarkerVisitedState(e.target, true);
+                });
             }
+            // END FIX
+
             marker.on('click', () => handleMarkerClick(site, marker));
+            markersLayer.addLayer(marker); 
+            
+            // 4. Create the Polygon
+            if (site.coordinates.polygon) {
+                const poly = L.polygon(site.coordinates.polygon, {
+                    color: markerColor,          // Outline: Category Color
+                    fillColor: fillColor,        // Fill: Lighter Category Color
+                    fillOpacity: 0.5,
+                    weight: 2
+                });
+
+                // NEW: Store the polygon globally
+                allPolygons[site.id] = poly; 
+
+                // NEW: Check if already visited and apply VISITED_POLYGON_COLOR
+                if (isSiteVisited) {
+                    safelyUpdatePolygonVisitedState(site.id, true);
+                }
+                
+                poly.on('click', () => handleMarkerClick(site, marker));
+                polygonsLayer.addLayer(poly); 
+            }
+            
         });
         updateGameProgress();
         updatePassport(); 
@@ -117,6 +328,9 @@ function initializeGameAndMap() {
     });
     map.locate({ watch: true, enableHighAccuracy: true });
     
+    // 4. Set initial layer visibility based on starting zoom
+    updateVisibility(); 
+
     if (!sessionStorage.getItem('jejak_welcome_shown')) {
         document.getElementById('welcomeModal').classList.remove('hidden');
         sessionStorage.setItem('jejak_welcome_shown', 'true');
@@ -222,7 +436,16 @@ function handleMarkerClick(site, marker) {
                 if (!visitedSites.includes(site.id)) {
                     visitedSites.push(site.id);
                     localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
-                    marker._icon.classList.add('marker-visited');
+
+                    // FIX: Use the global map and safe helper
+                    const markerToUpdate = allMarkers[site.id]; // Look up the marker globally
+                    safelyUpdateMarkerVisitedState(markerToUpdate, true); 
+                    // END FIX
+
+                    // NEW: Update polygon color
+                    safelyUpdatePolygonVisitedState(site.id, true); // <--- ADD THIS LINE
+                    // END NEW
+
                     updateGameProgress();
                     updatePassport();
                     
@@ -286,7 +509,14 @@ function handleCheckIn() {
         localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
         
         // Update the marker icon to "visited" (red)
-        currentModalMarker._icon.classList.add('marker-visited');
+        // FIX: Look up marker from global map and use safe helper
+        const markerToUpdate = allMarkers[currentModalSite.id]; // Look up the marker globally
+        safelyUpdateMarkerVisitedState(markerToUpdate, true); 
+        // END FIX
+
+        // NEW: Update polygon color
+        safelyUpdatePolygonVisitedState(currentModalSite.id, true); // <--- ADD THIS LINE
+        // END NEW
         
         // Update the button state
         siteModalCheckInBtn.disabled = true;
@@ -491,113 +721,155 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LOGIN & MODAL FUNCTIONS ---
 
-    function showAdminCode() {
+ function showAdminCode() {
         document.getElementById('landing-page').classList.add('hidden');
         document.getElementById('staff-screen').classList.remove('hidden');
     }
 
-    function setupAdminLoginLogic() {
-        const adminLoginBtn = document.getElementById('adminLoginBtn');
-        if (!adminLoginBtn) return;
 
-        adminLoginBtn.addEventListener('click', async () => {
-            const password = document.getElementById('adminPasswordInput').value;
-            const errorMsg = document.getElementById('adminErrorMsg');
-            const loginBtn = document.getElementById('adminLoginBtn');
 
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Checking...';
-            errorMsg.classList.add('hidden');
+function setupAdminLoginLogic() {
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    if (!adminLoginBtn) return;
 
-            try {
-                const response = await fetch('/api/get-admin-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: password })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('adminLoginForm').classList.add('hidden');
-                    document.getElementById('passkeyDate').textContent = `Date: ${data.date}`;
-                    document.getElementById('passkeyResult').textContent = data.passkey;
-                    document.getElementById('adminResult').classList.remove('hidden');
-                } else {
-                    errorMsg.textContent = data.error || 'Wrong password.';
-                    errorMsg.classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error('Error in admin login:', error);
-                errorMsg.textContent = 'Network error. Please try again.';
-                errorMsg.classList.remove('hidden');
-            }
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Get Passkey';
-        });
-    }
+    adminLoginBtn.addEventListener('click', async () => {
+        const password = document.getElementById('adminPasswordInput').value;
+        const errorMsg = document.getElementById('adminErrorMsg');
+        const loginBtn = document.getElementById('adminLoginBtn');
 
-    function setupGatekeeperLogic() {
-        const unlockBtn = document.getElementById('unlockBtn');
-        if (!unlockBtn) return;
+        // !!! USE THE SAME URL YOU USED IN verifyCode !!!
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
 
-        unlockBtn.addEventListener('click', async () => {
-            const passcodeInput = document.getElementById('passcodeInput');
-            const enteredCode = passcodeInput.value;
-            if (!enteredCode) return;
-            
-            unlockBtn.disabled = true;
-            unlockBtn.textContent = 'Verifying...';
-            
-            await verifyCode(enteredCode);
-            
-            if (!localStorage.getItem('jejak_session')) {
-                 unlockBtn.disabled = false;
-                 unlockBtn.textContent = 'Verify & Unlock';
-            }
-        });
-    }
-
-    async function verifyCode(enteredCode) {
-        const errorMsg = document.getElementById('errorMsg');
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Verifying...';
         errorMsg.classList.add('hidden');
 
         try {
-            const response = await fetch('/api/check-passkey', { 
+            // We send the admin password as the "passkey"
+            // The Google Script is already programmed to recognize this!
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ passkey: enteredCode })
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ 
+                    passkey: password,
+                    deviceId: 'ADMIN_DEVICE' // Device ID doesn't matter for Admin
+                })
             });
 
-            if (response.ok) {
+            const result = await response.json();
+
+            if (result.success && result.isAdmin) {
+                // Save session as Admin
                 localStorage.setItem('jejak_session', JSON.stringify({
                     valid: true,
-                    start: Date.now()
+                    start: Date.now(),
+                    role: 'admin'
                 }));
 
-                document.getElementById('gatekeeper').style.opacity = 0;
-                document.getElementById('landing-page').style.opacity = 0;
+                // Update UI to show they are logged in
+                document.getElementById('adminLoginForm').classList.add('hidden');
+                
+                // If you want to show a success message or redirect to map:
+                document.getElementById('passkeyDate').textContent = `Authenticated as Admin`;
+                document.getElementById('passkeyResult').textContent = "ACCESS GRANTED";
+                document.getElementById('adminResult').classList.remove('hidden');
 
+                // Optional: Automatically move to the map after 1.5 seconds
                 setTimeout(() => {
-                    document.getElementById('gatekeeper').remove();
-                    document.getElementById('landing-page').remove();
-                    document.getElementById('progress-container').classList.remove('hidden');
-                    
-                    initializeGameAndMap();
-                    setupGameUIListeners();
-                    
-                }, 500);
+                    location.reload(); 
+                }, 1500);
 
             } else {
-                const data = await response.json();
-                console.error('Passkey error:', data.error);
-                errorMsg.textContent = data.error || 'Invalid or expired passkey.';
+                errorMsg.textContent = result.error || 'Invalid Admin Password.';
                 errorMsg.classList.remove('hidden');
             }
         } catch (error) {
-            console.error('Error during passkey verification:', error);
-            errorMsg.textContent = 'Network error. Please try again.';
+            console.error('Error in admin login:', error);
+            errorMsg.textContent = 'Network error. Check Google Script deployment.';
+            errorMsg.classList.remove('hidden');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Get Access';
+        }
+    });
+}
+
+    function setupGatekeeperLogic() {
+    const unlockBtn = document.getElementById('unlockBtn');
+    if (!unlockBtn) return;
+
+    unlockBtn.addEventListener('click', async () => {
+        const passcodeInput = document.getElementById('passcodeInput');
+        const enteredCode = passcodeInput.value.trim();
+        if (!enteredCode) return;
+        
+        unlockBtn.disabled = true;
+        unlockBtn.textContent = 'Verifying...';
+        
+        await verifyCode(enteredCode);
+        
+        // If verification failed, reset the button
+        if (!localStorage.getItem('jejak_session')) {
+             unlockBtn.disabled = false;
+             unlockBtn.textContent = 'Verify & Unlock';
+        }
+    });
+}
+
+async function verifyCode(enteredCode) {
+    const errorMsg = document.getElementById('errorMsg');
+    errorMsg.classList.add('hidden');
+
+    // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
+
+    try {
+        // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
+        const response = await fetch(GOOGLE_SCRIPT_URL, { 
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ 
+                passkey: enteredCode, 
+                deviceId: deviceId 
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Save session
+            localStorage.setItem('jejak_session', JSON.stringify({
+                valid: true,
+                start: Date.now(),
+                role: result.isAdmin ? 'admin' : 'user'
+            }));
+
+            // UI Transitions
+            document.getElementById('gatekeeper').style.opacity = 0;
+            document.getElementById('landing-page').style.opacity = 0;
+
+            setTimeout(() => {
+                document.getElementById('gatekeeper').remove();
+                document.getElementById('landing-page').remove();
+                document.getElementById('progress-container').classList.remove('hidden');
+                
+                // Start the app
+                initializeGameAndMap();
+                setupGameUIListeners();
+            }, 500);
+
+        } else {
+            errorMsg.textContent = result.error || 'Invalid or expired passkey.';
             errorMsg.classList.remove('hidden');
         }
+    } catch (error) {
+        console.error('Verification Error:', error);
+        errorMsg.textContent = 'Network error. Make sure the script is deployed to "Anyone".';
+        errorMsg.classList.remove('hidden');
     }
+}
     
     /**
      * Finds all DOM elements and attaches all in-game listeners.

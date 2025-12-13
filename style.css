@@ -186,3 +186,36 @@ body, html {
     line-height: 1.2;
     letter-spacing: 0.5px;
 }
+
+/* --- 10. HERITAGE POLYGON STYLES --- */
+.heritage-polygon {
+    filter: drop-shadow(0 0 5px rgba(160, 82, 45, 0.6));
+    transition: fill-opacity 0.3s ease;
+}
+
+.heritage-polygon:hover {
+    fill-opacity: 0.8 !important;
+    cursor: pointer;
+}
+
+/* Visited Marker Override */
+.marker-visited .pin-head {
+    /* Color for stamp/visited sites */
+    background-color: #DAA520 !important; 
+    border-color: #fff !important;
+}
+
+/* Define the animation keyframes */
+@keyframes dash {
+    to {
+        /* Moves the dashes along the path */
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Apply the animation to the polyline's SVG path */
+.animated-trail {
+    stroke-dasharray: 20, 10; /* Must match the polyline setting */
+    stroke-dashoffset: 30;    /* Start offset */
+    animation: dash 5s linear infinite; /* Animation runs continuously */
+}
