@@ -4,15 +4,14 @@
 // --- CONFIGURATION ---
 const HISTORY_WINDOW_SIZE = 10;
 const MAX_MESSAGES_PER_SESSION = 10;
-
-// const SESSION_DURATION = 24 * 60 * 60 * 1000; // REMOVED: No longer using 24h window
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 // --- GAME STATE ---
 let map = null;
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
 let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
-const TOTAL_SITES = 13;
-let allSiteData = [];
+const TOTAL_SITES = 13; 
+let allSiteData = []; 
 let chatHistory = [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
 let currentModalSite = null; // To track the currently open pin
@@ -51,7 +50,7 @@ const allRiddles = [
 ];
 
 // --- DOM Elements ---
-let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalHintBtn, siteModalHintText;
+let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn;
 let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
 let passportModal, closePassportModal, passportInfo, passportGrid;
 let welcomeModal, closeWelcomeModal;
@@ -250,9 +249,9 @@ function initializeGameAndMap() {
             // 3. Create the Marker
             const marker = L.marker(latlng)
                 .bindTooltip(site.name, {
-                    permanent: false,
-                    direction: 'top',
-                    sticky: true
+                    permanent: false, 
+                    direction: 'top', 
+                    sticky: true 
                 });
                 
             // NEW: Store the marker globally
@@ -296,17 +295,17 @@ function initializeGameAndMap() {
             
         });
         updateGameProgress();
-        updatePassport();
+        updatePassport(); 
     }).catch(err => console.error("Error loading Map Data:", err));
 
-
+    
     // --- Custom User Location Pin ---
     const userIcon = L.divIcon({
         className: 'user-location-pin',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
-
+    
     // Make userMarker global
     userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
 
@@ -317,11 +316,11 @@ function initializeGameAndMap() {
         fillOpacity: 0.1,
         weight: 1
     }).addTo(map);
-
+    
     map.on('locationfound', (e) => {
         userMarker.setLatLng(e.latlng);
         userCircle.setLatLng(e.latlng).setRadius(e.accuracy / 2);
-
+        
         // --- ADDED: Proximity Feature Logic ---
         if (allSiteData.length > 0) {
             updateProximityPulse(e.latlng);
@@ -345,7 +344,7 @@ function updateProximityPulse(userLatLng) {
     if (!userMarker || !userMarker._icon) return;
 
     let closestDist = Infinity;
-    const undiscoveredSites = allSiteData.filter(site =>
+    const undiscoveredSites = allSiteData.filter(site => 
         !visitedSites.includes(site.id) && !discoveredSites.includes(site.id)
     );
 
@@ -358,20 +357,14 @@ function updateProximityPulse(userLatLng) {
     });
 
     const pinElement = userMarker._icon;
+    pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
 
-
-    // Optimized: Only touch DOM if state changes
-    let newState = 'pulse-slow';
-    if (closestDist < 75) {
-        newState = 'pulse-fast';
-    } else if (closestDist < 250) {
-        newState = 'pulse-medium';
-    }
-
-    if (currentPulseState !== newState) {
-        pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
-        pinElement.classList.add(newState);
-        currentPulseState = newState;
+    if (closestDist < 75) { // Under 75 meters
+        pinElement.classList.add('pulse-fast');
+    } else if (closestDist < 250) { // Under 250 meters
+        pinElement.classList.add('pulse-medium');
+    } else { // Far away
+        pinElement.classList.add('pulse-slow');
     }
 }
 
@@ -384,23 +377,14 @@ function getDayOfYear() {
     return Math.floor(diff / oneDay);
 }
 
-// NEW: Helper to get Today's Date String (YYYY-MM-DD) for Session Validation
-function getTodayDateString() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
 // ADDED: Update Daily Challenge Modal Function
 function updateChallengeModal() {
     const dayOfYear = getDayOfYear();
     const riddleIndex = dayOfYear % allRiddles.length;
     const todayRiddle = allRiddles[riddleIndex];
-
+    
     challengeRiddle.textContent = `"${todayRiddle.q}"`;
-
+    
     if (solvedRiddle.day === dayOfYear && solvedRiddle.id === todayRiddle.a) {
         challengeResult.textContent = "You've already solved today's challenge. Well done!";
     } else {
@@ -411,7 +395,7 @@ function updateChallengeModal() {
 function handleMarkerClick(site, marker) {
     if (!siteModal) {
         console.error("Site modal is not initialized!");
-        return;
+        return; 
     }
 
     currentModalSite = site;
@@ -421,9 +405,9 @@ function handleMarkerClick(site, marker) {
     siteModalTitle.textContent = site.name;
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
-
+    
     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
-
+    
     // Show "Ask AI" and "Directions" for ALL sites
     siteModalDirections.style.display = 'block';
     siteModalAskAI.style.display = 'block';
@@ -432,47 +416,23 @@ function handleMarkerClick(site, marker) {
         // This is a main site (1-13)
         siteModalQuizArea.style.display = 'block';
         siteModalCheckInBtn.style.display = 'none'; // Hide Check-in button
-
+        
         siteModalQuizQ.textContent = site.quiz.q;
         siteModalQuizInput.value = "";
         siteModalQuizResult.classList.add('hidden');
-
+        
         const newQuizBtn = siteModalQuizBtn.cloneNode(true);
         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
-        siteModalQuizBtn = newQuizBtn;
-
-        // --- NEW: Quiz Hint Logic ---
-        siteModalHintText.textContent = site.quiz.hint || "No hint available.";
-        siteModalHintText.classList.add('hidden'); // Reset to hidden
-
-        // Remove old listener to prevent duplicates (cloning for button above handles that, but link needs care)
-        const newHintBtn = siteModalHintBtn.cloneNode(true);
-        siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
-        siteModalHintBtn = newHintBtn;
-
-        siteModalHintBtn.addEventListener('click', () => {
-            siteModalHintText.classList.toggle('hidden');
-        });
-
+        siteModalQuizBtn = newQuizBtn; 
+        
         siteModalQuizBtn.addEventListener('click', () => {
-            // SMART GRADING: Normalization Function
-            const normalize = (val) => {
-                if (!val) return '';
-                // 1. Lowercase & Remove all non-alphanumeric chars (spaces, commas, dots, dashes)
-                let s = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-
-                // 2. Map Number Words to Digits (common cases)
-                const numMap = {
-                    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
-                    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
-                };
-                return numMap[s] || s;
-            };
-
-            if (normalize(siteModalQuizInput.value) === normalize(site.quiz.a)) {
+            const userAnswer = siteModalQuizInput.value.trim().toLowerCase();
+            const correctAnswer = site.quiz.a.trim().toLowerCase();
+            
+            if (userAnswer === correctAnswer) {
                 siteModalQuizResult.textContent = "Correct! Well done!";
                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
-
+                
                 if (!visitedSites.includes(site.id)) {
                     visitedSites.push(site.id);
                     localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
@@ -488,36 +448,12 @@ function handleMarkerClick(site, marker) {
 
                     updateGameProgress();
                     updatePassport();
-
+                    
                     // --- ADDED: Play Sound & Check for Completion ---
                     chaChingSound.play();
-
+                    
                     if (visitedSites.length === TOTAL_SITES) {
                         congratsModal.classList.remove('hidden');
-                        // BOMBASTIC: Trigger Confetti!
-                        if (typeof confetti === 'function') {
-                            const duration = 3 * 1000;
-                            const end = Date.now() + duration;
-
-                            (function frame() {
-                                confetti({
-                                    particleCount: 5,
-                                    angle: 60,
-                                    spread: 55,
-                                    origin: { x: 0 }
-                                });
-                                confetti({
-                                    particleCount: 5,
-                                    angle: 120,
-                                    spread: 55,
-                                    origin: { x: 1 }
-                                });
-
-                                if (Date.now() < end) {
-                                    requestAnimationFrame(frame);
-                                }
-                            }());
-                        }
                     }
                 }
             } else {
@@ -531,7 +467,7 @@ function handleMarkerClick(site, marker) {
         // This is a "discovery" pin (A, B, C...)
         siteModalQuizArea.style.display = 'none'; // Hide Quiz
         siteModalCheckInBtn.style.display = 'block'; // Show Check-in button
-
+        
         // Set the state of the Check-in button
         if (discoveredSites.includes(site.id)) {
             siteModalCheckInBtn.disabled = true;
@@ -550,7 +486,7 @@ function handleMarkerClick(site, marker) {
     const dayOfYear = getDayOfYear();
     const riddleIndex = dayOfYear % allRiddles.length;
     const todayRiddle = allRiddles[riddleIndex];
-
+    
     // Check if riddle is unsolved AND this is the correct site
     if (solvedRiddle.day !== dayOfYear && currentModalSite.id === todayRiddle.a) {
         siteModalSolveChallengeBtn.style.display = 'block';
@@ -566,12 +502,12 @@ function handleMarkerClick(site, marker) {
  */
 function handleCheckIn() {
     if (!currentModalSite || !currentModalMarker) return;
-
+    
     // Add to discovered list if not already there
     if (!discoveredSites.includes(currentModalSite.id)) {
         discoveredSites.push(currentModalSite.id);
         localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
-
+        
         // Update the marker icon to "visited" (red)
         // FIX: Look up marker from global map and use safe helper
         const markerToUpdate = allMarkers[currentModalSite.id]; // Look up the marker globally
@@ -599,17 +535,15 @@ async function handleSendMessage() {
     chatSendBtn.disabled = true;
 
     addChatMessage('user', userQuery);
-    addChatMessage('user', userQuery);
-    // Modified: Use skeleton loader instead of "..."
-    const thinkingEl = addChatMessage('ai', '<span class="skeleton text-xs px-8 rounded">Loading...</span>');
-
+    const thinkingEl = addChatMessage('ai', '...');
+    
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+            body: JSON.stringify({ 
                 userQuery: userQuery,
-                history: chatHistory.slice(-HISTORY_WINDOW_SIZE)
+                history: chatHistory.slice(-HISTORY_WINDOW_SIZE) 
             })
         });
 
@@ -618,19 +552,19 @@ async function handleSendMessage() {
         }
 
         const data = await response.json();
-
+        
         chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
         chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-
+        
         userMessageCount++;
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
-
-        thinkingEl.querySelector('p:last-child').innerHTML = data.reply; // Select the content paragraph
+        
+        thinkingEl.querySelector('p').innerHTML = data.reply; 
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('p:last-child').textContent = "Sorry, I couldn't connect. Please try again.";
+        thinkingEl.querySelector('p').textContent = "Sorry, I couldn't connect. Please try again.";
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
@@ -647,10 +581,10 @@ function addChatMessage(role, text) {
     const align = (role === 'user') ? 'self-end' : 'self-start';
     const bg = (role === 'user') ? 'bg-white' : 'bg-blue-100';
     const textCol = (role === 'user') ? 'text-gray-900' : 'text-blue-900';
-
+    
     messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align}`;
     messageEl.innerHTML = `<p class="font-bold text-sm">${name}</p><p>${text}</p>`;
-
+    
     chatHistoryEl.appendChild(messageEl);
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
     return messageEl;
@@ -661,7 +595,7 @@ function addChatMessage(role, text) {
 function updateGameProgress() {
     const visitedCount = visitedSites.length;
     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
-
+    
     if (document.getElementById('progressBar') && document.getElementById('progressText')) {
         const percent = (visitedCount / mainSitesTotal) * 100;
         document.getElementById('progressBar').style.width = `${percent}%`;
@@ -696,29 +630,25 @@ function updatePassport() {
 
     const mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
     const visitedCount = visitedSites.length;
-
+    
     passportInfo.textContent = `You have collected ${visitedCount} of the ${mainSites.length} stamps.`;
     passportGrid.innerHTML = "";
 
     mainSites.forEach(site => {
         const stamp = document.createElement('div');
         stamp.className = 'passport-stamp';
-
+        
         const isVisited = visitedSites.includes(site.id);
         if (!isVisited) {
             stamp.classList.add('grayscale');
-        } else {
-            // ADDED: Stamp animation for visited sites
-            stamp.querySelector('img')?.classList.add('stamp-animate'); // Optional: animate the image or the whole stamp
         }
 
         const img = document.createElement('img');
-        img.loading = 'lazy'; // Efficiency: Lazy load images
         img.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=?';
         img.alt = site.name;
 
         const name = document.createElement('p');
-        name.textContent = `${site.id}. ${site.name}`;
+        name.textContent = `${site.id}. ${site.name}`; 
 
         stamp.appendChild(img);
         stamp.appendChild(name);
@@ -729,26 +659,22 @@ function updatePassport() {
 
 // --- APP STARTUP & LANDING PAGE LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
-
+    
     function initApp() {
         const landingPage = document.getElementById('landing-page');
         const gatekeeper = document.getElementById('gatekeeper');
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-
-
-        const todayStr = getTodayDateString();
-
-        // Modified: Check if session exists AND matches TODAY'S date
-        if (sessionData && sessionData.valid && sessionData.date === todayStr) {
-            // Session is VALID for TODAY: Go straight to map
+        
+        if (sessionData && sessionData.valid && (Date.now() - sessionData.start < SESSION_DURATION)) {
+            // Session is VALID: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
             document.getElementById('progress-container').classList.remove('hidden');
-
+            
             initializeGameAndMap();
-            setupGameUIListeners();
-
-            if (chatLimitText) {
+            setupGameUIListeners(); 
+            
+            if (chatLimitText) { 
                 if (userMessageCount >= MAX_MESSAGES_PER_SESSION) {
                     disableChatUI(true);
                 } else {
@@ -770,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('gatekeeper').classList.remove('hidden');
         });
-
+        
         document.getElementById('btnStaff').addEventListener('click', () => {
             showAdminCode();
         });
@@ -779,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('gatekeeper').classList.add('hidden');
             document.getElementById('landing-page').classList.remove('hidden');
         });
-
+        
         const closeStaffBtn = document.getElementById('closeStaffScreen');
         if (closeStaffBtn) {
             closeStaffBtn.addEventListener('click', () => {
@@ -787,9 +713,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('landing-page').classList.remove('hidden');
             });
         }
-
+        
         setupGatekeeperLogic();
-        setupAdminLoginLogic();
+        setupAdminLoginLogic(); 
     }
 
 
@@ -965,9 +891,7 @@ async function verifyCode(enteredCode) {
         siteModalDirections = document.getElementById('siteModalDirections');
         siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn');
         siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
-        siteModalHintBtn = document.getElementById('siteModalHintBtn');
-        siteModalHintText = document.getElementById('siteModalHintText');
-
+        
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
         chatHistoryEl = document.getElementById('chatHistory');
@@ -979,10 +903,10 @@ async function verifyCode(enteredCode) {
         closePassportModal = document.getElementById('closePassportModal');
         passportInfo = document.getElementById('passportInfo');
         passportGrid = document.getElementById('passportGrid');
-
+        
         welcomeModal = document.getElementById('welcomeModal');
         closeWelcomeModal = document.getElementById('closeWelcomeModal');
-
+        
         // ADDED: New Modal Elements
         congratsModal = document.getElementById('congratsModal');
         closeCongratsModal = document.getElementById('closeCongratsModal');
@@ -993,7 +917,7 @@ async function verifyCode(enteredCode) {
         challengeRiddle = document.getElementById('challengeRiddle');
         challengeResult = document.getElementById('challengeResult');
         chaChingSound = document.getElementById('chaChingSound');
-
+        
         // --- Attach Listeners ---
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
@@ -1008,7 +932,7 @@ async function verifyCode(enteredCode) {
         closeChatModal.addEventListener('click', () => {
             chatModal.classList.add('hidden');
         });
-
+        
         document.getElementById('btnPassport').addEventListener('click', () => {
             updatePassport();
             passportModal.classList.remove('hidden');
@@ -1031,82 +955,74 @@ async function verifyCode(enteredCode) {
         siteModalAskAI.addEventListener('click', () => {
             const siteName = siteModalTitle.textContent;
             if (!siteName || siteName === "Site Title") return;
-
+            
             const question = `Tell me more about ${siteName}.`;
-
+            
             siteModal.classList.add('hidden');
             chatModal.classList.remove('hidden');
-
+            
             chatInput.value = question;
             handleSendMessage();
         });
-
+        
         siteModalDirections.addEventListener('click', () => {
             if (!currentModalSite) return;
-
+            
             const lat = currentModalSite.coordinates[0];
             const lon = currentModalSite.coordinates[1];
-
+            
             // === CRITICAL FIX ===
             // This is the correct, universal URL for Google Maps directions
             const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
-
+            
             window.open(url, '_blank');
         });
-
+        
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
         siteModalCheckInBtn.addEventListener('click', handleCheckIn);
-
+        
         // --- ADDED: NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
             closeWelcomeModal.addEventListener('click', () => {
                 welcomeModal.classList.add('hidden');
             });
         }
-
+        
         closeCongratsModal.addEventListener('click', () => {
             congratsModal.classList.add('hidden');
         });
-
+        
         shareWhatsAppBtn.addEventListener('click', () => {
             const message = "🎉 Mission Accomplished! I've collected all 13 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
             const whatsappMsg = encodeURIComponent(message);
             window.open(`https://wa.me/?text=${whatsappMsg}`, '_blank');
         });
-
+        
         btnChallenge.addEventListener('click', () => {
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
         });
-
+        
         closeChallengeModal.addEventListener('click', () => {
             challengeModal.classList.add('hidden');
         });
-
+        
         siteModalSolveChallengeBtn.addEventListener('click', () => {
             const dayOfYear = getDayOfYear();
             const riddleIndex = dayOfYear % allRiddles.length;
             const todayRiddle = allRiddles[riddleIndex];
-
+            
             // Mark as solved
             solvedRiddle = { day: dayOfYear, id: todayRiddle.a };
             localStorage.setItem('jejak_solved_riddle', JSON.stringify(solvedRiddle));
-
+            
             // Hide button in site modal
             siteModalSolveChallengeBtn.style.display = 'none';
             siteModal.classList.add('hidden');
-
+            
             // Show result in challenge modal
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
-            // BOMBASTIC: Trigger Small Confetti Burst!
-            if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
         });
     }
 
