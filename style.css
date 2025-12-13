@@ -1,12 +1,26 @@
 /* --- 1. MAP & LAYOUT SETTINGS --- */
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    /* Default body font */
+    background-color: #fdfaf5;
+    /* Warm heritage paper tone */
 }
-#map { 
-    width: 100vw; 
-    height: 100vh; 
+
+h1,
+h2,
+h3,
+.heritage-font {
+    font-family: 'Merriweather', serif;
+    /* Headings */
+}
+
+#map {
+    width: 100vw;
+    height: 100vh;
     height: 100dvh;
     z-index: 1;
     position: absolute;
@@ -18,60 +32,156 @@ body, html {
 #progress-container {
     pointer-events: none;
 }
-#progress-container > div {
+
+#progress-container>div {
     pointer-events: auto;
 }
+
 /* MODIFIED: Added #btnChallenge */
-#btnChat, #btnPassport, #btnRecenter, #btnChallenge {
+/* MODIFIED: Added #btnChallenge and Enhanced Glassmorphism */
+#btnChat,
+#btnPassport,
+#btnRecenter,
+#btnChallenge {
     z-index: 1000;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.85) !important;
+    /* Slightly more opaque */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(255, 255, 255, 0.5) inset;
+}
+
+#btnChat:active,
+#btnPassport:active,
+#btnRecenter:active,
+#btnChallenge:active {
+    transform: scale(0.95);
 }
 
 /* --- 3. TRANSITIONS & ANIMATIONS --- */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fade-in { animation: fadeIn 1s ease-out forwards; }
-@keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.animate-slide-up { opacity: 0; animation: slideUpFade 0.8s ease-out 0.3s forwards; }
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 
-/* --- 4. "CLASSIC" MODAL STYLE (Site & Passport) --- */
-.classic-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.classic-modal-content {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-width: 500px;
-    width: 90%;
-    overflow: hidden;
-    animation: slideUpFade 0.3s ease-out forwards;
-    position: relative;
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* --- 5. "MODERN" MODAL STYLE (Chatbox) --- */
+.animate-fade-in {
+    animation: fadeIn 1s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    opacity: 0;
+    animation: slideUpFade 0.8s ease-out 0.3s forwards;
+}
+
+/* --- 4. UNIFIED "HERITAGE GLASS" MODAL STYLE --- */
+.classic-modal-backdrop,
 .modern-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Lighter dark overlay */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
-    transition: opacity 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.5s ease;
 }
+
+.classic-modal-content,
+.modern-modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    /* High Contrast / Almost Opaque */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    /* Deeper shadow */
+    width: 90%;
+    max-width: 500px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    /* Springy pop */
+    position: relative;
+    overflow: hidden;
+    color: #1a202c;
+    /* Ensure dark text */
+}
+
 .modern-modal-content {
     height: 70vh;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-width: 500px;
-    width: 90%;
-    animation: slideUpFade 0.3s ease-out forwards;
     display: flex;
     flex-direction: column;
+}
+
+/* --- BOMBASTIC ANIMATIONS --- */
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* --- 5. BOMBASTIC LANDING PAGE --- */
+#landing-page {
+    /* High-contrast, moody background */
+    /* OPTIMIZED: Smaller WebP Image (w=1080) & Darker Overlay for Contrast */
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=75&w=1080&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    color: white;
+}
+
+#landing-page h1 {
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    font-weight: 800;
+}
+
+#landing-page p {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Glass-morphic Cards for Buttons on Landing */
+.glass-card-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    /* More visible */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: all 0.3s ease;
+}
+
+.glass-card-btn:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* --- 6. GAMIFICATION STYLES --- */
@@ -86,25 +196,29 @@ body, html {
     border-radius: 8px;
     overflow: hidden;
     border: 2px solid #eee;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
 .passport-stamp img {
     display: block;
     width: 100%;
-    height: 80px; /* Small square-ish image */
+    height: 80px;
+    /* Small square-ish image */
     object-fit: cover;
 }
+
 .passport-stamp p {
     font-size: 10px;
     font-weight: bold;
     text-align: center;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     padding: 4px;
     position: absolute;
     bottom: 0;
     width: 100%;
     color: #333;
 }
+
 .grayscale {
     filter: grayscale(100%);
     opacity: 0.6;
@@ -115,72 +229,164 @@ body, html {
 ---
 */
 .user-location-pin {
-    background-color: #10B981; /* Green */
+    background-color: #10B981;
+    /* Green */
     width: 20px;
     height: 20px;
     border-radius: 50%;
     border: 3px solid #ffffff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
     /* MODIFIED: Set default animation to medium */
     animation: pulse-animation-medium 1.5s infinite;
 }
 
 /* Renamed old animation to medium */
 @keyframes pulse-animation-medium {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.4);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* ADDED: New animation speeds */
 @keyframes pulse-animation-slow {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.2); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 0.8; }
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
 }
 
 @keyframes pulse-animation-fast {
-    0% { transform: scale(1.2); opacity: 1; }
-    50% { transform: scale(1.6); opacity: 1; }
-    100% { transform: scale(1.2); opacity: 1; }
+    0% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.6);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
 }
 
 /* ADDED: Classes to trigger new animations */
 .pulse-slow {
     animation: pulse-animation-slow 3s infinite !important;
 }
+
 .pulse-medium {
     animation: pulse-animation-medium 1.5s infinite !important;
 }
+
 .pulse-fast {
     animation: pulse-animation-fast 0.7s infinite !important;
+}
+
+/* --- 10. NEW ANIMATIONS: SKELETON & STAMP --- */
+@keyframes skeleton-loading {
+    0% {
+        background-color: #f0f0f0;
+    }
+
+    50% {
+        background-color: #e0e0e0;
+    }
+
+    100% {
+        background-color: #f0f0f0;
+    }
+}
+
+.skeleton {
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    color: transparent !important;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+}
+
+.skeleton::before {
+    content: '\00a0';
+}
+
+/* Non-breaking space to hold height */
+
+@keyframes stamp-land {
+    0% {
+        transform: scale(3) rotate(-15deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(0.8) rotate(-15deg);
+        opacity: 1;
+    }
+
+    70% {
+        transform: scale(1.1) rotate(-15deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(-15deg);
+    }
+}
+
+.stamp-animate {
+    animation: stamp-land 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    display: inline-block;
+    /* Required for transform */
 }
 
 
 /* --- 9. NEW UI ADDITIONS --- */
 #logoOverlay {
     position: fixed;
-    top: 15px; 
+    top: 15px;
     right: 15px;
     z-index: 1000;
     pointer-events: none;
-    
+
     background-color: white;
     border-radius: 8px;
     padding: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    width: 120px; 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    width: 120px;
 }
+
 #logoOverlay img {
-    width: 80px; 
+    width: 80px;
     height: 80px;
     display: block;
-    margin: 0 auto 8px auto; 
+    margin: 0 auto 8px auto;
 }
+
 #logoOverlay p {
     font-size: 10px;
-    font-weight: 600; 
+    font-weight: 600;
     color: #333;
     text-align: center;
     line-height: 1.2;
