@@ -22,8 +22,25 @@ body, html {
     pointer-events: auto;
 }
 /* MODIFIED: Added #btnChallenge */
-#btnChat, #btnPassport, #btnRecenter, #btnChallenge {
+/* MODIFIED: Added #btnChallenge and Enhanced Glassmorphism */
+#btnChat,
+#btnPassport,
+#btnRecenter,
+#btnChallenge {
     z-index: 1000;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.85) !important;
+    /* Slightly more opaque */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(255, 255, 255, 0.5) inset;
+}
+
+#btnChat:active,
+#btnPassport:active,
+#btnRecenter:active,
+#btnChallenge:active {
+    transform: scale(0.95);
 }
 
 /* --- 3. TRANSITIONS & ANIMATIONS --- */
@@ -32,44 +49,39 @@ body, html {
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slide-up { opacity: 0; animation: slideUpFade 0.8s ease-out 0.3s forwards; }
 
-/* --- 4. "CLASSIC" MODAL STYLE (Site & Passport) --- */
-.classic-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
+/* --- 4. UNIFIED "HERITAGE GLASS" MODAL STYLE --- */
+.classic-modal-backdrop,
+.modern-modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Lighter dark overlay */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.classic-modal-content {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-width: 500px;
-    width: 90%;
-    overflow: hidden;
-    animation: slideUpFade 0.3s ease-out forwards;
-    position: relative;
+    transition: all 0.5s ease;
 }
 
-/* --- 5. "MODERN" MODAL STYLE (Chatbox) --- */
-.modern-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 2000;
-    transition: opacity 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.classic-modal-content,
+.modern-modal-content {
+    background: rgba(255, 255, 255, 0.85);
+    /* Frosted Glass */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    /* Springy pop */
+    position: relative;
+    overflow: hidden;
 }
+
 .modern-modal-content {
     height: 70vh;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-width: 500px;
-    width: 90%;
-    animation: slideUpFade 0.3s ease-out forwards;
     display: flex;
     flex-direction: column;
 }
@@ -218,4 +230,152 @@ body, html {
     stroke-dasharray: 20, 10; /* Must match the polyline setting */
     stroke-dashoffset: 30;    /* Start offset */
     animation: dash 5s linear infinite; /* Animation runs continuously */
+}
+
+/* --- 10. NEW ANIMATIONS: SKELETON & STAMP --- */
+@keyframes skeleton-loading {
+    0% {
+        background-color: #f0f0f0;
+    }
+
+    50% {
+        background-color: #e0e0e0;
+    }
+
+    100% {
+        background-color: #f0f0f0;
+    }
+}
+
+.skeleton {
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    color: transparent !important;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+}
+
+.skeleton::before {
+    content: '\00a0';
+}
+
+/* Non-breaking space to hold height */
+
+@keyframes stamp-land {
+    0% {
+        transform: scale(3) rotate(-15deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(0.8) rotate(-15deg);
+        opacity: 1;
+    }
+
+    70% {
+        transform: scale(1.1) rotate(-15deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(-15deg);
+    }
+}
+
+.stamp-animate {
+    animation: stamp-land 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    display: inline-block;
+    /* Required for transform */
+}
+
+/* --- BOMBASTIC ANIMATIONS --- */
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* --- 5. BWM KUL CITY WALK LANDING PAGE (PROFESSIONAL LIGHT THEME) --- */
+#landing-page {
+    /* Clean, soft white background with a subtle, non-distracting texture */
+    background: #fdfdff; 
+    color: #343a40; /* Charcoal text for high readability */
+    text-align: center;
+    padding: 100px 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* Clean transition for any full-page changes */
+    transition: background 0.5s ease; 
+}
+
+#landing-page h1 {
+    /* Strong, readable font size */
+    font-size: clamp(2.5rem, 6vw, 4rem); 
+    font-weight: 800;
+    /* Professional primary color (Deep Navy/Charcoal Blue) */
+    color: #172a3a; 
+    letter-spacing: -0.02em; /* Tighter letter-spacing for large, professional titles */
+    margin-bottom: 0.5rem;
+    /* Very subtle, professional shadow */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+}
+
+#landing-page p {
+    color: #6c757d !important; /* Secondary gray for body text */
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    max-width: 600px;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+    text-shadow: none;
+}
+
+/* Professional Button Style (Flat/Minimalist) */
+.glass-card-btn {
+    /* Use the professional primary color for the background */
+    background-color: #007bff !important; 
+    color: white !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 15px 40px;
+    border-radius: 8px; /* Slightly rounded corners */
+    border: none !important;
+    box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3); /* Shadow tied to button color */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Remove any glass-morphic effects */
+    backdrop-filter: none; 
+}
+
+.glass-card-btn:hover {
+    /* Darker shade of primary color on hover */
+    background-color: #0056b3 !important; 
+    transform: translateY(-2px); /* Gentle lift on hover */
+    /* Increased shadow depth on hover */
+    box-shadow: 0 12px 20px rgba(0, 123, 255, 0.4); 
+}
+
+/* Secondary Button Style (Optional: Use for "Continue Saved Game") */
+/* If you have a secondary button, give it a subtle outline style */
+.glass-card-btn.secondary {
+    background-color: transparent !important;
+    color: #007bff !important;
+    border: 2px solid #007bff !important;
+    box-shadow: none;
+}
+
+.glass-card-btn.secondary:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#logoOverlay {
+    z-index: 9000;
+    pointer-events: auto;
 }

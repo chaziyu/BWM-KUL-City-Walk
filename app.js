@@ -57,6 +57,7 @@ let welcomeModal, closeWelcomeModal;
 let congratsModal, closeCongratsModal, shareWhatsAppBtn;
 let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challengeResult;
 let chaChingSound;
+let siteModalHintBtn, siteModalHintText;
 
 //BUG FIX
 // --- UTILITY FUNCTION FOR SAFELY MANAGING MARKER STATE ---
@@ -425,11 +426,35 @@ function handleMarkerClick(site, marker) {
         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
         siteModalQuizBtn = newQuizBtn; 
         
+        // --- NEW: Quiz Hint Logic ---
+        siteModalHintText.textContent = site.quiz.hint || "No hint available.";
+        siteModalHintText.classList.add('hidden'); // Reset to hidden
+
+        // Remove old listener to prevent duplicates (cloning for button above handles that, but link needs care)
+        const newHintBtn = siteModalHintBtn.cloneNode(true);
+        siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
+        siteModalHintBtn = newHintBtn;
+
+        siteModalHintBtn.addEventListener('click', () => {
+            siteModalHintText.classList.toggle('hidden');
+        });
+
         siteModalQuizBtn.addEventListener('click', () => {
-            const userAnswer = siteModalQuizInput.value.trim().toLowerCase();
-            const correctAnswer = site.quiz.a.trim().toLowerCase();
-            
-            if (userAnswer === correctAnswer) {
+            // SMART GRADING: Normalization Function
+            const normalize = (val) => {
+                if (!val) return '';
+                // 1. Lowercase & Remove all non-alphanumeric chars (spaces, commas, dots, dashes)
+                let s = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                // 2. Map Number Words to Digits (common cases)
+                const numMap = {
+                    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+                    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
+                };
+                return numMap[s] || s;
+            };
+
+            if (normalize(siteModalQuizInput.value) === normalize(site.quiz.a)) {
                 siteModalQuizResult.textContent = "Correct! Well done!";
                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
                 
@@ -454,6 +479,30 @@ function handleMarkerClick(site, marker) {
                     
                     if (visitedSites.length === TOTAL_SITES) {
                         congratsModal.classList.remove('hidden');
+                        // BOMBASTIC: Trigger Confetti!
+                        if (typeof confetti === 'function') {
+                            const duration = 3 * 1000;
+                            const end = Date.now() + duration;
+
+                            (function frame() {
+                                confetti({
+                                    particleCount: 5,
+                                    angle: 60,
+                                    spread: 55,
+                                    origin: { x: 0 }
+                                });
+                                confetti({
+                                    particleCount: 5,
+                                    angle: 120,
+                                    spread: 55,
+                                    origin: { x: 1 }
+                                });
+
+                                if (Date.now() < end) {
+                                    requestAnimationFrame(frame);
+                                }
+                            }());
+                        }
                     }
                 }
             } else {
@@ -535,7 +584,8 @@ async function handleSendMessage() {
     chatSendBtn.disabled = true;
 
     addChatMessage('user', userQuery);
-    const thinkingEl = addChatMessage('ai', '...');
+    // Modified: Use skeleton loader instead of "..."
+    const thinkingEl = addChatMessage('ai', '<span class="skeleton text-xs px-8 rounded">Loading...</span>');
     
     try {
         const response = await fetch('/api/chat', {
@@ -560,11 +610,11 @@ async function handleSendMessage() {
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
         
-        thinkingEl.querySelector('p').innerHTML = data.reply; 
+        thinkingEl.querySelector('p:last-child').innerHTML = data.reply; // Select the content paragraph
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('p').textContent = "Sorry, I couldn't connect. Please try again.";
+        thinkingEl.querySelector('p:last-child').textContent = "Sorry, I couldn't connect. Please try again.";
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
@@ -641,6 +691,9 @@ function updatePassport() {
         const isVisited = visitedSites.includes(site.id);
         if (!isVisited) {
             stamp.classList.add('grayscale');
+        }else {
+            // ADDED: Stamp animation for visited sites
+            stamp.querySelector('img')?.classList.add('stamp-animate'); // Optional: animate the image or the whole stamp
         }
 
         const img = document.createElement('img');
@@ -694,7 +747,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupLandingPage() {
         document.getElementById('btnVisitor').addEventListener('click', () => {
             document.getElementById('landing-page').classList.add('hidden');
-            document.getElementById('gatekeeper').classList.remove('hidden');
+
+            const gatekeeper = document.getElementById('gatekeeper');
+            gatekeeper.classList.remove('hidden');
+            //gatekeeper.style.display = 'flex';
         });
         
         document.getElementById('btnStaff').addEventListener('click', () => {
@@ -875,6 +931,17 @@ async function verifyCode(enteredCode) {
      * Finds all DOM elements and attaches all in-game listeners.
      */
     function setupGameUIListeners() {
+        // --- NEW: LOGO CLICK LISTENER ---
+        const logoElement = document.getElementById('logoOverlay');
+        if (logoElement) {
+            logoElement.addEventListener('click', () => {
+                // Open the Badan Warisan Malaysia website in a new tab
+                window.open('https://badanwarisanmalaysia.org/', '_blank'); 
+            });
+            // Optional: Change cursor to indicate clickability
+            logoElement.style.cursor = 'pointer';
+        }
+
         // --- Find all elements first ---
         siteModal = document.getElementById('siteModal');
         siteModalImage = document.getElementById('siteModalImage');
@@ -891,6 +958,8 @@ async function verifyCode(enteredCode) {
         siteModalDirections = document.getElementById('siteModalDirections');
         siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn');
         siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
+        siteModalHintBtn = document.getElementById('siteModalHintBtn');
+        siteModalHintText = document.getElementById('siteModalHintText');
         
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
@@ -1023,8 +1092,18 @@ async function verifyCode(enteredCode) {
             // Show result in challenge modal
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
+            // BOMBASTIC: Trigger Small Confetti Burst!
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
         });
     }
+
+    
 
     // --- Run the app ---
     initApp();
