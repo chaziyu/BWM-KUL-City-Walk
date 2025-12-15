@@ -144,7 +144,7 @@ function initializeGameAndMap() {
     if (map) return;
     
     // 1. Initialize the map object FIRST
-    map = L.map('map').setView([3.1483, 101.6938], 16);
+    map = L.map('map').setView([3.1495519988154683, 101.69609103393907], 16);
     
     // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
     map.on('zoomend', updateVisibility); // <--- FIX IS HERE
@@ -991,7 +991,7 @@ async function verifyCode(enteredCode) {
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
             if (map) {
-                map.setView([3.1483, 101.6938], 16);
+                map.setView([3.1495519988154683, 101.69609103393907], 16);
             }
         });
 
@@ -1037,8 +1037,8 @@ async function verifyCode(enteredCode) {
         siteModalDirections.addEventListener('click', () => {
             if (!currentModalSite) return;
             
-            const lat = currentModalSite.coordinates[0];
-            const lon = currentModalSite.coordinates[1];
+            const lat = currentModalSite.coordinates.marker[0];
+            const lon = currentModalSite.coordinates.marker[1];
             
             // === CRITICAL FIX ===
             // This is the correct, universal URL for Google Maps directions

@@ -21,6 +21,40 @@ body, html {
 #progress-container > div {
     pointer-events: auto;
 }
+
+#progress-container {
+  padding-left: 50px; /* leave space for zoom controls */
+}
+
+#progress-container {
+    pointer-events: none !important;
+}
+
+#progress-container .pointer-events-auto {
+    pointer-events: auto !important;
+}
+
+#progress-container .w-full {
+    transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease;
+}
+
+#progress-container {
+    background: none !important;
+    backdrop-filter: none !important;
+}
+/* A subtle pulse for the progress bar head */
+#progressBar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 100%;
+    background: white;
+    opacity: 0.3;
+    filter: blur(4px);
+}
+
 /* MODIFIED: Added #btnChallenge */
 /* MODIFIED: Added #btnChallenge and Enhanced Glassmorphism */
 #btnChat,
