@@ -160,16 +160,40 @@ body, html {
 8. NEW USER LOCATION PIN
 ---
 */
+/* Wrapper: Just a container, no animation or colors */
+.user-pin-wrapper {
+    background: transparent;
+    border: none;
+}
+
+/* Inner Pin: Holds the color and animation */
 .user-location-pin {
-    background-color: #10B981; /* Green */
-    width: 20px;
-    height: 20px;
+    background-color: #10B981;
+    width: 100%;  /* Fill the wrapper */
+    height: 100%; /* Fill the wrapper */
     border-radius: 50%;
     border: 3px solid #ffffff;
     box-shadow: 0 0 10px rgba(0,0,0,0.5);
     
-    /* MODIFIED: Set default animation to medium */
+    /* Animation happens here, safely inside the wrapper */
     animation: pulse-animation-medium 1.5s infinite;
+}
+
+/* MAKE SURE YOU HAVE THIS KEYFRAME DEFINED! */
+/* If this is missing, the animation won't work */
+@keyframes pulse-animation-medium {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1.2); /* This scale is now safe! */
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
 }
 
 /* Renamed old animation to medium */

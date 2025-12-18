@@ -302,30 +302,29 @@ function initializeGameAndMap() {
     
     // --- Custom User Location Pin ---
     const userIcon = L.divIcon({
-    className: 'user-location-pin',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    // ADD THIS HTML LINE:
-    html: '<div style="background-color: #10B981; width: 100%; height: 100%; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
-        opacity: 0,      // Hide outline
-        fillOpacity: 0   // Hide fill
-});
+        // 1. Keep the wrapper clean (no animation here!)
+        className: 'user-pin-wrapper', 
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        // 2. Add the style class to this INNER div instead
+        html: '<div class="user-location-pin"></div>' 
+    });
     
     // Make userMarker global
     userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
     //userMarker = L.marker([0, 0]).addTo(map);
 
     const userCircle = L.circle([0, 0], {
-        radius: 10,
         color: "#10B981",
+        opacity: 0.4,
         fillColor: "#10B981",
-        fillOpacity: 0.1,
+        fillOpacity: 0.05,
         weight: 1
     }).addTo(map);
     
     map.on('locationfound', (e) => {
         userMarker.setLatLng(e.latlng);
-        userCircle.setLatLng(e.latlng).setRadius(e.accuracy / 2);
+        userCircle.setLatLng(e.latlng).setRadius(Math.min(e.accuracy / 2, 100));
         
         // --- ADDED: Proximity Feature Logic ---
         if (allSiteData.length > 0) {
