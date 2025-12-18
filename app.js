@@ -688,10 +688,14 @@ function updateGameProgress() {
     const visitedCount = visitedSites.length;
     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
     
-    if (document.getElementById('progressBar') && document.getElementById('progressText')) {
-        const percent = (visitedCount / mainSitesTotal) * 100;
-        document.getElementById('progressBar').style.width = `${percent}%`;
-        document.getElementById('progressText').textContent = `${visitedCount}/${mainSitesTotal} Sites`;
+    // 1. Update the Top Progress Bar
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    // 2. Update the Passport Subtitle (The new part!)
+    const visitedCountEl = document.getElementById('visitedCount');
+    if (visitedCountEl) {
+        visitedCountEl.innerText = count;
     }
 }
 
