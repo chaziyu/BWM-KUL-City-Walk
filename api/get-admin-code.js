@@ -3,7 +3,7 @@
 function getTodayString() {
     const now = new Date();
     // Get the date string for the 'Asia/Kuala_Lumpur' timezone
-    const todayStr = now.toLocaleDateString('en-CA', {
+    const todayStr = now.toLocaleDateString('en-GB', {
         timeZone: 'Asia/Kuala_Lumpur'
     });
     return todayStr;
