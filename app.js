@@ -684,24 +684,35 @@ function addChatMessage(role, text) {
 
 // --- UI UPDATE FUNCTIONS ---
 
+// function updateGameProgress() {
+//     const visitedCount = visitedSites.length;
+//     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
+    
+//     // 1. Update the Top Progress Bar
+//     const progressBar = document.getElementById('progressBar');
+//     const progressText = document.getElementById('progressText');
+    
+//     if (progressBar && progressText) {
+//         const percentage = (count / mainSitesTotal) * 100;
+//         progressBar.style.width = `${percentage}%`;
+//         progressText.textContent = `${count}/${mainSitesTotal} Sites`;
+//     }
+
+//     // 2. Update the Passport Subtitle (The new part!)
+//     const visitedCountEl = document.getElementById('visitedCount');
+//     if (visitedCountEl) {
+//         visitedCountEl.innerText = count;
+//     }
+// }
+
 function updateGameProgress() {
     const visitedCount = visitedSites.length;
     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
     
-    // 1. Update the Top Progress Bar
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    
-    if (progressBar && progressText) {
-        const percentage = (count / mainSitesTotal) * 100;
-        progressBar.style.width = `${percentage}%`;
-        progressText.textContent = `${count}/${mainSitesTotal} Sites`;
-    }
-    
-    // 2. Update the Passport Subtitle (The new part!)
-    const visitedCountEl = document.getElementById('visitedCount');
-    if (visitedCountEl) {
-        visitedCountEl.innerText = count;
+    if (document.getElementById('progressBar') && document.getElementById('progressText')) {
+        const percent = (visitedCount / mainSitesTotal) * 100;
+        document.getElementById('progressBar').style.width = `${percent}%`;
+        document.getElementById('progressText').textContent = `${visitedCount}/${mainSitesTotal} Sites`;
     }
 }
 
