@@ -337,7 +337,7 @@ function initializeGameAndMap() {
     alert("GPS Error: " + e.message + "\nPlease make sure Location Services are enabled and you are using HTTPS.");
 });
 
-    map.locate({ watch: true, enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 });
+    map.locate({ watch: true, enableHighAccuracy: true, maximumAge: 10000 });
     
     // 4. Set initial layer visibility based on starting zoom
     updateVisibility(); 
