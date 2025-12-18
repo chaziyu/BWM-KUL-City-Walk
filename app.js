@@ -441,8 +441,8 @@ function handleMarkerClick(site, marker) {
         if (site.faq) {
             faqHtml = `
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h4 class="font-bold text-gray-900 mb-2 text-sm">📍 Visitor Quick Facts</h4>
-                    <ul class="text-sm space-y-2 text-gray-700">
+                    <h4 class="font-bold text-gray-900 text-sm">📍 Visitor Quick Facts</h4>
+                    <ul class="text-sm text-gray-700">
                         <li><strong>🕒 Hours:</strong> ${site.faq.opening_hours || 'Exterior view 24/7'}</li>
                         <li><strong>🎟️ Fee:</strong> ${site.faq.ticket_fee || 'Free Admission'}</li>
                         <li><strong>💡 Tip:</strong> ${site.faq.tips || 'Great for photography!'}</li>
