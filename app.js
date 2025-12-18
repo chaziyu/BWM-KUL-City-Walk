@@ -692,6 +692,12 @@ function updateGameProgress() {
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
     
+    if (progressBar && progressText) {
+        const percentage = (count / mainSitesTotal) * 100;
+        progressBar.style.width = `${percentage}%`;
+        progressText.textContent = `${count}/${mainSitesTotal} Sites`;
+    }
+    
     // 2. Update the Passport Subtitle (The new part!)
     const visitedCountEl = document.getElementById('visitedCount');
     if (visitedCountEl) {
