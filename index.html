@@ -17,6 +17,7 @@
     
     <link rel="stylesheet" href="style.css" />
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -202,6 +203,9 @@
             <button id="shareWhatsAppBtn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition shadow-lg">
                 Share on WhatsApp
             </button>
+            <button onclick="document.getElementById('badgeInputModal').classList.remove('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded mt-2">
+                Claim Explorer Badge
+            </button>
         </div>
     </div>
 
@@ -213,6 +217,96 @@
             <p id="challengeRiddle" class="text-gray-600 mb-4">Riddle loading...</p>
             <p id="challengeResult" class="font-bold text-green-600"></p>
         </div>
+    </div>
+
+    <div id="badgeInputModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[5000]">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl relative border-4 border-yellow-500">
+            <button id="closeBadgeModal" class="absolute top-2 right-2 text-gray-500 hover:text-red-500">✕</button>
+            
+            <h2 class="text-xl font-bold text-center mb-1 text-yellow-700">🏆 LEGENDARY STATUS</h2>
+            <p class="text-sm text-center text-gray-500 mb-4">Personalize your Explorer ID</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Your Name</label>
+                    <input type="text" id="explorerNameInput" placeholder="e.g. Charlie Chaplin" maxlength="20" 
+                        class="w-full border-2 border-gray-300 rounded p-2 focus:border-yellow-500 outline-none font-bold text-gray-800">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Profile Photo (Optional)</label>
+                    <input type="file" id="explorerPhotoInput" accept="image/*" 
+                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+                </div>
+
+                <button id="btnGenerateBadge" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold py-3 rounded shadow-lg transform active:scale-95 transition">
+                    ✨ Generate & Download ID
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hiddenBadgeTemplate" class="fixed top-[-9999px] left-[-9999px] w-[800px] h-[450px] bg-[#fdfaf5] border-[12px] border-[#1a3c5e] rounded-lg shadow-2xl flex flex-col overflow-hidden font-serif relative">
+        
+        <div class="absolute inset-0 opacity-[0.05] bg-[url('images/cream-paper.png')] pointer-events-none"></div>
+        
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#1a3c5e] opacity-[0.03] text-9xl font-bold pointer-events-none uppercase tracking-widest">
+            Warisan
+        </div>
+
+        <div class="flex flex-1 p-8 relative z-10">
+            
+            <div class="w-[240px] flex flex-col items-center pr-8 border-r border-[#1a3c5e]/20 relative shrink-0">
+                 <div class="text-center mb-6">
+                    <h4 class="text-[#1a3c5e] text-sm font-bold uppercase tracking-widest">Passport</h4>
+                    <h4 class="text-[#b4975a] text-xs font-bold uppercase tracking-widest">Pasport</h4>
+                </div>
+
+                <div class="w-44 h-52 bg-white border-2 border-[#1a3c5e] p-1 relative shadow-sm">
+                    <img id="badgeProfileImage" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="w-full h-full object-cover" alt="Explorer">
+                    
+                    <div class="absolute -bottom-5 -right-5 w-24 h-24 border-4 border-red-900/70 rounded-full flex items-center justify-center transform rotate-[-15deg] opacity-90 mix-blend-multiply pointer-events-none bg-red-900/5">
+                        <div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">
+                            BWM<br>Kuala Lumpur<br>COMPLETED
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 pl-10 flex flex-col">
+                <div class="mb-8 border-b border-[#1a3c5e]/10 pb-3">
+                    <h1 class="text-4xl font-bold text-[#1a3c5e] uppercase leading-none">Malaysia</h1>
+                    <h2 class="text-sm text-[#b4975a] font-bold uppercase tracking-wider mt-1">Warisan Kuala Lumpur</h2>
+                </div>
+
+                <div class="space-y-6 flex-1">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase font-semibold">Name / Nama</p>
+                        <h2 id="badgeNameDisplay" class="text-3xl font-bold text-[#1a3c5e] font-sans uppercase leading-tight break-words">Unknown Explorer</h2>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-4">
+                        <div class="col-span-3">
+                            <p class="text-xs text-gray-500 uppercase font-semibold min-h-[32px] flex items-end pb-1">Status / Taraf</p>
+                            <p class="text-xl font-bold text-[#1a3c5e] uppercase whitespace-nowrap leading-none tracking-wide">Master Explorer</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-xs text-gray-500 uppercase font-semibold min-h-[32px] flex items-end pb-1 leading-tight">Date of Issue /<br>Tarikh Dikeluarkan</p>
+                            <p id="badgeDateDisplay" class="text-xl font-bold text-[#1a3c5e] font-sans leading-none">--/--/----</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 mb-2 p-4 bg-[#1a3c5e]/5 border-l-4 border-[#b4975a] rounded-r-md flex items-center min-h-[80px]">
+                     <p class="text-sm text-[#1a3c5e] leading-relaxed italic text-justify">
+                        "The bearer of this document has successfully navigated and documented all 13 designated heritage sites within the historic core of Kuala Lumpur."
+                    </p>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="h-4 w-full bg-[#1a3c5e]/10 border-t border-[#1a3c5e]/20"></div>
     </div>
     
     <audio id="chaChingSound" src="https://raw.githubusercontent.com/chaziyu/jejak-warisan/main/images/ca%20ching%20sounds%20effect.mp3" preload="auto"></audio>
