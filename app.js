@@ -418,7 +418,7 @@ function handleMarkerClick(site, marker) {
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
 
-    // 2. MORE INFO SECTION (Task 6 & 9 with Image Safety Check)
+    // 2. MORE INFO SECTION LOGIC
     if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
         siteModalMore = document.getElementById('siteModalMore');
         siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
@@ -455,7 +455,6 @@ function handleMarkerClick(site, marker) {
         siteModalMoreContent.innerHTML = `
             ${bwImageHtml}
             ${flyerTextHtml}
-            <p class="text-gray-700">${site.ai_context || site.info || ""}</p>
             ${faqHtml}
         `;
 
@@ -464,7 +463,7 @@ function handleMarkerClick(site, marker) {
         siteModalMoreBtn.textContent = 'More info';
 
         // Only show the "More info" button if extra information exists
-        const hasExtraInfo = bwImageHtml || flyerTextHtml || faqHtml || site.ai_context;
+        const hasExtraInfo = bwImageHtml || flyerTextHtml || faqHtml;
         siteModalMore.style.display = hasExtraInfo ? 'block' : 'none';
 
         siteModalMoreBtn.onclick = () => {
