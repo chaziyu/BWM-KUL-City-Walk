@@ -10,7 +10,24 @@ const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 let map = null;
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
 let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
-const TOTAL_SITES = 13; 
+// Data cleanup: remove deprecated site IDs (8 and 10) from stored state
+/*
+(() => {
+    const removedIds = ['8', '10'];
+    const normalize = (ids) => (Array.isArray(ids) ? ids.map(String).filter(id => !removedIds.includes(id)) : []);
+    const newVisited = normalize(visitedSites);
+    const newDiscovered = normalize(discoveredSites);
+    if (newVisited.length !== visitedSites.length) {
+        visitedSites = newVisited;
+        localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
+    }
+    if (newDiscovered.length !== discoveredSites.length) {
+        discoveredSites = newDiscovered;
+        localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
+    }
+})();
+*/
+const TOTAL_SITES = 11; 
 let allSiteData = []; 
 let chatHistory = [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
@@ -41,9 +58,7 @@ const allRiddles = [
     { q: "My Art Deco clock tower was built in 1937 to commemorate the coronation of King George VI.", a: "5" },
     { q: "I am KL's oldest Chinese temple, and I am uniquely angled to follow Feng Shui principles.", a: "6" },
     { q: "I am an unusual triangular building with no 'five-foot way' and whimsical garlic-shaped finials on my roof.", a: "7" },
-    { q: "I am a traditional medicine shop, a 'living museum' for over 30 years, where you can still buy herbs.", a: "8" },
     { q: "In 1932, I was the tallest building in KL, standing at 85 feet. I also housed Radio Malaya.", a: "9" },
-    { q: "I am not a building, but a fragrant stop where artisans weave fresh flower garlands.", a: "10" },
     { q: "My prayer services are held in both Arabic and Tamil, a unique feature for a mosque in this area.", a: "11" },
     { q: "I am Malaysia's oldest existing jewellers, founded by a man who was shipwrecked!", a: "12" },
     { q: "I was KL's only theatre, but I was heavily damaged by a major fire in the 1980s.", a: "13" }
@@ -1108,7 +1123,7 @@ async function verifyCode(enteredCode) {
         });
         
         shareWhatsAppBtn.addEventListener('click', () => {
-            const message = "🎉 Mission Accomplished! I've collected all 13 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
+            const message = "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
             const whatsappMsg = encodeURIComponent(message);
             window.open(`https://wa.me/?text=${whatsappMsg}`, '_blank');
         });

@@ -293,29 +293,9 @@
     }
   },
   {
-    "_note":"The following location is not there anymore, but kept for historical record.",
-    "id": "8",
-    "name": "Kedai Ubat Kwong Ban Heng",
-    "coordinates": [3.1484, 101.6978],
-    "image": "images/kwongubat.jpg",
-    "built": "c. 1980s (Established)",
-    "architects": "N/A",
-    "info": "A true step back in time. This traditional medicine shop was established over 30 years ago and still retains its original glass cabinets and fittings. It's a living museum where you can purchase traditional herbs for everything from coughs to stress relief.",
-    "quiz": {
-      "q": "This shop was established over how many years ago?",
-      "a": "30",
-      "hint": "Three decades."
-    },
-    "flyer_text":"Crossing over to the other side of Jalan Tun Perak, stop at No 62, Kedai Ubat Kwong Ban Heng. Established over 30 years ago, you will find many of the traditional fixtures and fittings, glass cabinets and shelving have been retained. The signboard over the doorway in front of the shop reflects the name of the original owner, and although there is now a new proprietor, they have retained the name of the shop. Here you can find out more about the different types of traditional herbs and medicines which can you can use to cure ailments from coughs, to headaches and which help with digestion, vertigo, and even reduce stress.",
-    "ai_context": "A true step back in time! This traditional medicine shop was established over 30 years ago and still retains its original fixtures and fittings, including the old glass cabinets. It's a living museum where you can purchase traditional herbs.\n\nHere's a local tip: Many visitors stop by these traditional shops to try a cup of herbal tea, which is often brewed daily and can be good for cooling the body on a hot day.",
-    "faq": {
-      "opening_hours": "Permanently Closed (Historical Reference)",
-      "ticket_fee": "N/A",
-      "tips": "The business is no longer operating, but you can view the exterior architecture which remains part of the shophouse row."
-    }
   },
   {
-    "id": "9",
+    "id": "8",
     "name": "Oriental Building",
     "coordinates": {
       "marker": [3.1493706099473684, 101.69681830104241],
@@ -348,40 +328,9 @@
     }
   },
   {
-    "_note":"The following location is not there anymore, but kept for historical record.",
-    "id": "10",
-    "name": "Flower Garland Stalls",
-    "coordinates": {
-      "marker": [3.151021865608186, 101.69789917666657],          
-      "polygon": [
-        [3.1508757059897903, 101.69790405964153],
-        [3.150919360837406, 101.69820284936748],
-        [3.1510305928810567, 101.69818921433551],
-        [3.151000180852421, 101.6979271204006],
-        [3.15105887139147, 101.69791793763682],
-        [3.151048614366559, 101.69788137966168],
-        [3.1508757059897903, 101.69790405964153]
-      ]
-    },
-    "image": "images/flower_garland.webp",
-    "built": "N/A",
-    "architects": "N/A",
-    "info": "A vibrant and fragrant stop. Here, you can watch artisans skillfully weave traditional fresh flower garlands, which are used for religious offerings and celebrations. You can even learn how to make one!",
-    "quiz": {
-      "q": "You can learn how to make a traditional flower ___.",
-      "a": "garland",
-      "hint": "A decorative wreath of flowers worn around the neck."
-    },
-    "flyer_text":"Across the street you can admire some beautiful old shophouses such as the Teochew Association Building and the Eng Choon Huay Kuan which skirt around the foot of Bukit Nanas. You should cross over and stop at the flower garland stall where you can learn how to make a traditional flower garland, or if you like, you can buy a bunch of flowers.",
-    "ai_context": "A vibrant and fragrant stop near the Teochew Association building. Here, you can watch artisans skillfully weave traditional fresh flower garlands. These garlands, often made of jasmine and marigolds, are used for religious offerings at temples and for celebrations like weddings.\n\nHere's a local tip: The artisans are usually happy to show you their craft. You can learn how to make a traditional flower garland or simply buy some fresh flowers.",
-    "faq": {
-      "opening_hours": "Approx. 8:00 AM - 9:00 PM daily",
-      "ticket_fee": "Free to watch / Pay for goods",
-      "tips": "Always ask permission before taking close-up photos of the weavers."
-    }
   },
   {
-    "id": "11",
+    "id": "9",
     "name": "Masjid India",
     "coordinates": {
       "marker": [3.151676207223744, 101.69635099850319],
@@ -417,7 +366,7 @@
     }
   },
   {
-    "id": "12",
+    "id": "10",
     "name": "P.H. Hendry Royal Jewellers",
     "coordinates": {
       "marker": [3.150875108847643, 101.69535179942443],
@@ -447,7 +396,7 @@
     }
   },
   {
-    "id": "13",
+    "id": "11",
     "name": "Panggong Bandaraya (Old City Hall)",
     "coordinates": {
       "marker": [3.150412705057221, 101.69500165127062],
