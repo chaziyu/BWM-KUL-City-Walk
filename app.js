@@ -727,7 +727,7 @@ function updatePassport() {
     const mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
     const visitedCount = visitedSites.length;
     
-    passportInfo.textContent = `You have collected ${visitedCount} of the ${mainSites.length} stamps.`;
+    passportInfo.textContent = `You have visited ${visitedCount} of the ${mainSites.length} heritage buildings in Kuala Lumpur!`;
     passportGrid.innerHTML = "";
 
     mainSites.forEach(site => {
