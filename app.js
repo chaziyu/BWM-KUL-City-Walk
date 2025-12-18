@@ -410,32 +410,62 @@ function handleMarkerClick(site, marker) {
     }
 
     currentModalSite = site;
-    currentModalMarker = marker; // Store the marker
+    currentModalMarker = marker; // Store the marker reference
 
+    // 1. Basic Site Info
     siteModalLabel.textContent = site.id ? `${site.id}.` : "";
     siteModalTitle.textContent = site.name;
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
-    // NEW: Populate and toggle the More info section (prefers site.more_info over site.ai_context)
+
+    // 2. MORE INFO SECTION (Task 6 & 9 with Image Safety Check)
     if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
         siteModalMore = document.getElementById('siteModalMore');
         siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
         siteModalMoreContent = document.getElementById('siteModalMoreContent');
     }
-    if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
-        const moreText = (site.more_info && site.more_info.trim().length)
-            ? site.more_info
-            : (site.ai_context || '');
-        const hasMore = moreText.trim().length > 0;
 
-        // Reset state on open
+    if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
+        // --- Conditional Flyer Image (B&W PNG) ---
+        const bwImageHtml = (site.flyer_image && site.flyer_image.trim() !== "") 
+            ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">` 
+            : "";
+
+        // --- Conditional Flyer Text ---
+        const flyerTextHtml = site.flyer_text 
+            ? `<div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 italic text-gray-700 text-sm">${site.flyer_text}</div>` 
+            : "";
+
+        // --- Conditional FAQ Content ---
+        let faqHtml = "";
+        if (site.faq) {
+            faqHtml = `
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="font-bold text-gray-900 mb-2">📍 Visitor Quick Facts</h4>
+                    <ul class="text-sm space-y-2">
+                        <li><strong>🕒 Hours:</strong> ${site.faq.opening_hours || 'Exterior view 24/7'}</li>
+                        <li><strong>🎟️ Fee:</strong> ${site.faq.ticket_fee || 'Free Admission'}</li>
+                        <li><strong>💡 Tip:</strong> ${site.faq.tips || 'Great for photography!'}</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // --- Combine everything into the "More Info" dropdown ---
+        siteModalMoreContent.innerHTML = `
+            ${bwImageHtml}
+            ${flyerTextHtml}
+            <p class="text-gray-700">${site.ai_context || site.info || ""}</p>
+            ${faqHtml}
+        `;
+
+        // Reset visibility for each new site opened
         siteModalMoreContent.classList.add('hidden');
         siteModalMoreBtn.textContent = 'More info';
-        siteModalMoreContent.textContent = hasMore ? moreText : '';
 
-        // Show/hide button and container based on availability
-        siteModalMore.style.display = hasMore ? 'block' : 'none';
-        siteModalMoreBtn.style.display = hasMore ? 'block' : 'none';
+        // Only show the "More info" button if extra information exists
+        const hasExtraInfo = bwImageHtml || flyerTextHtml || faqHtml || site.ai_context;
+        siteModalMore.style.display = hasExtraInfo ? 'block' : 'none';
 
         siteModalMoreBtn.onclick = () => {
             const isHidden = siteModalMoreContent.classList.contains('hidden');
@@ -449,16 +479,17 @@ function handleMarkerClick(site, marker) {
         };
     }
     
+    // 3. QUIZ & CHECK-IN LOGIC
     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
     
-    // Show "Ask AI" and "Directions" for ALL sites
+    // Standard actions
     siteModalDirections.style.display = 'block';
     siteModalAskAI.style.display = 'block';
 
     if (isMainSite) {
-        // This is a main site (1-13)
+        // Numerical Main Site (1-13)
         siteModalQuizArea.style.display = 'block';
-        siteModalCheckInBtn.style.display = 'none'; // Hide Check-in button
+        siteModalCheckInBtn.style.display = 'none'; 
         
         siteModalQuizQ.textContent = site.quiz.q;
         siteModalQuizInput.value = "";
@@ -468,11 +499,9 @@ function handleMarkerClick(site, marker) {
         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
         siteModalQuizBtn = newQuizBtn; 
         
-        // --- NEW: Quiz Hint Logic ---
         siteModalHintText.textContent = site.quiz.hint || "No hint available.";
-        siteModalHintText.classList.add('hidden'); // Reset to hidden
+        siteModalHintText.classList.add('hidden'); 
 
-        // Remove old listener to prevent duplicates (cloning for button above handles that, but link needs care)
         const newHintBtn = siteModalHintBtn.cloneNode(true);
         siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
         siteModalHintBtn = newHintBtn;
@@ -482,13 +511,9 @@ function handleMarkerClick(site, marker) {
         });
 
         siteModalQuizBtn.addEventListener('click', () => {
-            // SMART GRADING: Normalization Function
             const normalize = (val) => {
                 if (!val) return '';
-                // 1. Lowercase & Remove all non-alphanumeric chars (spaces, commas, dots, dashes)
                 let s = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-
-                // 2. Map Number Words to Digits (common cases)
                 const numMap = {
                     'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
                     'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
@@ -504,45 +529,24 @@ function handleMarkerClick(site, marker) {
                     visitedSites.push(site.id);
                     localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
 
-                    // FIX: Use the global map and safe helper
-                    const markerToUpdate = allMarkers[site.id]; // Look up the marker globally
+                    const markerToUpdate = allMarkers[site.id];
                     safelyUpdateMarkerVisitedState(markerToUpdate, true); 
-                    // END FIX
-
-                    // NEW: Update polygon color
-                    safelyUpdatePolygonVisitedState(site.id, true); // <--- ADD THIS LINE
-                    // END NEW
+                    safelyUpdatePolygonVisitedState(site.id, true);
 
                     updateGameProgress();
                     updatePassport();
                     
-                    // --- ADDED: Play Sound & Check for Completion ---
                     chaChingSound.play();
                     
                     if (visitedSites.length === TOTAL_SITES) {
                         congratsModal.classList.remove('hidden');
-                        // BOMBASTIC: Trigger Confetti!
                         if (typeof confetti === 'function') {
                             const duration = 3 * 1000;
                             const end = Date.now() + duration;
-
                             (function frame() {
-                                confetti({
-                                    particleCount: 5,
-                                    angle: 60,
-                                    spread: 55,
-                                    origin: { x: 0 }
-                                });
-                                confetti({
-                                    particleCount: 5,
-                                    angle: 120,
-                                    spread: 55,
-                                    origin: { x: 1 }
-                                });
-
-                                if (Date.now() < end) {
-                                    requestAnimationFrame(frame);
-                                }
+                                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                                if (Date.now() < end) requestAnimationFrame(frame);
                             }());
                         }
                     }
@@ -555,11 +559,10 @@ function handleMarkerClick(site, marker) {
         });
 
     } else {
-        // This is a "discovery" pin (A, B, C...)
-        siteModalQuizArea.style.display = 'none'; // Hide Quiz
-        siteModalCheckInBtn.style.display = 'block'; // Show Check-in button
+        // Discovery Pin (A, B, C...)
+        siteModalQuizArea.style.display = 'none'; 
+        siteModalCheckInBtn.style.display = 'block'; 
         
-        // Set the state of the Check-in button
         if (discoveredSites.includes(site.id)) {
             siteModalCheckInBtn.disabled = true;
             siteModalCheckInBtn.textContent = 'Visited';
@@ -573,12 +576,11 @@ function handleMarkerClick(site, marker) {
         }
     }
 
-    // --- ADDED: Daily Challenge Button Logic ---
+    // 4. DAILY CHALLENGE BUTTON LOGIC
     const dayOfYear = getDayOfYear();
     const riddleIndex = dayOfYear % allRiddles.length;
     const todayRiddle = allRiddles[riddleIndex];
     
-    // Check if riddle is unsolved AND this is the correct site
     if (solvedRiddle.day !== dayOfYear && currentModalSite.id === todayRiddle.a) {
         siteModalSolveChallengeBtn.style.display = 'block';
     } else {
@@ -587,6 +589,191 @@ function handleMarkerClick(site, marker) {
 
     siteModal.classList.remove('hidden');
 }
+
+// function handleMarkerClick(site, marker) {
+//     if (!siteModal) {
+//         console.error("Site modal is not initialized!");
+//         return; 
+//     }
+
+//     currentModalSite = site;
+//     currentModalMarker = marker; // Store the marker
+
+//     siteModalLabel.textContent = site.id ? `${site.id}.` : "";
+//     siteModalTitle.textContent = site.name;
+//     siteModalInfo.textContent = site.info;
+//     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
+//     // NEW: Populate and toggle the More info section (prefers site.more_info over site.ai_context)
+//     if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
+//         siteModalMore = document.getElementById('siteModalMore');
+//         siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
+//         siteModalMoreContent = document.getElementById('siteModalMoreContent');
+//     }
+//     if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
+//         const moreText = (site.more_info && site.more_info.trim().length)
+//             ? site.more_info
+//             : (site.ai_context || '');
+//         const hasMore = moreText.trim().length > 0;
+
+//         // Reset state on open
+//         siteModalMoreContent.classList.add('hidden');
+//         siteModalMoreBtn.textContent = 'More info';
+//         siteModalMoreContent.textContent = hasMore ? moreText : '';
+
+//         // Show/hide button and container based on availability
+//         siteModalMore.style.display = hasMore ? 'block' : 'none';
+//         siteModalMoreBtn.style.display = hasMore ? 'block' : 'none';
+
+//         siteModalMoreBtn.onclick = () => {
+//             const isHidden = siteModalMoreContent.classList.contains('hidden');
+//             if (isHidden) {
+//                 siteModalMoreContent.classList.remove('hidden');
+//                 siteModalMoreBtn.textContent = 'Hide info';
+//             } else {
+//                 siteModalMoreContent.classList.add('hidden');
+//                 siteModalMoreBtn.textContent = 'More info';
+//             }
+//         };
+//     }
+    
+//     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
+    
+//     // Show "Ask AI" and "Directions" for ALL sites
+//     siteModalDirections.style.display = 'block';
+//     siteModalAskAI.style.display = 'block';
+
+//     if (isMainSite) {
+//         // This is a main site (1-13)
+//         siteModalQuizArea.style.display = 'block';
+//         siteModalCheckInBtn.style.display = 'none'; // Hide Check-in button
+        
+//         siteModalQuizQ.textContent = site.quiz.q;
+//         siteModalQuizInput.value = "";
+//         siteModalQuizResult.classList.add('hidden');
+        
+//         const newQuizBtn = siteModalQuizBtn.cloneNode(true);
+//         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
+//         siteModalQuizBtn = newQuizBtn; 
+        
+//         // --- NEW: Quiz Hint Logic ---
+//         siteModalHintText.textContent = site.quiz.hint || "No hint available.";
+//         siteModalHintText.classList.add('hidden'); // Reset to hidden
+
+//         // Remove old listener to prevent duplicates (cloning for button above handles that, but link needs care)
+//         const newHintBtn = siteModalHintBtn.cloneNode(true);
+//         siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
+//         siteModalHintBtn = newHintBtn;
+
+//         siteModalHintBtn.addEventListener('click', () => {
+//             siteModalHintText.classList.toggle('hidden');
+//         });
+
+//         siteModalQuizBtn.addEventListener('click', () => {
+//             // SMART GRADING: Normalization Function
+//             const normalize = (val) => {
+//                 if (!val) return '';
+//                 // 1. Lowercase & Remove all non-alphanumeric chars (spaces, commas, dots, dashes)
+//                 let s = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+//                 // 2. Map Number Words to Digits (common cases)
+//                 const numMap = {
+//                     'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
+//                     'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
+//                 };
+//                 return numMap[s] || s;
+//             };
+
+//             if (normalize(siteModalQuizInput.value) === normalize(site.quiz.a)) {
+//                 siteModalQuizResult.textContent = "Correct! Well done!";
+//                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
+                
+//                 if (!visitedSites.includes(site.id)) {
+//                     visitedSites.push(site.id);
+//                     localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
+
+//                     // FIX: Use the global map and safe helper
+//                     const markerToUpdate = allMarkers[site.id]; // Look up the marker globally
+//                     safelyUpdateMarkerVisitedState(markerToUpdate, true); 
+//                     // END FIX
+
+//                     // NEW: Update polygon color
+//                     safelyUpdatePolygonVisitedState(site.id, true); // <--- ADD THIS LINE
+//                     // END NEW
+
+//                     updateGameProgress();
+//                     updatePassport();
+                    
+//                     // --- ADDED: Play Sound & Check for Completion ---
+//                     chaChingSound.play();
+                    
+//                     if (visitedSites.length === TOTAL_SITES) {
+//                         congratsModal.classList.remove('hidden');
+//                         // BOMBASTIC: Trigger Confetti!
+//                         if (typeof confetti === 'function') {
+//                             const duration = 3 * 1000;
+//                             const end = Date.now() + duration;
+
+//                             (function frame() {
+//                                 confetti({
+//                                     particleCount: 5,
+//                                     angle: 60,
+//                                     spread: 55,
+//                                     origin: { x: 0 }
+//                                 });
+//                                 confetti({
+//                                     particleCount: 5,
+//                                     angle: 120,
+//                                     spread: 55,
+//                                     origin: { x: 1 }
+//                                 });
+
+//                                 if (Date.now() < end) {
+//                                     requestAnimationFrame(frame);
+//                                 }
+//                             }());
+//                         }
+//                     }
+//                 }
+//             } else {
+//                 siteModalQuizResult.textContent = "Not quite, try again!";
+//                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-red-600";
+//             }
+//             siteModalQuizResult.classList.remove('hidden');
+//         });
+
+//     } else {
+//         // This is a "discovery" pin (A, B, C...)
+//         siteModalQuizArea.style.display = 'none'; // Hide Quiz
+//         siteModalCheckInBtn.style.display = 'block'; // Show Check-in button
+        
+//         // Set the state of the Check-in button
+//         if (discoveredSites.includes(site.id)) {
+//             siteModalCheckInBtn.disabled = true;
+//             siteModalCheckInBtn.textContent = 'Visited';
+//             siteModalCheckInBtn.classList.add('bg-gray-400', 'hover:bg-gray-400');
+//             siteModalCheckInBtn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+//         } else {
+//             siteModalCheckInBtn.disabled = false;
+//             siteModalCheckInBtn.textContent = 'Check In to this Site';
+//             siteModalCheckInBtn.classList.remove('bg-gray-400', 'hover:bg-gray-400');
+//             siteModalCheckInBtn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+//         }
+//     }
+
+//     // --- ADDED: Daily Challenge Button Logic ---
+//     const dayOfYear = getDayOfYear();
+//     const riddleIndex = dayOfYear % allRiddles.length;
+//     const todayRiddle = allRiddles[riddleIndex];
+    
+//     // Check if riddle is unsolved AND this is the correct site
+//     if (solvedRiddle.day !== dayOfYear && currentModalSite.id === todayRiddle.a) {
+//         siteModalSolveChallengeBtn.style.display = 'block';
+//     } else {
+//         siteModalSolveChallengeBtn.style.display = 'none';
+//     }
+
+//     siteModal.classList.remove('hidden');
+// }
 
 /**
  * NEW: Handles the "Check In" button click for discovery sites
