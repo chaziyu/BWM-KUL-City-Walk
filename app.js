@@ -301,14 +301,16 @@ function initializeGameAndMap() {
 
     
     // --- Custom User Location Pin ---
+    /*
     const userIcon = L.divIcon({
         className: 'user-location-pin',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
-    
+    */
     // Make userMarker global
-    userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
+    //userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
+    userMarker = L.marker([0, 0]).addTo(map);
 
     const userCircle = L.circle([0, 0], {
         radius: 10,
@@ -327,6 +329,12 @@ function initializeGameAndMap() {
             updateProximityPulse(e.latlng);
         }
     });
+
+    map.on('locationerror', (e) => {
+    console.error("GPS Error:", e.message);
+    alert("GPS Error: " + e.message + "\nPlease make sure Location Services are enabled and you are using HTTPS.");
+});
+
     map.locate({ watch: true, enableHighAccuracy: true });
     
     // 4. Set initial layer visibility based on starting zoom
