@@ -418,7 +418,7 @@ function handleMarkerClick(site, marker) {
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
 
-    // 2. MORE INFO SECTION LOGIC
+    // 2. MORE INFO SECTION LOGIC (AI Context removed, Flyer & FAQ kept)
     if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
         siteModalMore = document.getElementById('siteModalMore');
         siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
@@ -451,7 +451,7 @@ function handleMarkerClick(site, marker) {
             `;
         }
 
-        // --- Combine everything into the "More Info" dropdown ---
+        // --- Combine everything into the "More Info" dropdown (Removed ai_context) ---
         siteModalMoreContent.innerHTML = `
             ${bwImageHtml}
             ${flyerTextHtml}
@@ -462,7 +462,7 @@ function handleMarkerClick(site, marker) {
         siteModalMoreContent.classList.add('hidden');
         siteModalMoreBtn.textContent = 'More info';
 
-        // Only show the "More info" button if extra information exists
+        // Only show the "More info" button if Flyer or FAQ information exists
         const hasExtraInfo = bwImageHtml || flyerTextHtml || faqHtml;
         siteModalMore.style.display = hasExtraInfo ? 'block' : 'none';
 
@@ -483,7 +483,7 @@ function handleMarkerClick(site, marker) {
     
     // Standard actions
     siteModalDirections.style.display = 'block';
-    siteModalAskAI.style.display = 'block';
+    siteModalAskAI.style.display = 'block'; // Keep the button as requested
 
     if (isMainSite) {
         // Numerical Main Site (1-13)
