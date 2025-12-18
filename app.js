@@ -418,7 +418,7 @@ function handleMarkerClick(site, marker) {
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
 
-    // 2. MORE INFO SECTION LOGIC (AI Context removed, Flyer & FAQ kept)
+    // 2. MORE INFO SECTION (Replaced AI-Context with Flyer-Text, kept original font)
     if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
         siteModalMore = document.getElementById('siteModalMore');
         siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
@@ -426,23 +426,23 @@ function handleMarkerClick(site, marker) {
     }
 
     if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
-        // --- Conditional Flyer Image (B&W PNG) ---
+        // --- Flyer Image (B&W PNG) ---
         const bwImageHtml = (site.flyer_image && site.flyer_image.trim() !== "") 
             ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">` 
             : "";
 
-        // --- Conditional Flyer Text ---
+        // --- Flyer Text (Replacing AI Context - Kept original text styling) ---
         const flyerTextHtml = site.flyer_text 
-            ? `<div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 italic text-gray-700 text-sm">${site.flyer_text}</div>` 
+            ? `<p class="text-gray-700 mb-4">${site.flyer_text}</p>` 
             : "";
 
-        // --- Conditional FAQ Content ---
+        // --- Visitor FAQ ---
         let faqHtml = "";
         if (site.faq) {
             faqHtml = `
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h4 class="font-bold text-gray-900 mb-2">📍 Visitor Quick Facts</h4>
-                    <ul class="text-sm space-y-2">
+                    <h4 class="font-bold text-gray-900 mb-2 text-sm">📍 Visitor Quick Facts</h4>
+                    <ul class="text-sm space-y-2 text-gray-700">
                         <li><strong>🕒 Hours:</strong> ${site.faq.opening_hours || 'Exterior view 24/7'}</li>
                         <li><strong>🎟️ Fee:</strong> ${site.faq.ticket_fee || 'Free Admission'}</li>
                         <li><strong>💡 Tip:</strong> ${site.faq.tips || 'Great for photography!'}</li>
@@ -451,18 +451,15 @@ function handleMarkerClick(site, marker) {
             `;
         }
 
-        // --- Combine everything into the "More Info" dropdown (Removed ai_context) ---
-        siteModalMoreContent.innerHTML = `
-            ${bwImageHtml}
-            ${flyerTextHtml}
-            ${faqHtml}
-        `;
+        // --- Combine into the dropdown ---
+        // Strictly using Flyer info only. ai_context is deleted here.
+        siteModalMoreContent.innerHTML = `${bwImageHtml}${flyerTextHtml}${faqHtml}`;
 
         // Reset visibility for each new site opened
         siteModalMoreContent.classList.add('hidden');
         siteModalMoreBtn.textContent = 'More info';
 
-        // Only show the "More info" button if Flyer or FAQ information exists
+        // Only show button if Flyer or FAQ data exists
         const hasExtraInfo = bwImageHtml || flyerTextHtml || faqHtml;
         siteModalMore.style.display = hasExtraInfo ? 'block' : 'none';
 
@@ -478,15 +475,13 @@ function handleMarkerClick(site, marker) {
         };
     }
     
-    // 3. QUIZ & CHECK-IN LOGIC
-    const isMainSite = site.quiz && !isNaN(parseInt(site.id));
-    
-    // Standard actions
+    // 3. ACTIONS (Kept the AI button visible)
     siteModalDirections.style.display = 'block';
-    siteModalAskAI.style.display = 'block'; // Keep the button as requested
+    siteModalAskAI.style.display = 'block'; 
 
+    // 4. QUIZ & CHECK-IN LOGIC
+    const isMainSite = site.quiz && !isNaN(parseInt(site.id));
     if (isMainSite) {
-        // Numerical Main Site (1-13)
         siteModalQuizArea.style.display = 'block';
         siteModalCheckInBtn.style.display = 'none'; 
         
@@ -534,7 +529,6 @@ function handleMarkerClick(site, marker) {
 
                     updateGameProgress();
                     updatePassport();
-                    
                     chaChingSound.play();
                     
                     if (visitedSites.length === TOTAL_SITES) {
@@ -558,29 +552,23 @@ function handleMarkerClick(site, marker) {
         });
 
     } else {
-        // Discovery Pin (A, B, C...)
         siteModalQuizArea.style.display = 'none'; 
         siteModalCheckInBtn.style.display = 'block'; 
         
         if (discoveredSites.includes(site.id)) {
             siteModalCheckInBtn.disabled = true;
             siteModalCheckInBtn.textContent = 'Visited';
-            siteModalCheckInBtn.classList.add('bg-gray-400', 'hover:bg-gray-400');
-            siteModalCheckInBtn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+            siteModalCheckInBtn.classList.add('bg-gray-400');
         } else {
             siteModalCheckInBtn.disabled = false;
             siteModalCheckInBtn.textContent = 'Check In to this Site';
-            siteModalCheckInBtn.classList.remove('bg-gray-400', 'hover:bg-gray-400');
-            siteModalCheckInBtn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            siteModalCheckInBtn.classList.remove('bg-gray-400');
         }
     }
 
-    // 4. DAILY CHALLENGE BUTTON LOGIC
-    const dayOfYear = getDayOfYear();
-    const riddleIndex = dayOfYear % allRiddles.length;
-    const todayRiddle = allRiddles[riddleIndex];
-    
-    if (solvedRiddle.day !== dayOfYear && currentModalSite.id === todayRiddle.a) {
+    // 5. DAILY CHALLENGE LOGIC
+    const todayRiddle = allRiddles[getDayOfYear() % allRiddles.length];
+    if (solvedRiddle.day !== getDayOfYear() && currentModalSite.id === todayRiddle.a) {
         siteModalSolveChallengeBtn.style.display = 'block';
     } else {
         siteModalSolveChallengeBtn.style.display = 'none';
