@@ -50,7 +50,7 @@ const allRiddles = [
 ];
 
 // --- DOM Elements ---
-let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn;
+let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalMoreBtn, siteModalMoreContent, siteModalMore;
 let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
 let passportModal, closePassportModal, passportInfo, passportGrid;
 let welcomeModal, closeWelcomeModal;
@@ -416,6 +416,38 @@ function handleMarkerClick(site, marker) {
     siteModalTitle.textContent = site.name;
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
+    // NEW: Populate and toggle the More info section (prefers site.more_info over site.ai_context)
+    if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
+        siteModalMore = document.getElementById('siteModalMore');
+        siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
+        siteModalMoreContent = document.getElementById('siteModalMoreContent');
+    }
+    if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
+        const moreText = (site.more_info && site.more_info.trim().length)
+            ? site.more_info
+            : (site.ai_context || '');
+        const hasMore = moreText.trim().length > 0;
+
+        // Reset state on open
+        siteModalMoreContent.classList.add('hidden');
+        siteModalMoreBtn.textContent = 'More info';
+        siteModalMoreContent.textContent = hasMore ? moreText : '';
+
+        // Show/hide button and container based on availability
+        siteModalMore.style.display = hasMore ? 'block' : 'none';
+        siteModalMoreBtn.style.display = hasMore ? 'block' : 'none';
+
+        siteModalMoreBtn.onclick = () => {
+            const isHidden = siteModalMoreContent.classList.contains('hidden');
+            if (isHidden) {
+                siteModalMoreContent.classList.remove('hidden');
+                siteModalMoreBtn.textContent = 'Hide info';
+            } else {
+                siteModalMoreContent.classList.add('hidden');
+                siteModalMoreBtn.textContent = 'More info';
+            }
+        };
+    }
     
     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
     
