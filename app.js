@@ -1447,9 +1447,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sharePassportBtn) {
             sharePassportBtn.addEventListener('click', () => {
                 const count = visitedSites.length;
-                const message = `I'm exploring Kuala Lumpur's Heritage Sites! I've visited ${count} so far on the BWM KUL City Walk. 🏛️✨\n\nJoin the adventure: https://bwm-kul-city-walk.vercel.app/`;
-                const whatsappMsg = encodeURIComponent(message);
-                window.location.href = `https://wa.me/?text=${whatsappMsg}`;
+                const text = `I'm exploring Kuala Lumpur's Heritage Sites! I've visited ${count} so far on the BWM KUL City Walk. 🏛️✨`;
+                const url = 'https://bwm-kul-city-walk.vercel.app/';
+
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'BWM KUL City Walk',
+                        text: text,
+                        url: url
+                    }).catch(console.error);
+                } else {
+                    const message = `${text}\n\nJoin the adventure: ${url}`;
+                    const whatsappMsg = encodeURIComponent(message);
+                    window.open(`https://api.whatsapp.com/send?text=${whatsappMsg}`, '_blank');
+                }
             });
         }
 
@@ -1458,10 +1469,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         shareWhatsAppBtn.addEventListener('click', () => {
-            const message = "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
-            const whatsappMsg = encodeURIComponent(message);
-            window.location.href = `https://wa.me/?text=${whatsappMsg}`;
+            const text = "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨";
+            const url = 'https://bwm-kul-city-walk.vercel.app/';
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Mission Accomplished!',
+                    text: text,
+                    url: url
+                }).catch(console.error);
+            } else {
+                const message = `${text}\n\nDiscover KL's history and start your own adventure here: ${url}`;
+                const whatsappMsg = encodeURIComponent(message);
+                window.open(`https://api.whatsapp.com/send?text=${whatsappMsg}`, '_blank');
+            }
         });
+
 
         btnChallenge.addEventListener('click', () => {
             updateChallengeModal();
