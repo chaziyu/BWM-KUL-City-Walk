@@ -117,9 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (photoInput.files && photoInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
+                    badgePhoto.onload = () => {
+                        captureAndDownload();
+                    };
                     badgePhoto.src = e.target.result;
-                    // Wait a moment for image to load before capturing
-                    setTimeout(captureAndDownload, 100);
                 }
                 reader.readAsDataURL(photoInput.files[0]);
             } else {
@@ -297,8 +298,8 @@ function getSiteColors(site) {
 function initializeGameAndMap() {
     if (map) return;
 
-    // 1. Initialize the map object FIRST
-    map = L.map('map').setView([3.1495519988154683, 101.69609103393907], 16);
+    // 1. Initialize the map object FIRST (Disable default zoom control)
+    map = L.map('map', { zoomControl: false }).setView([3.1495519988154683, 101.69609103393907], 16);
 
     // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
     map.on('zoomend', updateVisibility); // <--- FIX IS HERE
@@ -416,12 +417,14 @@ function initializeGameAndMap() {
             if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
                 // Set the state on the marker object itself for persistence
                 marker.options.isVisited = true;
-
-                // Use the 'add' event to guarantee the icon is in the DOM when we try to style it
-                marker.on('add', (e) => {
-                    safelyUpdateMarkerVisitedState(e.target, true);
-                });
             }
+
+            // Always attach the listener to handle re-adding to map (filtering)
+            marker.on('add', (e) => {
+                if (e.target.options.isVisited) {
+                    safelyUpdateMarkerVisitedState(e.target, true);
+                }
+            });
             // END FIX
             // 4. Attach Click Event
             marker.on('click', () => {
@@ -809,11 +812,13 @@ function handleMarkerClick(site, marker) {
         if (discoveredSites.includes(site.id)) {
             siteModalCheckInBtn.disabled = true;
             siteModalCheckInBtn.textContent = 'Visited';
-            siteModalCheckInBtn.classList.add('bg-gray-400');
+            siteModalCheckInBtn.classList.remove('bg-purple-700', 'hover:bg-purple-800', 'text-white');
+            siteModalCheckInBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
         } else {
             siteModalCheckInBtn.disabled = false;
             siteModalCheckInBtn.textContent = 'Check In to this Site';
-            siteModalCheckInBtn.classList.remove('bg-gray-400');
+            siteModalCheckInBtn.classList.remove('bg-gray-300', 'text-gray-600', 'cursor-not-allowed', 'bg-gray-400');
+            siteModalCheckInBtn.classList.add('bg-purple-700', 'hover:bg-purple-800', 'text-white');
         }
     }
 
@@ -852,8 +857,8 @@ function handleCheckIn() {
         // Update the button state
         siteModalCheckInBtn.disabled = true;
         siteModalCheckInBtn.textContent = 'Visited';
-        siteModalCheckInBtn.classList.add('bg-gray-400', 'hover:bg-gray-400');
-        siteModalCheckInBtn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+        siteModalCheckInBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
+        siteModalCheckInBtn.classList.remove('bg-purple-700', 'hover:bg-purple-800', 'text-white');
     }
 }
 
@@ -1399,10 +1404,41 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- ADDED: NEW LISTENERS FOR NEW FEATURES ---
+        // --- GLOBAL UI ZOOM LOGIC ---
+        const btnUIZoomIn = document.getElementById('btnUIZoomIn');
+        const btnUIZoomOut = document.getElementById('btnUIZoomOut');
+        let currentRootFontSize = 100; // Percentage
+
+        if (btnUIZoomIn && btnUIZoomOut) {
+            btnUIZoomIn.addEventListener('click', () => {
+                if (currentRootFontSize < 130) { // Max 130%
+                    currentRootFontSize += 10;
+                    document.documentElement.style.fontSize = `${currentRootFontSize}%`;
+                }
+            });
+
+            btnUIZoomOut.addEventListener('click', () => {
+                if (currentRootFontSize > 80) { // Min 80%
+                    currentRootFontSize -= 10;
+                    document.documentElement.style.fontSize = `${currentRootFontSize}%`;
+                }
+            });
+        }
+
+        // --- NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
             closeWelcomeModal.addEventListener('click', () => {
                 welcomeModal.classList.add('hidden');
+            });
+        }
+
+        const sharePassportBtn = document.getElementById('sharePassportBtn');
+        if (sharePassportBtn) {
+            sharePassportBtn.addEventListener('click', () => {
+                const count = visitedSites.length;
+                const message = `I'm exploring Kuala Lumpur's Heritage Sites! I've visited ${count} so far on the BWM KUL City Walk. 🏛️✨\n\nJoin the adventure: https://bwm-kul-city-walk.vercel.app/`;
+                const whatsappMsg = encodeURIComponent(message);
+                window.location.href = `https://wa.me/?text=${whatsappMsg}`;
             });
         }
 

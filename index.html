@@ -91,7 +91,7 @@
     <!-- MAP FILTER TABS -->
     <!-- MAP FILTER TABS (SIDEBAR STYLE) -->
     <div id="filterTabs"
-        class="fixed bottom-24 right-4 z-[2000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-2xl p-2 flex flex-col gap-2 w-40 transition-all">
+        class="fixed bottom-32 right-4 z-[2000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-2xl p-2 flex flex-col gap-2 w-40 transition-all">
         <button id="tabMustVisit"
             class="w-full py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 shadow-md transition-all">
             ✨ Must Visit
@@ -102,6 +102,8 @@
         </button>
     </div>
     <!-- End Map Filter Tabs -->
+
+
 
     <div id="landing-page"
         class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
@@ -190,8 +192,21 @@
 
     <div id="map" class="w-full h-screen z-10"></div>
 
+    <!-- GLOBAL UI ZOOM CONTROLS -->
+    <div class="fixed top-24 right-4 z-[1000] flex flex-col gap-2">
+        <button id="btnUIZoomIn"
+            class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">
+            +
+        </button>
+        <button id="btnUIZoomOut"
+            class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">
+            -
+        </button>
+    </div>
+    <!-- END GLOBAL UI ZOOM CONTROLS -->
+
     <button id="btnRecenter"
-        class="fixed bottom-6 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[1000] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+        class="fixed bottom-6 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
         title="Back to Dataran Merdeka">📍</button>
     <!-- PREVIEW CARD (Bottom Sheet) -->
     <div id="previewCard"
@@ -271,7 +286,7 @@
                 </div>
 
                 <button id="siteModalCheckInBtn"
-                    class="w-full bg-purple-600 text-white font-bold py-2 rounded-lg hover:bg-purple-700 transition mb-4 text-sm">
+                    class="w-full bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-800 transition mb-4 text-sm">
                     Check In to this Site
                 </button>
 
@@ -348,6 +363,17 @@
 
             <div id="passportGrid"
                 class="max-h-[60vh] overflow-y-auto grid grid-cols-3 gap-4 p-2 bg-gray-100 rounded-lg">
+            </div>
+
+            <div class="mt-4 flex flex-col gap-2">
+                <button onclick="document.getElementById('badgeInputModal').classList.remove('hidden');"
+                    class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold py-3 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition shadow-md flex items-center justify-center gap-2">
+                    🎓 Create / Download Explorer ID
+                </button>
+                <button id="sharePassportBtn"
+                    class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition shadow-md flex items-center justify-center gap-2">
+                    Share Progress on WhatsApp
+                </button>
             </div>
         </div>
     </div>
