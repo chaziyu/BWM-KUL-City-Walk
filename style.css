@@ -571,55 +571,56 @@ font {
 }
 
 
-/* --- COMPACT FLOATING TRANSLATE WIDGET (TOP LEFT) --- */
+/* --- COMPACT FLOATING TRANSLATE WIDGET (BELOW ZOOM CONTROLS) --- */
 #google_translate_element {
     position: fixed !important;
-    top: 20px !important;
-    left: 20px !important;
+    top: 90px !important;
+    /* Positioned below standard Leaflet zoom controls */
+    left: 10px !important;
+    /* Aligned with Leaflet controls margin */
     right: auto !important;
     z-index: 5000;
-    /* Below Landing Page (6000) but above Map (1) */
 
-    /* Compact Styling */
+    /* Smaller & More Transparent */
     transform: scale(1);
-    /* Reset scale, manage via width/height */
     transform-origin: top left;
 
-    /* Glassmorphism to match app buttons */
-    background: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    border-radius: 12px;
-    /* Smooth rounded corners */
+    /* High Transparency Glassmorphism */
+    background: rgba(255, 255, 255, 0.5) !important;
+    /* More transparent */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    /* Slightly smaller radius */
     padding: 0px;
-    /* Minimal padding */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-    /* Force specific dimensions to hide extra text/whitespace */
-    width: 140px !important;
-    height: 48px !important;
+    /* Smaller Dimensions */
+    width: 100px !important;
+    height: 30px !important;
     overflow: hidden;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    opacity: 0.9;
+    opacity: 0.8;
     transition: all 0.3s ease;
 }
 
 #google_translate_element:hover {
     opacity: 1;
-    transform: translateY(2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8) !important;
+    /* Less transparent on hover */
+    transform: translateY(0px);
 }
 
 /* Hide 'Powered by Google' branding */
 .goog-te-gadget {
     color: transparent !important;
     font-size: 0 !important;
-    margin-top: 2px !important;
+    margin-top: 0px !important;
     width: 100%;
     height: 100%;
     display: flex !important;
@@ -631,21 +632,20 @@ font {
     display: none !important;
 }
 
-/* Style the internal Dropdown to look like a native button label */
+/* Small, Compact Dropdown Text */
 .goog-te-gadget .goog-te-combo {
-    color: #4b5563 !important;
-    /* Gray-700 */
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-    font-weight: 700 !important;
-    /* Bold */
-    font-size: 14px !important;
+    color: #333 !important;
+    font-family: ui-sans-serif, system-ui, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    /* Smaller font */
     background: transparent !important;
     border: none !important;
     outline: none !important;
     margin: 0 !important;
-    padding: 4px !important;
-    width: 110% !important;
-    /* Slightly larger to hide browsers' default arrow if needed, or keeping it standard */
+    padding: 0px !important;
+    width: 120% !important;
     cursor: pointer;
     text-align: center;
+    height: 100%;
 }
