@@ -40,41 +40,8 @@
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
                 includedLanguages: 'en,ms,zh-CN,zh-TW,ta,id,ar,ja,ko,th,vi,fr,de,es,ru',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
             }, 'google_translate_element');
-
-            // --- FORCE FIX: Remove Google's Top Spacer (Nuclear Option) ---
-            const killBanner = () => {
-                // 1. Reset Body
-                if (document.body.style.top && document.body.style.top !== '0px') {
-                    document.body.style.top = '0px';
-                    document.body.style.marginTop = '0px'; // Also reset margin
-                    document.body.style.position = 'static';
-                }
-
-                // 2. Remove Banner iFrame
-                const banners = document.querySelectorAll('.goog-te-banner-frame');
-                banners.forEach(b => {
-                    b.style.display = 'none';
-                    b.style.height = '0';
-                    b.style.visibility = 'hidden';
-                    b.remove(); // Attempt to remove entirely
-                });
-
-                // 3. Remove "skiptranslate" class from body if it causes padding
-                // document.body.classList.remove('skiptranslate'); 
-                // (Careful: removing correct class might break translations, just hiding effects is safer)
-            };
-
-            // Run immediately and peridically
-            killBanner();
-            setInterval(killBanner, 1000); // Check every second just in case
-
-            // Watch for changes
-            const observer = new MutationObserver(killBanner);
-            observer.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
-            observer.observe(document.documentElement, { childList: true, subtree: true });
         }
     </script>
     <script type="text/javascript"
@@ -200,7 +167,7 @@
             class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
     </div>
 
-    <div id="welcomeModal" class="classic-modal-backdrop fixed inset-0 z-[8000] flex hidden">
+    <div id="welcomeModal" class="classic-modal-backdrop fixed inset-0 z-[4000] flex hidden">
         <div class="classic-modal-content p-6 text-center">
             <h2 class="text-2xl font-bold text-gray-800 mb-3">Welcome to BWM KUL City Walk!</h2>
             <p class="text-gray-600 mb-6">Explore the 24 pins to discover the city's history. Collect all 11 stamps from
@@ -315,7 +282,7 @@
         </div>
     </div>
 
-    <div id="passportModal" class="classic-modal-backdrop fixed inset-0 z-[8000] hidden">
+    <div id="passportModal" class="classic-modal-backdrop fixed inset-0 hidden">
         <div class="classic-modal-content p-6 text-center">
             <button id="closePassportModal"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
@@ -329,7 +296,7 @@
         </div>
     </div>
 
-    <div id="congratsModal" class="classic-modal-backdrop fixed inset-0 z-[8000] flex hidden">
+    <div id="congratsModal" class="classic-modal-backdrop fixed inset-0 z-[4000] flex hidden">
         <div class="classic-modal-content p-6 text-center">
             <button id="closeCongratsModal"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
@@ -348,7 +315,7 @@
         </div>
     </div>
 
-    <div id="challengeModal" class="classic-modal-backdrop fixed inset-0 z-[8000] flex hidden">
+    <div id="challengeModal" class="classic-modal-backdrop fixed inset-0 z-[4000] flex hidden">
         <div class="classic-modal-content p-6 text-center">
             <button id="closeChallengeModal"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
