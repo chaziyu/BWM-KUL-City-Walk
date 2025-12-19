@@ -1,40 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>BWM KUL City Walk</title>
-    
+
     <!-- ANTI-CACHE META TAGS -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.css" />
-    
+    <link rel="stylesheet"
+        href="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.css" />
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <link rel="stylesheet" href="style.css" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
+    <script
+        src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
+
 <body class="overflow-hidden bg-gray-100">
 
-    <div id="landing-page" class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
+    <div id="landing-page"
+        class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
         <div class="mb-10 animate-fade-in">
             <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-3 tracking-tight">BWM KUL City Walk</h1>
-            <p class="text-gray-500 text-sm md:text-base uppercase tracking-widest">Discover Kuala Lumpur's Heritage Buildings</p>
+            <p class="text-gray-500 text-sm md:text-base uppercase tracking-widest">Discover Kuala Lumpur's Heritage
+                Buildings</p>
         </div>
         <div class="w-full max-w-xs space-y-4 animate-slide-up">
-            <button id="btnVisitor" 
-            class="w-full group relative flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <button id="btnVisitor"
+                class="w-full group relative flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                 <span class="mr-3 text-xl">🗝️</span>
                 Enter with Passkey
             </button>
-            <button id="btnStaff" class="w-full flex justify-center items-center py-4 px-4 border-2 border-gray-200 text-sm font-bold rounded-xl text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-all">
+            <button id="btnStaff"
+                class="w-full flex justify-center items-center py-4 px-4 border-2 border-gray-200 text-sm font-bold rounded-xl text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-all">
                 BWM Staff Login
             </button>
         </div>
@@ -43,109 +50,154 @@
         </div>
     </div>
 
-    <div id="gatekeeper" class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4">
+    <div id="gatekeeper"
+        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative">
-            <button id="backToHome" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">← Back</button>
+            <button id="backToHome"
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">←
+                Back</button>
             <div class="mb-4 mt-2 text-5xl">🔐</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Visitor Access</h2>
             <p class="text-gray-600 mb-6 text-sm">Please enter the Passkey provided by the counter.</p>
-            <input type="text" id="passcodeInput" placeholder="e.g. AB-12345" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition font-mono">
-            <button id="unlockBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Verify & Unlock</button>
+            <input type="text" id="passcodeInput" placeholder="e.g. AB-12345"
+                class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition font-mono">
+            <button id="unlockBtn"
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Verify
+                & Unlock</button>
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
         </div>
     </div>
 
-    <div id="staff-screen" class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white">
+    <div id="staff-screen"
+        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative text-gray-900">
-            <button id="closeStaffScreen" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">← Back</button>
+            <button id="closeStaffScreen"
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">←
+                Back</button>
             <div class="mb-4 mt-2 text-5xl">🧑‍💼</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Staff Access</h2>
             <p class="text-gray-600 mb-6 text-sm">Enter the admin password to Login.</p>
             <div id="adminLoginForm">
-                <input type="password" id="adminPasswordInput" placeholder="Admin Password" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition">
-                <button id="adminLoginBtn" class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition shadow-lg">Login</button>
+                <input type="password" id="adminPasswordInput" placeholder="Admin Password"
+                    class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition">
+                <button id="adminLoginBtn"
+                    class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition shadow-lg">Login</button>
                 <p id="adminErrorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Wrong password.</p>
             </div>
             <div id="adminResult" class="hidden">
                 <p class="text-gray-600 mb-2" id="passkeyDate">Date: 2024-01-01</p>
                 <p class="text-2xl font-bold font-mono text-blue-600" id="passkeyResult">AB-1234</p>
                 <p class="text-gray-500 text-sm mt-4"></p>
-                
+
                 <div class="mt-6 border-t pt-4">
-                    <p class="text-xs text-gray-500">To check your AI API usage and quota, log in to your Google Cloud account and visit the dashboard:</p>
-                    <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
+                    <p class="text-xs text-gray-500">To check your AI API usage and quota, log in to your Google Cloud
+                        account and visit the dashboard:</p>
+                    <a href="https://console.cloud.google.com/apis/dashboard" target="_blank"
+                        class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
                 </div>
             </div>
         </div>
     </div>
 
-<div id="progress-container" class="fixed top-0 left-0 w-full z-[1000] hidden px-4 pt-4">
-        <div class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto flex items-center">
+    <div id="progress-container" class="fixed top-0 left-0 w-full z-[1000] hidden px-4 pt-4">
+        <div
+            class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto flex items-center">
             <div class="bg-gray-200 rounded-full h-3 w-full mx-3 relative overflow-hidden">
-                <div id="progressBar" class="bg-gradient-to-r from-green-400 to-green-500 h-full w-0 transition-all duration-700 ease-out rounded-full"></div>
+                <div id="progressBar"
+                    class="bg-gradient-to-r from-green-400 to-green-500 h-full w-0 transition-all duration-700 ease-out rounded-full">
+                </div>
             </div>
             <span id="progressText" class="text-xs font-bold text-gray-700 whitespace-nowrap mr-2">0/11 Sites</span>
         </div>
     </div>
 
-    
+
     <div id="map" class="w-full h-screen z-10"></div>
-    
-    <button id="btnRecenter" class="fixed bottom-6 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[1000] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200" title="Back to Dataran Merdeka">📍</button>
+
+    <button id="btnRecenter"
+        class="fixed bottom-6 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[1000] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+        title="Back to Dataran Merdeka">📍</button>
     <div class="fixed bottom-6 left-4 z-[1000] flex flex-col gap-3">
-        <button id="btnChallenge" class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🏆</button>
-        <button id="btnPassport" class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🛂</button>
-        <button id="btnChat" class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
+        <button id="btnChallenge"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🏆</button>
+        <button id="btnPassport"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🛂</button>
+        <button id="btnChat"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
     </div>
 
     <div id="welcomeModal" class="classic-modal-backdrop fixed inset-0 z-[4000] flex hidden">
         <div class="classic-modal-content p-6 text-center">
             <h2 class="text-2xl font-bold text-gray-800 mb-3">Welcome to BWM KUL City Walk!</h2>
-            <p class="text-gray-600 mb-6">Explore the 24 pins to discover the city's history. Collect all 11 stamps from the main sites to complete your passport!</p>
-            <button id="closeWelcomeModal" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Start Exploring</button>
+            <p class="text-gray-600 mb-6">Explore the 24 pins to discover the city's history. Collect all 11 stamps from
+                the main sites to complete your passport!</p>
+            <button id="closeWelcomeModal"
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Start
+                Exploring</button>
         </div>
     </div>
 
     <div id="siteModal" class="classic-modal-backdrop fixed inset-0 hidden">
         <div class="classic-modal-content">
             <div class="relative">
-                <img id="siteModalImage" src="https://placehold.co/600x400/eee/ccc?text=Site+Image" alt="Heritage Site" class="w-full h-48 object-cover">
-                <button id="closeSiteModal" class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/80 transition">×</button>
+                <img id="siteModalImage" src="https://placehold.co/600x400/eee/ccc?text=Site+Image" alt="Heritage Site"
+                    class="w-full h-48 object-cover">
+                <button id="closeSiteModal"
+                    class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/80 transition">×</button>
             </div>
             <div class="p-6 max-h-[60vh] overflow-y-auto">
-                
+
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">
                     <span id="siteModalLabel" class="text-gray-500 font-medium mr-2"></span>
                     <span id="siteModalTitle">Site Title</span>
                 </h2>
-                
+
+                <!-- Zoom Controls -->
+                <div class="flex gap-2 mb-2">
+                    <button id="btnTextSizeSmall"
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700">A-</button>
+                    <button id="btnTextSizeReset"
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700">Reset</button>
+                    <button id="btnTextSizeLarge"
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700">A+</button>
+                </div>
+
                 <p id="siteModalInfo" class="text-gray-700 mb-4">Site info loading...</p>
                 <!-- More Info: Collapsible detailed description -->
                 <div id="siteModalMore" class="mb-4">
-                    <button id="siteModalMoreBtn" class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-700 transition mb-2 text-sm">More info</button>
-                    <div id="siteModalMoreContent" class="mt-2 text-gray-700 hidden whitespace-pre-line bg-gray-100 border border-gray-200 rounded-lg p-3"></div>
+                    <button id="siteModalMoreBtn"
+                        class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-700 transition mb-2 text-sm">More
+                        info</button>
+                    <div id="siteModalMoreContent"
+                        class="mt-2 text-gray-700 hidden whitespace-pre-line bg-gray-100 border border-gray-200 rounded-lg p-3">
+                    </div>
                 </div>
-                
-                <button id="siteModalCheckInBtn" class="w-full bg-purple-600 text-white font-bold py-2 rounded-lg hover:bg-purple-700 transition mb-4 text-sm">
+
+                <button id="siteModalCheckInBtn"
+                    class="w-full bg-purple-600 text-white font-bold py-2 rounded-lg hover:bg-purple-700 transition mb-4 text-sm">
                     Check In to this Site
                 </button>
-                
-                <button id="siteModalSolveChallengeBtn" class="w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-600 transition mb-4 text-sm hidden">
+
+                <button id="siteModalSolveChallengeBtn"
+                    class="w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-600 transition mb-4 text-sm hidden">
                     🏆 Solve Daily Challenge
                 </button>
 
                 <div class="flex gap-2">
-                    <button id="siteModalDirections" class="flex-1 bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 transition text-sm">
+                    <button id="siteModalDirections"
+                        class="flex-1 bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 transition text-sm">
                         Get Directions
                     </button>
-                    <button id="siteModalAskAI" class="flex-1 bg-gray-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-gray-700 transition text-sm">
+                    <button id="siteModalAskAI"
+                        class="flex-1 bg-gray-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-gray-700 transition text-sm">
                         Ask AI
                     </button>
                 </div>
-                
+
                 <div id="siteModalQuizArea" class="bg-gray-100 p-4 rounded-lg mt-4">
                     <p id="siteModalQuizQ" class="font-bold text-gray-800 mb-2">Quiz: Question loading...</p>
-                    <input type="text" id="siteModalQuizInput" class="w-full border-2 border-gray-200 p-2 rounded-lg" placeholder="Type your answer...">
+                    <input type="text" id="siteModalQuizInput" class="w-full border-2 border-gray-200 p-2 rounded-lg"
+                        placeholder="Type your answer...">
                     <div class="flex justify-between items-center mt-2">
                         <button id="siteModalHintBtn" class="text-xs text-blue-600 font-bold hover:underline">💡 Need a
                             hint?</button>
@@ -153,7 +205,9 @@
                     <p id="siteModalHintText"
                         class="text-sm mt-2 text-gray-500 italic hidden bg-yellow-50 p-2 rounded border border-yellow-200">
                     </p>
-                    <button id="siteModalQuizBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition mt-2">Submit Answer</button>
+                    <button id="siteModalQuizBtn"
+                        class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition mt-2">Submit
+                        Answer</button>
                     <p id="siteModalQuizResult" class="text-sm mt-2 text-center font-bold"></p>
                 </div>
             </div>
@@ -175,31 +229,39 @@
             <div class="p-4 border-t bg-white">
                 <p id="chatLimitText" class="text-xs text-gray-500 text-center mb-2">You have 10 messages remaining.</p>
                 <div class="flex gap-2">
-                    <input type="text" id="chatInput" placeholder="Ask a question..." class="flex-1 border-2 border-gray-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 transition">
-                    <button id="chatSendBtn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Send</button>
+                    <input type="text" id="chatInput" placeholder="Ask a question..."
+                        class="flex-1 border-2 border-gray-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                    <button id="chatSendBtn"
+                        class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Send</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="passportModal" class="classic-modal-backdrop fixed inset-0 hidden">
-         <div class="classic-modal-content p-6 text-center">
-            <button id="closePassportModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+        <div class="classic-modal-content p-6 text-center">
+            <button id="closePassportModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">My Passport</h2>
-           <p id="passportInfo" class="text-gray-600 mb-6 text-sm italic">Visited <span id="visitedCount">0</span> of 11 heritage buildings in Kuala Lumpur</p>
-            
-            <div id="passportGrid" class="max-h-[60vh] overflow-y-auto grid grid-cols-3 gap-4 p-2 bg-gray-100 rounded-lg">
-                </div>
-         </div>
+            <p id="passportInfo" class="text-gray-600 mb-6 text-sm italic">Visited <span id="visitedCount">0</span> of
+                11 heritage buildings in Kuala Lumpur</p>
+
+            <div id="passportGrid"
+                class="max-h-[60vh] overflow-y-auto grid grid-cols-3 gap-4 p-2 bg-gray-100 rounded-lg">
+            </div>
+        </div>
     </div>
-    
+
     <div id="congratsModal" class="classic-modal-backdrop fixed inset-0 z-[4000] flex hidden">
         <div class="classic-modal-content p-6 text-center">
-            <button id="closeCongratsModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <button id="closeCongratsModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
             <div class="text-6xl mb-4">🎉</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-3">Congratulations!</h2>
-            <p class="text-gray-600 mb-6">You have visited all 11 heritage buildings in Kuala Lumpur and completed the BWM KUL City Walk Passport!</p>
-            <button id="shareWhatsAppBtn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition shadow-lg">
+            <p class="text-gray-600 mb-6">You have visited all 11 heritage buildings in Kuala Lumpur and completed the
+                BWM KUL City Walk Passport!</p>
+            <button id="shareWhatsAppBtn"
+                class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition shadow-lg">
                 Share on WhatsApp
             </button>
         </div>
@@ -207,16 +269,20 @@
 
     <div id="challengeModal" class="classic-modal-backdrop fixed inset-0 z-[4000] flex hidden">
         <div class="classic-modal-content p-6 text-center">
-            <button id="closeChallengeModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <button id="closeChallengeModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
             <div class="text-6xl mb-4">🏆</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-3">Daily Challenge</h2>
             <p id="challengeRiddle" class="text-gray-600 mb-4">Riddle loading...</p>
             <p id="challengeResult" class="font-bold text-green-600"></p>
         </div>
     </div>
-    
-    <audio id="chaChingSound" src="https://raw.githubusercontent.com/chaziyu/jejak-warisan/main/images/ca%20ching%20sounds%20effect.mp3" preload="auto"></audio>
-    
+
+    <audio id="chaChingSound"
+        src="https://raw.githubusercontent.com/chaziyu/jejak-warisan/main/images/ca%20ching%20sounds%20effect.mp3"
+        preload="auto"></audio>
+
     <script src="app.js" type="module"></script>
 </body>
+
 </html>

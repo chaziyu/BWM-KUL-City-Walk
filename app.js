@@ -1169,3 +1169,44 @@ async function verifyCode(enteredCode) {
     // --- Run the app ---
     initApp();
 });
+
+// --- ZOOM FUNCTIONALITY ---
+document.addEventListener('DOMContentLoaded', () => {
+    const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
+    const btnTextSizeReset = document.getElementById('btnTextSizeReset');
+    const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
+    const contentText = document.getElementById('siteModalInfo');
+    const moreContentText = document.getElementById('siteModalMoreContent');
+    
+    let currentTextSize = 100; // Percentage
+
+    function updateTextSize() {
+        if(contentText) contentText.style.fontSize = \\%\;
+        if(moreContentText) moreContentText.style.fontSize = \\%\;
+    }
+
+    if(btnTextSizeSmall) {
+        btnTextSizeSmall.addEventListener('click', () => {
+             if (currentTextSize > 80) {
+                currentTextSize -= 10;
+                updateTextSize();
+             }
+        });
+    }
+
+    if(btnTextSizeLarge) {
+        btnTextSizeLarge.addEventListener('click', () => {
+             if (currentTextSize < 200) {
+                currentTextSize += 10;
+                updateTextSize();
+             }
+        });
+    }
+
+    if(btnTextSizeReset) {
+        btnTextSizeReset.addEventListener('click', () => {
+            currentTextSize = 100;
+            updateTextSize();
+        });
+    }
+});
