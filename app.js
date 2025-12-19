@@ -208,20 +208,29 @@ function safelyUpdatePolygonVisitedState(siteId, isVisited) {
     }
 }
 
+// --- MAP FILTER STATE ---
+let activeFilterMode = 'must_visit'; // Default: Top 6 Only (as requested "highlight only")
+
+// ... (existing code) ...
+
 //MAP LOGIC
 // 2. The Switcher Function (No "site" variable needed here!)
-// --- MAP VISIBILITY TOGGLE ---
-// --- MAP VISIBILITY TOGGLE (UPDATED FOR FILTER) ---
+// --- MAP VISIBILITY TOGGLE (UPDATED FOR TABS) ---
 function updateVisibility() {
     // Safety check: ensure map and layers are initialized before proceeding
     if (!map || !markersLayer || !polygonsLayer) return;
 
     const currentZoom = map.getZoom();
 
-    // 1. Determine which Sites to Show based on Filter
-    // If Filter is ACTIVE, only show 'must_visit'. Else show all.
+    // 1. Determine which Sites to Show based on Filter Mode
     const visibleSiteIds = allSiteData
-        .filter(site => !isFilterActive || site.category === 'must_visit')
+        .filter(site => {
+            if (activeFilterMode === 'must_visit') {
+                return site.category === 'must_visit';
+            } else {
+                return site.category === 'recommended';
+            }
+        })
         .map(site => site.id);
 
     // A. Handle Markers (Show when Zoom < Threshold)
@@ -509,43 +518,48 @@ function initializeGameAndMap() {
         maximumAge: 10000
     });
 
-    // --- MAP FILTER STATE ---
-    let isFilterActive = false; // Default: Show All
+    // --- MAP FILTER STATE --- (Managed by activeFilterMode global)
 
     // ... (existing code) ...
 
     // 4. Set initial layer visibility based on starting zoom
     updateVisibility();
 
-    // 5. Initialize Map Filter Button Logic
-    const filterBtn = document.getElementById('mapFilterBtn');
-    const filterText = document.getElementById('mapFilterText');
-    const filterStatus = document.getElementById('mapFilterStatus');
+    // 5. Initialize Map Filter Tab Logic
+    const tabMustVisit = document.getElementById('tabMustVisit');
+    const tabRecommended = document.getElementById('tabRecommended');
 
-    if (filterBtn) {
-        // Show button now that map is ready
-        filterBtn.classList.remove('hidden');
+    function updateTabStyles() {
+        if (!tabMustVisit || !tabRecommended) return;
 
-        filterBtn.addEventListener('click', () => {
-            isFilterActive = !isFilterActive;
+        if (activeFilterMode === 'must_visit') {
+            // Must Visit Active
+            tabMustVisit.className = "px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 shadow-lg transition-all transform scale-105 border-indigo-700";
+            tabRecommended.className = "px-4 py-2 rounded-full text-sm font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 transition-all";
+        } else {
+            // Recommended Active
+            tabMustVisit.className = "px-4 py-2 rounded-full text-sm font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 transition-all";
+            tabRecommended.className = "px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 shadow-lg transition-all transform scale-105 border-indigo-700";
+        }
+    }
 
-            // UI Updates
-            if (isFilterActive) {
-                filterBtn.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-                filterText.textContent = "Highlights Only";
-                filterStatus.classList.remove('bg-gray-300');
-                filterStatus.classList.add('bg-indigo-500');
-            } else {
-                filterBtn.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
-                filterText.textContent = "Show All";
-                filterStatus.classList.add('bg-gray-300');
-                filterStatus.classList.remove('bg-indigo-500');
-            }
-
-            // Trigger Map Update
+    if (tabMustVisit && tabRecommended) {
+        tabMustVisit.addEventListener('click', () => {
+            activeFilterMode = 'must_visit';
+            updateTabStyles();
             updateVisibility();
         });
+
+        tabRecommended.addEventListener('click', () => {
+            activeFilterMode = 'recommended';
+            updateTabStyles();
+            updateVisibility();
+        });
+
+        // Init styles
+        updateTabStyles();
     }
+
 
     if (!sessionStorage.getItem('jejak_welcome_shown')) {
         document.getElementById('welcomeModal').classList.remove('hidden');

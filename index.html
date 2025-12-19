@@ -88,15 +88,19 @@
         })();
     </script>
 
-    <!-- MAP FILTER TOGGLE -->
-    <button id="mapFilterBtn"
-        class="absolute top-[130px] left-[10px] z-[4000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-md rounded-full px-3 py-1.5 flex items-center gap-2 transition-all hover:bg-white active:scale-95 group hidden">
-        <span class="text-lg leading-none">✨</span>
-        <span id="mapFilterText" class="text-xs font-bold text-gray-700 group-hover:text-indigo-600">Highlights</span>
-        <!-- Status Dot -->
-        <span id="mapFilterStatus" class="w-2 h-2 rounded-full bg-gray-300 transition-colors"></span>
-    </button>
-    <!-- End Map Filter -->
+    <!-- MAP FILTER TABS -->
+    <div id="filterTabs"
+        class="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[4000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-full p-1 flex items-center gap-1 transition-all">
+        <button id="tabMustVisit"
+            class="px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 shadow-sm transition-all">
+            ✨ Must Visit
+        </button>
+        <button id="tabRecommended"
+            class="px-4 py-2 rounded-full text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">
+            Also Recommended
+        </button>
+    </div>
+    <!-- End Map Filter Tabs -->
 
     <div id="landing-page"
         class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
