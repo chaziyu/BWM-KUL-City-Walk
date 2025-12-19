@@ -571,53 +571,53 @@ font {
 }
 
 
-/* --- COMPACT FLOATING TRANSLATE WIDGET (BELOW ZOOM CONTROLS) --- */
+/* --- COMPACT FLOATING TRANSLATE WIDGET (ICON ONLY) --- */
 #google_translate_element {
     position: fixed !important;
     top: 90px !important;
     left: 10px !important;
     z-index: 5000;
 
-    /* Button Container Style */
-    background: rgba(255, 255, 255, 0.6) !important;
+    /* Icon Button Style */
+    background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    /* Circular */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 
-    width: auto !important;
-    min-width: 80px;
-    height: 30px !important;
-    padding: 0 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease;
     overflow: hidden;
 }
 
 #google_translate_element:hover {
-    background: rgba(255, 255, 255, 0.9) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+    background: white !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* THE HACK: Display Custom Text using CSS */
+/* THE HACK: Display Globe Icon */
 #google_translate_element::before {
-    content: 'Translate';
-    /* Custom Label */
-    font-family: ui-sans-serif, system-ui, sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    color: #4b5563;
-    display: block;
-    pointer-events: none;
-    /* Let clicks pass through to the select */
-    white-space: nowrap;
+    content: '\1F310';
+    /* Globe Emoji 🌐 */
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
 /* HIDE THE GOOGLE BRANDING COMPLETELY */
@@ -627,8 +627,16 @@ font {
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;
-    /* Make invisible but clickable */
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0.01;
+    /* Almost zero opacity to stay clickable */
+    pointer-events: auto;
+    /* Ensure it catches clicks */
+    z-index: 10;
+    /* Sit above the icon */
+    background: red;
+    /* Debug color (hidden by opacity) */
 }
 
 /* Ensure the dropdown covers the whole button to capture clicks */
@@ -636,7 +644,10 @@ font {
     width: 100% !important;
     height: 100% !important;
     margin: 0 !important;
+    border: none !important;
     cursor: pointer;
+    opacity: 0 !important;
+    display: block !important;
 }
 
 /* Hide branding elements */
