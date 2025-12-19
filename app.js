@@ -596,69 +596,84 @@ function handleMarkerClick(site, marker) {
         siteModalCheckInBtn.style.display = 'none';
 
         siteModalQuizQ.textContent = site.quiz.q;
-        siteModalQuizInput.value = "";
         siteModalQuizResult.classList.add('hidden');
 
-        const newQuizBtn = siteModalQuizBtn.cloneNode(true);
-        siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
-        siteModalQuizBtn = newQuizBtn;
-
-        siteModalHintText.textContent = site.quiz.hint || "No hint available.";
+        // Reset Hint
+        siteModalHintText.textContent = site.quiz.hint || "Try again!";
         siteModalHintText.classList.add('hidden');
 
-        const newHintBtn = siteModalHintBtn.cloneNode(true);
-        siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
-        siteModalHintBtn = newHintBtn;
+        // Clear Options
+        siteModalQuizOptions.innerHTML = '';
 
-        siteModalHintBtn.addEventListener('click', () => {
-            siteModalHintText.classList.toggle('hidden');
-        });
+        // Get and Shuffle Options
+        let options = site.quiz.options ? [...site.quiz.options] : [site.quiz.a];
+        options.sort(() => Math.random() - 0.5);
 
-        siteModalQuizBtn.addEventListener('click', () => {
-            const normalize = (val) => {
-                if (!val) return '';
-                let s = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const numMap = {
-                    'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5',
-                    'six': '6', 'seven': '7', 'eight': '8', 'nine': '9', 'ten': '10'
-                };
-                return numMap[s] || s;
-            };
+        // Create Buttons
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-lg border-2 border-gray-200 hover:bg-blue-50 hover:border-blue-400 transition text-center shadow-sm";
+            btn.textContent = opt;
 
-            if (normalize(siteModalQuizInput.value) === normalize(site.quiz.a)) {
-                siteModalQuizResult.textContent = "Correct! Well done!";
-                siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
+            btn.onclick = () => {
+                // Check Answer
+                if (opt === site.quiz.a) {
+                    // CORRECT
+                    siteModalQuizResult.textContent = "Correct! Well done!";
+                    siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
+                    siteModalQuizResult.classList.remove('hidden');
 
-                if (!visitedSites.includes(site.id)) {
-                    visitedSites.push(site.id);
-                    localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
+                    // Highlight Correct Button
+                    btn.classList.remove('bg-white', 'border-gray-200', 'hover:bg-blue-50', 'hover:border-blue-400');
+                    btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
 
-                    const markerToUpdate = allMarkers[site.id];
-                    safelyUpdateMarkerVisitedState(markerToUpdate, true);
-                    safelyUpdatePolygonVisitedState(site.id, true);
+                    // Disable all buttons
+                    const allBtns = siteModalQuizOptions.querySelectorAll('button');
+                    allBtns.forEach(b => b.disabled = true);
 
-                    updateGameProgress();
-                    updatePassport();
-                    chaChingSound.play();
+                    if (!visitedSites.includes(site.id)) {
+                        visitedSites.push(site.id);
+                        localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
 
-                    if (visitedSites.length === TOTAL_SITES) {
-                        congratsModal.classList.remove('hidden');
-                        if (typeof confetti === 'function') {
-                            const duration = 3 * 1000;
-                            const end = Date.now() + duration;
-                            (function frame() {
-                                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-                                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-                                if (Date.now() < end) requestAnimationFrame(frame);
-                            }());
+                        const markerToUpdate = allMarkers[site.id];
+                        safelyUpdateMarkerVisitedState(markerToUpdate, true);
+                        safelyUpdatePolygonVisitedState(site.id, true);
+
+                        updateGameProgress();
+                        updatePassport();
+                        chaChingSound.play();
+
+                        if (visitedSites.length === TOTAL_SITES) {
+                            congratsModal.classList.remove('hidden');
+                            if (typeof confetti === 'function') {
+                                const duration = 3 * 1000;
+                                const end = Date.now() + duration;
+                                (function frame() {
+                                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                                    if (Date.now() < end) requestAnimationFrame(frame);
+                                }());
+                            }
                         }
                     }
+
+                } else {
+                    // WRONG
+                    siteModalQuizResult.textContent = "Not quite, try again!";
+                    siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-red-600";
+                    siteModalQuizResult.classList.remove('hidden');
+
+                    // Shake/Red Effect
+                    btn.classList.add('bg-red-50', 'border-red-300');
+                    setTimeout(() => {
+                        btn.classList.remove('bg-red-50', 'border-red-300');
+                    }, 500);
+
+                    // SHOW HINT
+                    siteModalHintText.classList.remove('hidden');
                 }
-            } else {
-                siteModalQuizResult.textContent = "Not quite, try again!";
-                siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-red-600";
-            }
-            siteModalQuizResult.classList.remove('hidden');
+            };
+            siteModalQuizOptions.appendChild(btn);
         });
 
     } else {
@@ -1106,8 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
         siteModalInfo = document.getElementById('siteModalInfo');
         siteModalQuizArea = document.getElementById('siteModalQuizArea');
         siteModalQuizQ = document.getElementById('siteModalQuizQ');
-        siteModalQuizInput = document.getElementById('siteModalQuizInput');
-        siteModalQuizBtn = document.getElementById('siteModalQuizBtn');
+        siteModalQuizOptions = document.getElementById('siteModalQuizOptions');
+        // siteModalQuizInput = document.getElementById('siteModalQuizInput'); // REMOVED
+        // siteModalQuizBtn = document.getElementById('siteModalQuizBtn'); // REMOVED
         siteModalQuizResult = document.getElementById('siteModalQuizResult');
         closeSiteModal = document.getElementById('closeSiteModal');
         siteModalAskAI = document.getElementById('siteModalAskAI');
@@ -1149,7 +1165,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
             if (map) {
-                map.setView([3.1495519988154683, 101.69609103393907], 16);
+                if (userMarker) {
+                    // 1. If we have a user marker, zoom to it
+                    map.setView(userMarker.getLatLng(), 18);
+                } else if (navigator.geolocation) {
+                    // 2. Try to get fresh location
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const { latitude, longitude } = pos.coords;
+                            map.setView([latitude, longitude], 18);
+                        },
+                        (err) => {
+                            // 3. Fallback to center
+                            console.warn("Recenter failed:", err);
+                            map.setView([3.1495519988154683, 101.69609103393907], 16);
+                        },
+                        { enableHighAccuracy: true }
+                    );
+                } else {
+                    // 4. Fallback if no geolocation support
+                    map.setView([3.1495519988154683, 101.69609103393907], 16);
+                }
             }
         });
 
@@ -1202,7 +1238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // This is the correct, universal URL for Google Maps directions
             const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
 
-            window.open(url, '_blank');
+            window.location.href = url;
         });
 
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
@@ -1216,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lat = currentModalSite.coordinates.marker[0];
                 const lon = currentModalSite.coordinates.marker[1];
                 const url = `https://www.google.com/maps/search/restaurants+near+${lat},${lon}`;
-                window.open(url, '_blank');
+                window.location.href = url;
             });
         }
 
@@ -1227,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lat = currentModalSite.coordinates.marker[0];
                 const lon = currentModalSite.coordinates.marker[1];
                 const url = `https://www.google.com/maps/search/hotels+near+${lat},${lon}`;
-                window.open(url, '_blank');
+                window.location.href = url;
             });
         }
 
@@ -1245,7 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shareWhatsAppBtn.addEventListener('click', () => {
             const message = "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
             const whatsappMsg = encodeURIComponent(message);
-            window.open(`https://wa.me/?text=${whatsappMsg}`, '_blank');
+            window.location.href = `https://wa.me/?text=${whatsappMsg}`;
         });
 
         btnChallenge.addEventListener('click', () => {

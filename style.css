@@ -433,7 +433,61 @@ body, html {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-#logoOverlay {
-    z-index: 9000;
-    pointer-events: auto;
+
+/* --- 11. GOOGLE TRANSLATE CUSTOM STYLING --- */
+/* Hide the intrusive top bar */
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+body {
+    top: 0px !important;
+    position: static !important;
+}
+
+/* Hide annoying tooltips/popups */
+.goog-tooltip {
+    display: none !important;
+}
+.goog-tooltip:hover {
+    display: none !important;
+}
+.goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Make widget smaller and cleaner */
+#google_translate_element {
+    /* Scale down and align to avoid progress bar overlap */
+    transform: scale(0.85);
+    transform-origin: top right;
+    margin-right: -5px; /* Pull closer to edge */
+    margin-top: -5px;   /* Pull closer to top */
+    
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+#google_translate_element:hover {
+    opacity: 1;
+}
+
+/* Hide 'Powered by Google' branding */
+.goog-te-gadget {
+    color: transparent !important;
+    font-size: 0 !important;
+}
+.goog-te-gadget > span {
+    display: none !important;
+}
+.goog-te-gadget .goog-te-combo {
+    color: #374151 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    cursor: pointer;
+    outline: none !important;
 }
