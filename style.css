@@ -524,15 +524,17 @@ html {
 
 
 /* --- 11. GOOGLE TRANSLATE CUSTOM STYLING (ROBUST) --- */
-/* Completely hide the top banner frame */
+
+/* 1. HIDE THE TOP BANNER IFRAME */
 .goog-te-banner-frame.skiptranslate,
-.goog-te-banner-frame {
+.goog-te-banner-frame,
+iframe[id^=":"] {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
 }
 
-/* Force body to top, overriding Google's inline style */
+/* 2. PREVENT BODY SHIFT */
 body {
     top: 0px !important;
     position: static !important;
@@ -540,20 +542,34 @@ body {
     height: 100vh !important;
 }
 
-/* Hide annoying tooltips/popups */
+/* 3. HIDE "SATISFIED?" / "SUGGEST EDIT" POPUPS */
+.goog-te-balloon-frame {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 4. HIDE TOOLTIPS */
 .goog-tooltip {
     display: none !important;
+    visibility: hidden !important;
 }
 
 .goog-tooltip:hover {
     display: none !important;
 }
 
+/* 5. REMOVE TEXT HIGHLIGHTING STYLES */
 .goog-text-highlight {
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }
+
+font {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
 
 /* Make widget smaller and cleaner */
 #google_translate_element {
