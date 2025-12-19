@@ -574,8 +574,8 @@ font {
 /* --- COMPACT FLOATING TRANSLATE WIDGET (ICON ONLY) --- */
 #google_translate_element {
     position: fixed !important;
-    top: 20px !important;
-    left: 16px !important;
+    top: calc(1.25rem + env(safe-area-inset-top)) !important;
+    left: 1rem !important;
     z-index: 5000;
 
     /* Icon Button Style */
@@ -587,9 +587,9 @@ font {
     /* Circular */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
+    width: 3rem !important;
+    height: 3rem !important;
+    min-width: 3rem !important;
     padding: 0 !important;
 
     display: flex;

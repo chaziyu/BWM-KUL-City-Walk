@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no, viewport-fit=cover">
     <title>BWM KUL City Walk</title>
 
     <!-- ANTI-CACHE META TAGS -->
@@ -91,7 +92,7 @@
     <!-- MAP FILTER TABS -->
     <!-- MAP FILTER TABS (BOTTOM CENTER - VERTICAL STACK) -->
     <div id="filterTabs"
-        class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-2xl p-2 flex flex-col gap-2 w-48 transition-all">
+        class="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 transform -translate-x-1/2 z-[2000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-2xl p-2 flex flex-col md:flex-row gap-2 w-48 md:w-auto transition-all">
         <button id="tabMustVisit"
             class="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all">
             ✨ Must Visit
@@ -105,12 +106,12 @@
 
     <!-- CHAT BUTTON (Bottom Right - Above Recenter) -->
     <button id="btnChat"
-        class="fixed bottom-24 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">
+        class="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">
         💬
     </button>
 
     <!-- GLOBAL UI ZOOM CONTROLS (Moved to align under language button) -->
-    <div class="fixed top-20 left-4 z-[1000] flex flex-col gap-2 pt-2">
+    <div class="fixed top-[calc(5rem+env(safe-area-inset-top))] left-4 z-[1000] flex flex-col gap-2 pt-2">
         <button id="btnUIZoomIn"
             class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">
             +
@@ -122,7 +123,7 @@
     </div>
     <!-- END GLOBAL UI ZOOM CONTROLS -->
 
-    <div class="fixed bottom-6 left-4 z-[1000] flex flex-col gap-3">
+    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 z-[1000] flex flex-col gap-3">
         <button id="btnChallenge"
             class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🏆</button>
         <button id="btnPassport"
@@ -204,7 +205,7 @@
         </div>
     </div>
 
-    <div id="progress-container" class="fixed top-0 left-0 w-full z-[1000] hidden px-4 pt-4">
+    <div id="progress-container" class="fixed top-[env(safe-area-inset-top)] left-0 w-full z-[1000] hidden px-4 pt-4">
         <div
             class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto flex items-center">
             <div class="bg-gray-200 rounded-full h-3 w-full mx-3 relative overflow-hidden">
@@ -217,16 +218,16 @@
     </div>
 
 
-    <div id="map" class="w-full h-screen z-10"></div>
+    <div id="map" class="w-full h-[100dvh] z-10"></div>
 
 
 
     <button id="btnRecenter"
-        class="fixed bottom-6 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+        class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
         title="Back to Dataran Merdeka">📍</button>
     <!-- PREVIEW CARD (Bottom Sheet) -->
     <div id="previewCard"
-        class="fixed bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[3000] transform transition-transform duration-300 translate-y-[150%] hidden flex flex-col pb-8">
+        class="fixed bottom-[env(safe-area-inset-bottom)] left-0 w-full bg-white rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[3000] transform transition-transform duration-300 translate-y-[150%] hidden flex flex-col pb-8">
         <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
         </div>

@@ -565,12 +565,12 @@ function initializeGameAndMap() {
 
         if (activeFilterMode === 'must_visit') {
             // Must Visit Active
-            tabMustVisit.className = "w-full py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
-            tabRecommended.className = "w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
+            tabMustVisit.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
+            tabRecommended.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
         } else {
             // Recommended Active
-            tabMustVisit.className = "w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
-            tabRecommended.className = "w-full py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
+            tabMustVisit.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
+            tabRecommended.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
         }
     }
 
