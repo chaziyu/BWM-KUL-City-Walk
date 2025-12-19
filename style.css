@@ -219,7 +219,6 @@ body {
 /* GPU Acceleration for smoother modal transitions */
 .classic-modal-content,
 #previewCard,
-#filterTabs,
 #google_translate_element {
     will-change: transform, opacity;
     transform: translateZ(0);
