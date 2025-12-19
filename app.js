@@ -432,8 +432,14 @@ function initializeGameAndMap() {
 
             // Always attach the listener to handle re-adding to map (filtering)
             marker.on('add', (e) => {
-                // ADDED: Pin Drop Animation
-                e.target._icon?.classList.add('animate-pin-drop');
+                // ADDED: Pin Drop Animation (Safe delay and cleanup)
+                setTimeout(() => {
+                    const el = e.target._icon;
+                    if (el) {
+                        el.classList.add('animate-pin-drop');
+                        setTimeout(() => el.classList.remove('animate-pin-drop'), 500);
+                    }
+                }, 0);
 
                 if (e.target.options.isVisited) {
                     safelyUpdateMarkerVisitedState(e.target, true);
