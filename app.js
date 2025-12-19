@@ -211,20 +211,54 @@ function safelyUpdatePolygonVisitedState(siteId, isVisited) {
 //MAP LOGIC
 // 2. The Switcher Function (No "site" variable needed here!)
 // --- MAP VISIBILITY TOGGLE ---
+// --- MAP VISIBILITY TOGGLE (UPDATED FOR FILTER) ---
 function updateVisibility() {
     // Safety check: ensure map and layers are initialized before proceeding
     if (!map || !markersLayer || !polygonsLayer) return;
 
     const currentZoom = map.getZoom();
 
-    if (currentZoom >= ZOOM_THRESHOLD) {
-        // Zoomed in: Show Polygons, Hide Markers
-        if (map.hasLayer(markersLayer)) map.removeLayer(markersLayer);
-        if (!map.hasLayer(polygonsLayer)) map.addLayer(polygonsLayer);
-    } else {
-        // Zoomed out: Show Markers, Hide Polygons
+    // 1. Determine which Sites to Show based on Filter
+    // If Filter is ACTIVE, only show 'must_visit'. Else show all.
+    const visibleSiteIds = allSiteData
+        .filter(site => !isFilterActive || site.category === 'must_visit')
+        .map(site => site.id);
+
+    // A. Handle Markers (Show when Zoom < Threshold)
+    if (currentZoom < ZOOM_THRESHOLD) {
+        // Ensure Polygons are hidden
         if (map.hasLayer(polygonsLayer)) map.removeLayer(polygonsLayer);
+
+        // Ensure Markers Layer Group is on map
         if (!map.hasLayer(markersLayer)) map.addLayer(markersLayer);
+
+        // Toggle individual markers within the group
+        Object.keys(allMarkers).forEach(id => {
+            const marker = allMarkers[id];
+            if (visibleSiteIds.includes(id)) {
+                if (!markersLayer.hasLayer(marker)) markersLayer.addLayer(marker);
+            } else {
+                if (markersLayer.hasLayer(marker)) markersLayer.removeLayer(marker);
+            }
+        });
+
+    } else {
+        // Zoomed in: Show Polygons (Show when Zoom >= Threshold)
+        // Ensure Markers are hidden
+        if (map.hasLayer(markersLayer)) map.removeLayer(markersLayer);
+
+        // Ensure Polygons Layer Group is on map
+        if (!map.hasLayer(polygonsLayer)) map.addLayer(polygonsLayer);
+
+        // Toggle individual polygons within the group
+        Object.keys(allPolygons).forEach(id => {
+            const poly = allPolygons[id];
+            if (visibleSiteIds.includes(id)) {
+                if (!polygonsLayer.hasLayer(poly)) polygonsLayer.addLayer(poly);
+            } else {
+                if (polygonsLayer.hasLayer(poly)) polygonsLayer.removeLayer(poly);
+            }
+        });
     }
 }
 
@@ -240,8 +274,9 @@ function getSiteColors(site) {
         return { markerColor, fillColor, className };
     } else {
         // Colors for Checkpoints/Bonus Sites (Alphabetical ID: A, B, M...)
-        const markerColor = "#4CAF50"; // Green for checkpoint/bonus sites
-        const fillColor = "#635b5bff";   // Light Green for polygon fill
+        // UPDATED: Changed from Green to Purple for better contrast against map greenery
+        const markerColor = "#9333EA"; // Vibrant Purple (Tailwind Purple-600)
+        const fillColor = "#E9D5FF";   // Light Purple (Tailwind Purple-200)
         const className = 'bonus-marker-pin';
         return { markerColor, fillColor, className };
     }
@@ -474,8 +509,43 @@ function initializeGameAndMap() {
         maximumAge: 10000
     });
 
+    // --- MAP FILTER STATE ---
+    let isFilterActive = false; // Default: Show All
+
+    // ... (existing code) ...
+
     // 4. Set initial layer visibility based on starting zoom
     updateVisibility();
+
+    // 5. Initialize Map Filter Button Logic
+    const filterBtn = document.getElementById('mapFilterBtn');
+    const filterText = document.getElementById('mapFilterText');
+    const filterStatus = document.getElementById('mapFilterStatus');
+
+    if (filterBtn) {
+        // Show button now that map is ready
+        filterBtn.classList.remove('hidden');
+
+        filterBtn.addEventListener('click', () => {
+            isFilterActive = !isFilterActive;
+
+            // UI Updates
+            if (isFilterActive) {
+                filterBtn.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50');
+                filterText.textContent = "Highlights Only";
+                filterStatus.classList.remove('bg-gray-300');
+                filterStatus.classList.add('bg-indigo-500');
+            } else {
+                filterBtn.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50');
+                filterText.textContent = "Show All";
+                filterStatus.classList.add('bg-gray-300');
+                filterStatus.classList.remove('bg-indigo-500');
+            }
+
+            // Trigger Map Update
+            updateVisibility();
+        });
+    }
 
     if (!sessionStorage.getItem('jejak_welcome_shown')) {
         document.getElementById('welcomeModal').classList.remove('hidden');

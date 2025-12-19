@@ -79,7 +79,7 @@
             setInterval(() => {
                 const popups = document.querySelectorAll('.goog-te-balloon-frame, .goog-te-banner-frame, .goog-tooltip, iframe[id^=":"]');
                 popups.forEach(el => el.remove());
-                
+
                 // Force Body Reset
                 if (document.body.style.top !== '0px') {
                     document.body.style.top = '0px';
@@ -87,6 +87,16 @@
             }, 1000);
         })();
     </script>
+
+    <!-- MAP FILTER TOGGLE -->
+    <button id="mapFilterBtn"
+        class="absolute top-[130px] left-[10px] z-[4000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-md rounded-full px-3 py-1.5 flex items-center gap-2 transition-all hover:bg-white active:scale-95 group hidden">
+        <span class="text-lg leading-none">✨</span>
+        <span id="mapFilterText" class="text-xs font-bold text-gray-700 group-hover:text-indigo-600">Highlights</span>
+        <!-- Status Dot -->
+        <span id="mapFilterStatus" class="w-2 h-2 rounded-full bg-gray-300 transition-colors"></span>
+    </button>
+    <!-- End Map Filter -->
 
     <div id="landing-page"
         class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">

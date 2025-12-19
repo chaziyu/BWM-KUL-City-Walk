@@ -266,6 +266,7 @@
     "built": "1894-1897",
     "architects": "A.C. Norman, R.A.J. Bidwell, A.B. Hubback",
     "info": "This iconic landmark was the grand administrative center for the British. Built with over 4 million bricks, its 41-meter clock tower houses a one-ton bell that first chimed for Queen Victoria's birthday in 1897. Look for the granite bollards by the porch—they were for tethering horses!",
+    "category": "must_visit",
     "quiz": {
       "q": "What was the cost of the building in Straits Dollars?",
       "a": "198,000",
@@ -360,6 +361,7 @@
     "built": "1904-1907",
     "architects": "A.B. Hubback",
     "info": "Built for $100,000 Straits Dollars, this Moghul-style building served as KL's General Post Office until 1984. It was designed by A.B. Hubback to perfectly match its famous neighbor, the Sultan Abdul Samad Building, and features wide verandahs and elegant horse-shoe arches.",
+    "category": "recommended",
     "quiz": {
       "q": "Who was the architect?",
       "a": "A.B. Hubback",
@@ -421,6 +423,7 @@
     "built": "Early 1900s - 1930s",
     "architects": "B.M. Iversen (Loke Yew), A.K. Moosden (Chow Kit)",
     "info": "This cluster of buildings tells the story of KL's commercial boom. The Loke Yew Building (1930s) is a famous Art Deco structure. Next door, the Chow Kit & Co. building (1905) shows off a Neo-Renaissance style with Flemish pediments. These represent the empires of tin tycoons like Loke Yew.",
+    "category": "recommended",
     "quiz": {
       "q": "The Loke Yew Building is a 6-storey ___ style structure.",
       "a": "Art Deco",
@@ -474,6 +477,7 @@
     "built": "1908-1909",
     "architects": "A.B. Hubback",
     "info": "Officially Masjid Jamek Sultan Abdul Samad, this is one of KL's oldest mosques. It's built at the historic confluence of the Klang and Gombak rivers—the very birthplace of Kuala Lumpur! It sits on the site of an old Malay cemetery and features distinctive red and white brick bands.",
+    "category": "must_visit",
     "quiz": {
       "q": "Masjid Jamek is located on the site of a Malay...",
       "a": "cemetery",
@@ -528,6 +532,7 @@
     "built": "1907 (Shophouses), 1937 (Clock Tower)",
     "architects": "A.O. Coltman (Clock Tower)",
     "info": "This was the original town center established by Kapitan Yap Ah Loy, which once housed his market and gambling sheds. The square is lined with ornate 1907 Neo-classical shophouses. Its centerpiece is the Art Deco Clock Tower, built in 1937 to commemorate the coronation of King George VI.",
+    "category": "must_visit",
     "quiz": {
       "q": "The 1937 Clock Tower commemorates the coronation of King ___ ___.",
       "a": "George VI",
@@ -601,6 +606,7 @@
     "built": "1864 (Founded), 1882 (Rebuilt)",
     "architects": "N/A",
     "info": "As Kuala Lumpur's oldest traditional Chinese temple, its construction was funded by Kapitan Yap Ah Loy. It is uniquely angled away from the road to align with Feng Shui principles. It's dedicated to the deities Sin Sze Ya and Si Sze Ya, who are said to have guided the Kapitan to victory during the Selangor Civil War.",
+    "category": "must_visit",
     "quiz": {
       "q": "Who was the founder of the temple in 1864?",
       "a": "Kapitan Yap Ah Loy",
@@ -670,6 +676,7 @@
     "built": "1905",
     "architects": "N/A",
     "info": "This building is highly unusual because it spans an entire triangular block and has no 'five-foot way' (the covered walkway found on most shophouses). It was once occupied by the founders of Cycle & Carriage, who imported the first cars into Malaya.",
+    "category": "recommended",
     "quiz": {
       "q": "The unique Old Federal Stores building has no '___-foot way'.",
       "a": "five",
@@ -737,6 +744,7 @@
     "built": "1932",
     "architects": "A.O. Coltman",
     "info": "An Art Deco masterpiece. When it was completed in 1932, this 5-storey, 85-foot structure was the tallest building in Kuala Lumpur! Designed by A.O. Coltman on a triangular plot, it has a beautiful curved facade and originally housed Radio Malaya.",
+    "category": "recommended",
     "quiz": {
       "q": "In 1932, this was the tallest building in KL, at ___ feet high.",
       "a": "85",
@@ -815,6 +823,7 @@
     "built": "1966 (Rebuilt)",
     "architects": "N/A",
     "info": "This area's first mosque was a simple timber hut from 1893. The current Southern Indian-style structure opened in 1966. A unique feature is that prayer services here are conducted in both Arabic and Tamil. The surrounding arcade is famous for its textiles and spices.",
+    "category": "recommended",
     "quiz": {
       "q": "Prayer service is conducted in Arabic and ___.",
       "a": "Tamil",
@@ -868,6 +877,7 @@
     "built": "1902 (Established)",
     "architects": "N/A",
     "info": "This is Malaysia's oldest existing jewellers. It was founded by P.H. Hendry from Sri Lanka, who was shipwrecked en route to Australia! The family's craftsmanship was so renowned they were appointed Royal Jewellers to 3 different Sultans in the 1920s.",
+    "category": "recommended",
     "quiz": {
       "q": "P.H. Hendry was appointed royal jewellers to how many Sultans?",
       "a": "3",
@@ -945,6 +955,7 @@
     "built": "1904",
     "architects": "A.B. Hubback",
     "info": "Built for $107,000 Straits Dollars, this Moghul-style beauty by A.B. Hubback housed the Municipal Offices and KL's only theatre. After being heavily damaged by a major fire in the mid-1980s, it was beautifully restored. It is now the venue for the musical *MUD: Our Story of Kuala Lumpur*.",
+    "category": "recommended",
     "quiz": {
       "q": "The building was razed by ___ in the mid-1980s.",
       "a": "fire",
@@ -1019,6 +1030,7 @@
     "built": "1897 (Fountain)",
     "architects": "N/A",
     "info": "The historic cricket 'Padang' (field) where Malaysian independence was declared in 1957. It features a 100m tall flagpole (once the world's tallest) and a Victorian fountain imported from England in 1897.",
+    "category": "must_visit",
     "flyer_text": "Dataran Merdeka was originally known as the Padang. It was the focal point of colonial Kuala Lumpur and was used as the Parade Ground by the British Colonial administration. Until the early 1990s it was a prime location for sports like cricket, as well as football and rugby. In the centre of the Square, opposite Bangunan Sultan Abdul Samad, three flagpoles commemorate the historic event of Merdeka where at the stroke of midnight on 31 August 1957, the Union Jack was lowered for the last time, and Malaya became an independent nation. Today, beneath the Square is a complex of shops and a carpark. While it is no longer used for sports activities, it remains a prime venue for many large public events. On the south side of the Square is a 100m tall flagpole, reputedly the tallest in the world at the time it was built. At the corner of the Square, below the flagpole is the old ornamental fountain and horse drinking trough. Designed by Messrs Rosher & Company, this was imported from England, assembled locally and installed in 1897 at a cost of $4,000 (Straits Dollars).",
     "ai_context": "This is Merdeka Square, the historic cricket field known as the 'Padang'. This is where the Union Jack was lowered and the Malayan flag was raised at midnight on August 31, 1957, marking independence.\n\nLook For: The 100-meter-tall flagpole (one of the world's tallest) and the ornate Victorian fountain, which was imported from England and installed in 1897.\n\nExtra Tidbit: The building on the west side of the field is the Royal Selangor Club, founded in 1884. It's affectionately nicknamed \"The Spotted Dog\".",
     "faq": {
@@ -1178,6 +1190,7 @@
     "built": "1904-1905",
     "architects": "A.B. Hubback",
     "info": "Originally built as the FMS Railway Offices, this is a classic example of 'Blood and Bandage' brickwork (alternating red brick and white plaster). Designed by A.B. Hubback, it now houses a fascinating collection of Malaysian textiles.",
+    "category": "recommended",
     "flyer_text": "Constructed 1904-1905; Architect AB Hubback; Cost $116,000 (Straits Dollars). On the corner of Jalan Sultan Hishamuddin and Lebuh Pasar Besar, opposite the Old Post Office Building is the Textile Museum. Originally built as the FMS Railway Offices, it was taken over in 1917 by the PWD and now houses the Textile Museum. The façade of the building is in keeping with the Moghul style of the adjacent buildings with its distinctive red and white banding which has been achieved by alternating fair-faced bricks with plastered bricks. The main entrance along Jalan Sultan Hishamuddin comprises two pilasters that are topped by chatris flanked by two octagonal towers with a concrete dome surrounded by smaller domes.",
     "ai_context": "This stunning building, designed by A.B. Hubback, was completed in 1905. It was originally built as the FMS Railway Offices.\n\nLook For: It's a classic example of 'Blood and Bandage' brickwork, which is the local name for the style of alternating red bricks and white plaster bands.\n\nExtra Tidbit: Today, as the National Textile Museum, it houses four main galleries, including the 'Ratna Kencana' gallery, which showcases traditional Malaysian jewelry and accessories.",
     "faq": {
@@ -1229,6 +1242,7 @@
     "built": "1936",
     "architects": "A.O. Coltman",
     "info": "A 1936 Art Deco gem by A.O. Coltman. It was very modern for its time, featuring a basement bicycle garage! Look up to see the mosaic panel high on the building's facade, which features a Chinese Junk ship—the bank's original logo.",
+    "category": "recommended",
     "flyer_text": "This Art Deco building (1936) was the headquarters of the Overseas Chinese Banking Corporation (OCBC). The architect was AO Coltman who was also responsible for several other iconic buildings in Kuala Lumpur including the old RRI Building on Jalan Ampang and the Oriental Building on Jalan Tun Perak which you will pass later during this walk. The design was innovative for its time as it provided basement storage for bicycles; this still remains today although it is no longer used for its original purpose. Here the regular spaced windows flow along the façades addressing the corners of Lebuh Pasar Besar and Jalan Hang Kasturi and ends in a tapering stepped pylon with a flagpole at the top. A muted mosaic panel runs up the centre of the pylon ending with the original logo of the bank, a Chinese junk.",
     "ai_context": "This is another Art Deco masterpiece by A.O. Coltman, built in 1936 for the OCBC bank.\n\nLook For: High on the building's facade, you can see a mosaic panel featuring a Chinese Junk ship. This was the bank's original logo!\n\nFun Fact: This building was extremely modern for its time. It was one of the first in KL to be designed as 'earthquake-proof' and included an innovative basement bicycle garage for employees.",
     "faq": {
@@ -1280,6 +1294,7 @@
     "built": "1936",
     "architects": "T.Y. Lee",
     "info": "Built in 1936 as the city's wholesale wet market. It used special 'Calorex' glass to keep the interior cool, which was a high-tech solution before refrigeration was common! In 1986, it was saved from demolition and converted into the award-winning arts and crafts market we see today.",
+    "category": "must_visit",
     "flyer_text": "Built in 1936 at a cost of $330,000 (Straits Dollars), and replacing the older market on the same location, this Art Deco building served as KL's wholesale wet market until the mid 1980s when the wholesale market was relocated to an area outside the main city centre. The market itself was restored and adapted into an art and culture market in 1986. When originally built it was the largest room in the city at 120m long x 60m wide and 7.8m high. The building is splayed to align with the street, wider at one end with no two façades being the same. The original building had a dark grey granolithic exterior finish with a light green polished tiling interior to a height of 6 ft. The windows were metal framed with glazed 'Calorex' rolled plate glass which transmits only 20% of the sun's heat with 60% of daylight; this feature has been retained today and gives the building a distinctive look.",
     "ai_context": "This building, now known as Pasar Seni, was constructed in 1936 as the city's main wholesale wet market. It was designed by architect T.Y. Lee.\n\nDon't Miss: The building was high-tech for its time! It used special 'Calorex' glass in its windows, which transmits daylight but blocks 80% of the sun's heat, keeping the market cool *without* needing refrigerators.\n\nFun Fact: In the 1980s, the building was scheduled for demolition. It was saved by the Malaysian Heritage Society and beautifully repurposed into the arts and crafts market it is today.",
     "faq": {
@@ -1331,6 +1346,7 @@
     "built": "N/A",
     "architects": "N/A",
     "info": "A short street with huge history. This road originally led directly to the home of Kapitan Yap Ah Loy, one of KL's founders. It joins Jalan Hang Lekiu, which was formerly Klyne Street and one of the only paved streets in the early city.",
+    "category": "recommended",
     "flyer_text": "Jalan Yap Ah Loy is a short road with high historical significance. It led to the house on Lebuh Pasar Besar. This joins onto Jalan Hang Lekiu, originally known as Klyne Street. It was named after the Klyne brothers, Malacca-born Eurasians of Dutch descent. John Klyne served as a Surveyor in the Straits Settlements while his brother FC Klyne ran a pharmacy at the junction of High Street (Jalan Tun HS Lee) and Klyne Street. At one time almost all legal firms had their offices in Klyne Street because of its proximity to the Law Courts.",
     "ai_context": "This short street has huge historical significance. It originally led directly to the home of Kapitan Yap Ah Loy.\n\nExtra Tidbit: It joins Jalan Hang Lekiu, which was formerly known as Klyne Street. It was named after the Klyne brothers, one of whom was a surveyor and the other ran a pharmacy, and it was one of the only paved streets in the city.",
     "faq": {
@@ -1374,6 +1390,7 @@
     "built": "N/A",
     "architects": "N/A",
     "info": "Historically the street of the Chettiars (South Indian money-lenders). Look closely at No. 85—it features beautiful ceramic peacock tiles! The peacock is the symbol of Lord Muruga, the deity of the Chettiar caste.",
+    "category": "recommended",
     "flyer_text": "If you are to take a detour down this Lebuh Ampang you will find an area which still has many Indian restaurants, spice and sundry stores and money lenders. The shophouses along this street exhibit a wide range of styles from the more modest looking utilitarian façades with simple wooden shutters to the neo-Classical with more elaborate features and ornately decorated window frames, to the typical Art Deco style characterized by strong horizontal and vertical lines and geometric shapes. Lebuh Ampang was the street of the Chettiar, a south Indian caste of money-lenders. An example of a Chettier house is at No 85 which is decorated with glazed ceramic tiles of peacock designs. The peacock is the carriage of Lord Muruga who is the Hindu deity of the Chettiar caste.",
     "ai_context": "This street is historically the heart of the Chettiar community, who were South Indian money-lenders. The area is still filled with Indian restaurants, spice stores, and sundry shops.\n\nLook For: At building No. 85, you can see beautiful ceramic peacock tiles on the facade. The peacock is the sacred vehicle of Lord Muruga, the main deity of the Chettiar caste.\n\nFun Fact: Because of its strong South Indian influence, this street and the adjoining Jalan Masjid India are often collectively known as Kuala Lumpur's 'Little India'.",
     "faq": {
@@ -1429,6 +1446,7 @@
     "built": "N/A",
     "architects": "N/A",
     "info": "A mix of old and new. This street is notable for the Bank Muamalat building, which was cleverly designed to look like a traditional Malay House, despite being a modern banking hall.",
+    "category": "recommended",
     "flyer_text": "Walking up Jalan Melaka towards the top end of Jalan Ampang, you will pass several major modern buildings such as Bank Muamalat on your left which has a banking hall built following the design of a traditional Malay House. Next to it is the Etiqa Academy (formerly known as Bangunan Dato' Zainal) and the Amanahraya building.",
     "ai_context": "Jalan Melaka is a mix of old and new. Look For: The Bank Muamalat building. Although it's a modern banking hall, its architecture was designed to look like a traditional Malay House.\n\nExtra Tidbit: This is one of the city's older streets, originally linking the main river trading post to the road leading out towards the Ampang tin mines.",
     "faq": {
@@ -1472,6 +1490,7 @@
     "built": "1964",
     "architects": "N/A",
     "info": "Completed in 1964, these 8-storey blocks were an early and important experiment in mass public housing for the newly independent nation. They provided homes for 160 families and replaced the former squatters of Lorong Gombak.",
+    "category": "recommended",
     "flyer_text": "This was a private development by United Malay Realty Ltd. The two blocks in the vicinity of Masjid India are eight-storey buildings with one basement each. They have retail at ground floor level with offices at the first floor, and subsequent floors are 160 residential 3 or 4 bedroom flats. Selangor Mansion was built first at a cost of RM2.5 million and was completed in 1964, and Malayan Mansion after. It is said that many of the people who had lived at the Lorong Gombak squatter settlement which had been razed a few years previously, were relocated to Selangor and Malayan Mansions. This is an early example of mass public housing in the newly independent nation of Malaya, when Kuala Lumpur was still part of the State of Selangor.",
     "ai_context": "Completed in 1964 for $2.5 million, these 8-storey blocks were an early and important experiment in mass public housing for the newly independent nation. They provided 160 flats and replaced a former squatter settlement.\n\nFun Fact: These buildings are a prominent local example of Brutalist architecture, a style known for its raw concrete, blocky forms, and functional design that was popular in the 1960s.",
     "faq": {
@@ -1523,6 +1542,7 @@
     "built": "1970s",
     "architects": "N/A",
     "info": "Built in the 1970s, this tower was once the tallest in the area. It was developed by Malay entrepreneurs and remains the absolute best place in the city to buy traditional Malay attire like Baju Melayu and Songkok (traditional cap).",
+    "category": "recommended",
     "flyer_text": "Across from Masjid India is Wisma Yakin, an 11-storey building from the early 1970s. It was the tallest building in the area when first built and was developed by Malay entrepreneurs supported by PKNS (Selangor State Economic Development Corporation). It consists of a floor for retail outlets and remaining floors for other business activities and offices. It remains the must-go to place if you are looking to buy baju Melayu or songkok. You may want to drop by Patiman & Anak-anak Sdn Bhd at No 11 Wisma Yakin, where En Zulfadli who is in charge of the shop will explain the different types of songkok.",
     "ai_context": "Built in the 1970s, Wisma Yakin was the tallest building in the area at the time. It was a landmark project developed by Malay entrepreneurs with support from PKNS (Selangor State Economic Development Corporation).\n\nHere's a local tip: It remains the best place in all of KL to buy traditional Malay attire like Baju Melayu (the traditional men's outfit) and Songkok (the black velvet cap). The shop at No. 11 is run by an expert in the craft.",
     "faq": {
@@ -1566,6 +1586,7 @@
     "built": "N/A",
     "architects": "N/A",
     "info": "Known as 'Malay Street', this area was once filled with spice factories and bakeries. Look for the 100-year-old business selling 'Kain Pelekat' (sarongs) at No 3-5, run by the Kulasingam Chettiar family since 1895.",
+    "category": "recommended",
     "flyer_text": "Also known as Malay Street, this was named for the Malay settlers who were located in this area. A Malay school was originally found in this area at the Jalan Masjid India intersection. A prominent owner from the 1870s was Haji Mohamed Eusop bin Abubakar, a sea captain from Terengganu, who made his fortune as a rice trader and invested in several shophouses along Jalan TAR and Jalan Melayu. Jalan Melayu used to be filled with Malay spice factories, Indian bakeries and Chinese bicycle shops and it continues to have a vibrant mixture of businesses to today. See if you can find one of the old wholesale businesses selling Kain Pelikat (woven Indian hand-loom cotton worn by men as sarong), Goodluck Trading Company (established in 1895 on Batu Road and moved to Jalan Melayu in 1965) at No 3-5 Jalan Melayu.",
     "ai_context": "Also known as 'Malay Street', this area was named for the Malay settlers who lived here and was the site of the original Malay school. It used to be filled with spice factories and Indian bakeries.\n\nLook For: At No. 3-5, you can find the Goodluck Trading Company, a business run by the Kulasingam Chettiar family that has been selling 'Kain Pelekat' (traditional woven sarongs) since 1895!",
     "faq": {
