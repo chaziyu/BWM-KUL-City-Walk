@@ -65,7 +65,7 @@ const allRiddles = [
 ];
 
 // --- DOM Elements ---
-let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalMoreBtn, siteModalMoreContent, siteModalMore;
+let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizOptions, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalMoreBtn, siteModalMoreContent, siteModalMore;
 let siteModalFoodBtn, siteModalHotelBtn; // NEW BUTTONS
 let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
 let passportModal, closePassportModal, passportInfo, passportGrid;
@@ -443,11 +443,36 @@ function initializeGameAndMap() {
     });
 
     map.on('locationerror', (e) => {
-        console.error("GPS Error:", e.message);
-        alert("GPS Error: " + e.message + "\nPlease make sure Location Services are enabled and you are using HTTPS.");
+        console.error("GPS Error:", e);
+
+        let errorMessage = "GPS Error: ";
+        switch (e.code) {
+            case 1: // PERMISSION_DENIED
+                errorMessage += "Permission Denied.\n\nPLEASE FIX: Go to iPhone Settings > Privacy > Location Services > Safari Websites (or your browser) > Select 'While Using the App'.\n\nRefresh the page after changing this setting.";
+                break;
+            case 2: // POSITION_UNAVAILABLE
+                errorMessage += "Position Unavailable.\n\nPlease move directly under the open sky. GPS signals are weak indoors.";
+                break;
+            case 3: // TIMEOUT
+                errorMessage += "Request Timed Out.\n\nStandard GPS failed. We will try a lower accuracy method now...";
+                // Fallback attempt with lower accuracy
+                alert(errorMessage); // Alert first so they know
+                map.locate({ watch: true, enableHighAccuracy: false, maximumAge: 10000 });
+                return; // Exit here to avoid double alert
+            default:
+                errorMessage += e.message + "\n\nEnsure Location Services are ON and you are using HTTPS.";
+        }
+
+        alert(errorMessage);
     });
 
-    map.locate({ watch: true, enableHighAccuracy: true });
+    // Modified to include timeout and maximumAge to prevent infinite hanging
+    map.locate({
+        watch: true,
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 10000
+    });
 
     // 4. Set initial layer visibility based on starting zoom
     updateVisibility();
