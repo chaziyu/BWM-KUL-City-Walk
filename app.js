@@ -27,8 +27,8 @@ let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || []
     }
 })();
 */
-const TOTAL_SITES = 11; 
-let allSiteData = []; 
+const TOTAL_SITES = 11;
+let allSiteData = [];
 let chatHistory = [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
 let currentModalSite = null; // To track the currently open pin
@@ -78,51 +78,51 @@ let siteModalHintBtn, siteModalHintText;
 
 // 1. Setup Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // Elements
     const badgeModal = document.getElementById('badgeInputModal');
     const closeBadgeBtn = document.getElementById('closeBadgeModal');
     const btnGenerate = document.getElementById('btnGenerateBadge');
-    
+
     const nameInput = document.getElementById('explorerNameInput');
     const photoInput = document.getElementById('explorerPhotoInput');
-    
+
     // Template Elements
     const badgeName = document.getElementById('badgeNameDisplay');
     const badgeDate = document.getElementById('badgeDateDisplay');
     const badgePhoto = document.getElementById('badgeProfileImage');
 
     // Close Modal Logic
-    if(closeBadgeBtn) {
+    if (closeBadgeBtn) {
         closeBadgeBtn.addEventListener('click', () => {
             badgeModal.classList.add('hidden');
         });
     }
 
     // 2. The Main Generation Function
-    if(btnGenerate) {
+    if (btnGenerate) {
         btnGenerate.addEventListener('click', async () => {
             // A. Update the Template with User Data
             const userName = nameInput.value.trim() || "Master Explorer"; // Default if empty
             badgeName.textContent = userName;
-            
+
             // Set Date
             const today = new Date();
-            badgeDate.textContent = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+            badgeDate.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
 
             // Handle Photo
             if (photoInput.files && photoInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     badgePhoto.src = e.target.result;
                     // Wait a moment for image to load before capturing
-                    setTimeout(captureAndDownload, 100); 
+                    setTimeout(captureAndDownload, 100);
                 }
                 reader.readAsDataURL(photoInput.files[0]);
             } else {
                 // Use default if no photo uploaded
                 // Ensure you have a default image at this path or use a placeholder URL
-                badgePhoto.src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'; 
+                badgePhoto.src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
                 setTimeout(captureAndDownload, 100);
             }
         });
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. The Screenshot & Download Logic
     function captureAndDownload() {
         const badgeElement = document.getElementById('hiddenBadgeTemplate');
-        
+
         // Show loading state
         btnGenerate.textContent = "Generating...";
         btnGenerate.disabled = true;
@@ -150,12 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reset UI
             btnGenerate.textContent = "✨ Generate & Download ID";
             btnGenerate.disabled = false;
-            
+
             // Close modal (optional)
             // badgeModal.classList.add('hidden');
-            
+
             // Play sound!
-            if(typeof chaChingSound !== 'undefined') chaChingSound.play();
+            if (typeof chaChingSound !== 'undefined') chaChingSound.play();
 
         }).catch(err => {
             console.error("Badge generation failed:", err);
@@ -200,7 +200,7 @@ function safelyUpdatePolygonVisitedState(siteId, isVisited) {
                 polygon.setStyle({
                     color: markerColor,
                     fillColor: fillColor,
-                    fillOpacity: 0.5 
+                    fillOpacity: 0.5
                 });
             }
         }
@@ -249,10 +249,10 @@ function getSiteColors(site) {
 // --- CORE GAME & MAP INITIALIZATION ---
 function initializeGameAndMap() {
     if (map) return;
-    
+
     // 1. Initialize the map object FIRST
     map = L.map('map').setView([3.1495519988154683, 101.69609103393907], 16);
-    
+
     // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
     map.on('zoomend', updateVisibility); // <--- FIX IS HERE
 
@@ -265,49 +265,49 @@ function initializeGameAndMap() {
     setTimeout(() => { map.invalidateSize(); }, 100);
 
     const heritageZoneCoords = [
-      [3.147975450896226, 101.69407218460753],
-      [3.147875669801323, 101.69457723912365],
-      [3.147127721948337, 101.6944130737071],
-      [3.1470551688521766, 101.69489184188524],
-      [3.147040581431142, 101.6953510702482],
-      [3.146910977360818, 101.69596787508766],
-      [3.146040219660293, 101.69582514844836],
-      [3.1459295524663276, 101.69591377737044],
-      [3.1458637739165027, 101.69617940300776],
-      [3.145620507639194, 101.69619754843524],
-      [3.1454236958548734, 101.69644408495282],
-      [3.1454269210279193, 101.69664152594663],
-      [3.145876457674504, 101.69661151752189],
-      [3.145989111582452, 101.69696174751328],
-      [3.1461807892438145, 101.6967713155949],
-      [3.146446040826959, 101.69663637886669],
-      [3.1466857109719655, 101.69655305879348],
-      [3.1468060604896664, 101.69655801223007],
-      [3.146937297155233, 101.69705182258997],
-      [3.1479001753267966, 101.69784272570865],
-      [3.1487399967401046, 101.69704196933861],
-      [3.1491752105470994, 101.69664523897148],
-      [3.149414835714637, 101.69667637206499],
-      [3.1496467598275046, 101.69679166205447],
-      [3.150331101888554, 101.69749987377344],
-      [3.1504978321912773, 101.69782269435706],
-      [3.1511062051509526, 101.69778453086059],
-      [3.151545588948821, 101.69793104810935],
-      [3.1518111265568223, 101.69815387102346],
-      [3.1520067804815, 101.69841858672044],
-      [3.152150698997616, 101.69845017521152],
-      [3.152608986205081, 101.69846133998499],
-      [3.1518050329278964, 101.6972225224726],
-      [3.1518256789736085, 101.69716162454762],
-      [3.152118750930242, 101.696964832047],
-      [3.1512956011897018, 101.69643352266093],
-      [3.1510097545517226, 101.69612397196687],
-      [3.1513137554572097, 101.69585324808077],
-      [3.151576527436319, 101.6955174573178],
-      [3.150015739068621, 101.69453740808854],
-      [3.147974025683567, 101.69407485071252]
+        [3.147975450896226, 101.69407218460753],
+        [3.147875669801323, 101.69457723912365],
+        [3.147127721948337, 101.6944130737071],
+        [3.1470551688521766, 101.69489184188524],
+        [3.147040581431142, 101.6953510702482],
+        [3.146910977360818, 101.69596787508766],
+        [3.146040219660293, 101.69582514844836],
+        [3.1459295524663276, 101.69591377737044],
+        [3.1458637739165027, 101.69617940300776],
+        [3.145620507639194, 101.69619754843524],
+        [3.1454236958548734, 101.69644408495282],
+        [3.1454269210279193, 101.69664152594663],
+        [3.145876457674504, 101.69661151752189],
+        [3.145989111582452, 101.69696174751328],
+        [3.1461807892438145, 101.6967713155949],
+        [3.146446040826959, 101.69663637886669],
+        [3.1466857109719655, 101.69655305879348],
+        [3.1468060604896664, 101.69655801223007],
+        [3.146937297155233, 101.69705182258997],
+        [3.1479001753267966, 101.69784272570865],
+        [3.1487399967401046, 101.69704196933861],
+        [3.1491752105470994, 101.69664523897148],
+        [3.149414835714637, 101.69667637206499],
+        [3.1496467598275046, 101.69679166205447],
+        [3.150331101888554, 101.69749987377344],
+        [3.1504978321912773, 101.69782269435706],
+        [3.1511062051509526, 101.69778453086059],
+        [3.151545588948821, 101.69793104810935],
+        [3.1518111265568223, 101.69815387102346],
+        [3.1520067804815, 101.69841858672044],
+        [3.152150698997616, 101.69845017521152],
+        [3.152608986205081, 101.69846133998499],
+        [3.1518050329278964, 101.6972225224726],
+        [3.1518256789736085, 101.69716162454762],
+        [3.152118750930242, 101.696964832047],
+        [3.1512956011897018, 101.69643352266093],
+        [3.1510097545517226, 101.69612397196687],
+        [3.1513137554572097, 101.69585324808077],
+        [3.151576527436319, 101.6955174573178],
+        [3.150015739068621, 101.69453740808854],
+        [3.147974025683567, 101.69407485071252]
     ];
-    
+
     // Original heritage zone polygon
     L.polyline(heritageZoneCoords, {
         color: '#8B4513',
@@ -316,7 +316,7 @@ function initializeGameAndMap() {
         interactive: false,
         className: 'animated-trail' // Key: Assign a CSS class
     }).addTo(map);
-    
+
     // 3. Initialize the Layer Groups
     markersLayer = L.layerGroup().addTo(map); // Add markers layer to map (visible by default)
     polygonsLayer = L.layerGroup();           // Do NOT add polygons layer to map yet
@@ -331,9 +331,9 @@ function initializeGameAndMap() {
     });
 
     fetch('data.json').then(res => res.json()).then(sites => {
-        allSiteData = sites; 
+        allSiteData = sites;
         sites.forEach(site => {
-            
+
             // 1. FIX: DEFINE THE VARIABLE HERE!
             const isSiteVisited = visitedSites.includes(site.id) || discoveredSites.includes(site.id); // <--- FIX IS HERE
 
@@ -342,7 +342,7 @@ function initializeGameAndMap() {
 
             // --- Determine Coordinates ---
             let latlng = Array.isArray(site.coordinates) ? site.coordinates : site.coordinates?.marker;
-            if (!latlng) return; 
+            if (!latlng) return;
 
             // 2. Create the Custom Div Icon using the calculated color
             /*
@@ -357,19 +357,19 @@ function initializeGameAndMap() {
             // 3. Create the Marker
             const marker = L.marker(latlng)
                 .bindTooltip(site.name, {
-                    permanent: false, 
-                    direction: 'top', 
-                    sticky: true 
+                    permanent: false,
+                    direction: 'top',
+                    sticky: true
                 });
-                
+
             // NEW: Store the marker globally
-            allMarkers[site.id] = marker; 
-            
+            allMarkers[site.id] = marker;
+
             // FIX: Use the 'add' event and the helper to safely apply the class
             if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
                 // Set the state on the marker object itself for persistence
                 marker.options.isVisited = true;
-                
+
                 // Use the 'add' event to guarantee the icon is in the DOM when we try to style it
                 marker.on('add', (e) => {
                     safelyUpdateMarkerVisitedState(e.target, true);
@@ -378,8 +378,8 @@ function initializeGameAndMap() {
             // END FIX
 
             marker.on('click', () => handleMarkerClick(site, marker));
-            markersLayer.addLayer(marker); 
-            
+            markersLayer.addLayer(marker);
+
             // 4. Create the Polygon
             if (site.coordinates.polygon) {
                 const poly = L.polygon(site.coordinates.polygon, {
@@ -390,33 +390,33 @@ function initializeGameAndMap() {
                 });
 
                 // NEW: Store the polygon globally
-                allPolygons[site.id] = poly; 
+                allPolygons[site.id] = poly;
 
                 // NEW: Check if already visited and apply VISITED_POLYGON_COLOR
                 if (isSiteVisited) {
                     safelyUpdatePolygonVisitedState(site.id, true);
                 }
-                
+
                 poly.on('click', () => handleMarkerClick(site, marker));
-                polygonsLayer.addLayer(poly); 
+                polygonsLayer.addLayer(poly);
             }
-            
+
         });
         updateGameProgress();
-        updatePassport(); 
+        updatePassport();
     }).catch(err => console.error("Error loading Map Data:", err));
 
-    
+
     // --- Custom User Location Pin ---
     const userIcon = L.divIcon({
         // 1. Keep the wrapper clean (no animation here!)
-        className: 'user-pin-wrapper', 
+        className: 'user-pin-wrapper',
         iconSize: [20, 20],
         iconAnchor: [10, 10],
         // 2. Add the style class to this INNER div instead
-        html: '<div class="user-location-pin"></div>' 
+        html: '<div class="user-location-pin"></div>'
     });
-    
+
     // Make userMarker global
     userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
     //userMarker = L.marker([0, 0]).addTo(map);
@@ -428,11 +428,11 @@ function initializeGameAndMap() {
         fillOpacity: 0.05,
         weight: 1
     }).addTo(map);
-    
+
     map.on('locationfound', (e) => {
         userMarker.setLatLng(e.latlng);
         userCircle.setLatLng(e.latlng).setRadius(Math.min(e.accuracy / 2, 100));
-        
+
         // --- ADDED: Proximity Feature Logic ---
         if (allSiteData.length > 0) {
             updateProximityPulse(e.latlng);
@@ -440,14 +440,14 @@ function initializeGameAndMap() {
     });
 
     map.on('locationerror', (e) => {
-    console.error("GPS Error:", e.message);
-    alert("GPS Error: " + e.message + "\nPlease make sure Location Services are enabled and you are using HTTPS.");
-});
+        console.error("GPS Error:", e.message);
+        alert("GPS Error: " + e.message + "\nPlease make sure Location Services are enabled and you are using HTTPS.");
+    });
 
-    map.locate({ watch: true, enableHighAccuracy: true});
-    
+    map.locate({ watch: true, enableHighAccuracy: true });
+
     // 4. Set initial layer visibility based on starting zoom
-    updateVisibility(); 
+    updateVisibility();
 
     if (!sessionStorage.getItem('jejak_welcome_shown')) {
         document.getElementById('welcomeModal').classList.remove('hidden');
@@ -462,7 +462,7 @@ function updateProximityPulse(userLatLng) {
     if (!userMarker || !userMarker._icon) return;
 
     let closestDist = Infinity;
-    const undiscoveredSites = allSiteData.filter(site => 
+    const undiscoveredSites = allSiteData.filter(site =>
         !visitedSites.includes(site.id) && !discoveredSites.includes(site.id)
     );
 
@@ -500,9 +500,9 @@ function updateChallengeModal() {
     const dayOfYear = getDayOfYear();
     const riddleIndex = dayOfYear % allRiddles.length;
     const todayRiddle = allRiddles[riddleIndex];
-    
+
     challengeRiddle.textContent = `"${todayRiddle.q}"`;
-    
+
     if (solvedRiddle.day === dayOfYear && solvedRiddle.id === todayRiddle.a) {
         challengeResult.textContent = "You've already solved today's challenge. Well done!";
     } else {
@@ -513,7 +513,7 @@ function updateChallengeModal() {
 function handleMarkerClick(site, marker) {
     if (!siteModal) {
         console.error("Site modal is not initialized!");
-        return; 
+        return;
     }
 
     currentModalSite = site;
@@ -534,13 +534,13 @@ function handleMarkerClick(site, marker) {
 
     if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
         // --- Flyer Image (B&W PNG) ---
-        const bwImageHtml = (site.flyer_image && site.flyer_image.trim() !== "") 
-            ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">` 
+        const bwImageHtml = (site.flyer_image && site.flyer_image.trim() !== "")
+            ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">`
             : "";
 
         // --- Flyer Text (Replacing AI Context - Kept original text styling) ---
-        const flyerTextHtml = site.flyer_text 
-            ? `<p class="text-gray-700 mb-4">${site.flyer_text}</p>` 
+        const flyerTextHtml = site.flyer_text
+            ? `<p class="text-gray-700 mb-4">${site.flyer_text}</p>`
             : "";
 
         // --- Visitor FAQ ---
@@ -581,27 +581,27 @@ function handleMarkerClick(site, marker) {
             }
         };
     }
-    
+
     // 3. ACTIONS (Kept the AI button visible)
     siteModalDirections.style.display = 'block';
-    siteModalAskAI.style.display = 'block'; 
+    siteModalAskAI.style.display = 'block';
 
     // 4. QUIZ & CHECK-IN LOGIC
     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
     if (isMainSite) {
         siteModalQuizArea.style.display = 'block';
-        siteModalCheckInBtn.style.display = 'none'; 
-        
+        siteModalCheckInBtn.style.display = 'none';
+
         siteModalQuizQ.textContent = site.quiz.q;
         siteModalQuizInput.value = "";
         siteModalQuizResult.classList.add('hidden');
-        
+
         const newQuizBtn = siteModalQuizBtn.cloneNode(true);
         siteModalQuizBtn.parentNode.replaceChild(newQuizBtn, siteModalQuizBtn);
-        siteModalQuizBtn = newQuizBtn; 
-        
+        siteModalQuizBtn = newQuizBtn;
+
         siteModalHintText.textContent = site.quiz.hint || "No hint available.";
-        siteModalHintText.classList.add('hidden'); 
+        siteModalHintText.classList.add('hidden');
 
         const newHintBtn = siteModalHintBtn.cloneNode(true);
         siteModalHintBtn.parentNode.replaceChild(newHintBtn, siteModalHintBtn);
@@ -625,19 +625,19 @@ function handleMarkerClick(site, marker) {
             if (normalize(siteModalQuizInput.value) === normalize(site.quiz.a)) {
                 siteModalQuizResult.textContent = "Correct! Well done!";
                 siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
-                
+
                 if (!visitedSites.includes(site.id)) {
                     visitedSites.push(site.id);
                     localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
 
                     const markerToUpdate = allMarkers[site.id];
-                    safelyUpdateMarkerVisitedState(markerToUpdate, true); 
+                    safelyUpdateMarkerVisitedState(markerToUpdate, true);
                     safelyUpdatePolygonVisitedState(site.id, true);
 
                     updateGameProgress();
                     updatePassport();
                     chaChingSound.play();
-                    
+
                     if (visitedSites.length === TOTAL_SITES) {
                         congratsModal.classList.remove('hidden');
                         if (typeof confetti === 'function') {
@@ -659,9 +659,9 @@ function handleMarkerClick(site, marker) {
         });
 
     } else {
-        siteModalQuizArea.style.display = 'none'; 
-        siteModalCheckInBtn.style.display = 'block'; 
-        
+        siteModalQuizArea.style.display = 'none';
+        siteModalCheckInBtn.style.display = 'block';
+
         if (discoveredSites.includes(site.id)) {
             siteModalCheckInBtn.disabled = true;
             siteModalCheckInBtn.textContent = 'Visited';
@@ -689,22 +689,22 @@ function handleMarkerClick(site, marker) {
  */
 function handleCheckIn() {
     if (!currentModalSite || !currentModalMarker) return;
-    
+
     // Add to discovered list if not already there
     if (!discoveredSites.includes(currentModalSite.id)) {
         discoveredSites.push(currentModalSite.id);
         localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
-        
+
         // Update the marker icon to "visited" (red)
         // FIX: Look up marker from global map and use safe helper
         const markerToUpdate = allMarkers[currentModalSite.id]; // Look up the marker globally
-        safelyUpdateMarkerVisitedState(markerToUpdate, true); 
+        safelyUpdateMarkerVisitedState(markerToUpdate, true);
         // END FIX
 
         // NEW: Update polygon color
         safelyUpdatePolygonVisitedState(currentModalSite.id, true); // <--- ADD THIS LINE
         // END NEW
-        
+
         // Update the button state
         siteModalCheckInBtn.disabled = true;
         siteModalCheckInBtn.textContent = 'Visited';
@@ -724,14 +724,14 @@ async function handleSendMessage() {
     addChatMessage('user', userQuery);
     // Modified: Use skeleton loader instead of "..."
     const thinkingEl = addChatMessage('ai', '<span class="skeleton text-xs px-8 rounded">Loading...</span>');
-    
+
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 userQuery: userQuery,
-                history: chatHistory.slice(-HISTORY_WINDOW_SIZE) 
+                history: chatHistory.slice(-HISTORY_WINDOW_SIZE)
             })
         });
 
@@ -740,14 +740,14 @@ async function handleSendMessage() {
         }
 
         const data = await response.json();
-        
+
         chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
         chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-        
+
         userMessageCount++;
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
-        
+
         thinkingEl.querySelector('p:last-child').innerHTML = data.reply; // Select the content paragraph
 
     } catch (error) {
@@ -769,10 +769,10 @@ function addChatMessage(role, text) {
     const align = (role === 'user') ? 'self-end' : 'self-start';
     const bg = (role === 'user') ? 'bg-white' : 'bg-blue-100';
     const textCol = (role === 'user') ? 'text-gray-900' : 'text-blue-900';
-    
+
     messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align}`;
     messageEl.innerHTML = `<p class="font-bold text-sm">${name}</p><p>${text}</p>`;
-    
+
     chatHistoryEl.appendChild(messageEl);
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
     return messageEl;
@@ -787,7 +787,7 @@ function updateGameProgress() {
 
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
-    
+
     if (progressBar && progressText) {
         const percentage = (count / mainSitesTotal) * 100;
         progressBar.style.width = `${percentage}%`;
@@ -798,7 +798,7 @@ function updateGameProgress() {
 // function updateGameProgress() {
 //     const visitedCount = visitedSites.length;
 //     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
-    
+
 //     if (document.getElementById('progressBar') && document.getElementById('progressText')) {
 //         const percent = (visitedCount / mainSitesTotal) * 100;
 //         document.getElementById('progressBar').style.width = `${percent}%`;
@@ -833,18 +833,18 @@ function updatePassport() {
 
     const mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
     const visitedCount = visitedSites.length;
-    
+
     passportInfo.textContent = `You have visited ${visitedCount} of the ${mainSites.length} heritage buildings in Kuala Lumpur!`;
     passportGrid.innerHTML = "";
 
     mainSites.forEach(site => {
         const stamp = document.createElement('div');
         stamp.className = 'passport-stamp';
-        
+
         const isVisited = visitedSites.includes(site.id);
         if (!isVisited) {
             stamp.classList.add('grayscale');
-        }else {
+        } else {
             // ADDED: Stamp animation for visited sites
             stamp.querySelector('img')?.classList.add('stamp-animate'); // Optional: animate the image or the whole stamp
         }
@@ -854,7 +854,7 @@ function updatePassport() {
         img.alt = site.name;
 
         const name = document.createElement('p');
-        name.textContent = `${site.id}. ${site.name}`; 
+        name.textContent = `${site.id}. ${site.name}`;
 
         stamp.appendChild(img);
         stamp.appendChild(name);
@@ -865,22 +865,22 @@ function updatePassport() {
 
 // --- APP STARTUP & LANDING PAGE LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     function initApp() {
         const landingPage = document.getElementById('landing-page');
         const gatekeeper = document.getElementById('gatekeeper');
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-        
+
         if (sessionData && sessionData.valid && (Date.now() - sessionData.start < SESSION_DURATION)) {
             // Session is VALID: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
             document.getElementById('progress-container').classList.remove('hidden');
-            
+
             initializeGameAndMap();
-            setupGameUIListeners(); 
-            
-            if (chatLimitText) { 
+            setupGameUIListeners();
+
+            if (chatLimitText) {
                 if (userMessageCount >= MAX_MESSAGES_PER_SESSION) {
                     disableChatUI(true);
                 } else {
@@ -905,7 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gatekeeper.classList.remove('hidden');
             //gatekeeper.style.display = 'flex';
         });
-        
+
         document.getElementById('btnStaff').addEventListener('click', () => {
             showAdminCode();
         });
@@ -914,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('gatekeeper').classList.add('hidden');
             document.getElementById('landing-page').classList.remove('hidden');
         });
-        
+
         const closeStaffBtn = document.getElementById('closeStaffScreen');
         if (closeStaffBtn) {
             closeStaffBtn.addEventListener('click', () => {
@@ -922,164 +922,164 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('landing-page').classList.remove('hidden');
             });
         }
-        
+
         setupGatekeeperLogic();
-        setupAdminLoginLogic(); 
+        setupAdminLoginLogic();
     }
 
 
     // --- LOGIN & MODAL FUNCTIONS ---
 
- function showAdminCode() {
+    function showAdminCode() {
         document.getElementById('landing-page').classList.add('hidden');
         document.getElementById('staff-screen').classList.remove('hidden');
     }
 
 
 
-function setupAdminLoginLogic() {
-    const adminLoginBtn = document.getElementById('adminLoginBtn');
-    if (!adminLoginBtn) return;
+    function setupAdminLoginLogic() {
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        if (!adminLoginBtn) return;
 
-    adminLoginBtn.addEventListener('click', async () => {
-        const password = document.getElementById('adminPasswordInput').value;
-        const errorMsg = document.getElementById('adminErrorMsg');
-        const loginBtn = document.getElementById('adminLoginBtn');
+        adminLoginBtn.addEventListener('click', async () => {
+            const password = document.getElementById('adminPasswordInput').value;
+            const errorMsg = document.getElementById('adminErrorMsg');
+            const loginBtn = document.getElementById('adminLoginBtn');
 
-        // !!! USE THE SAME URL YOU USED IN verifyCode !!!
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
+            // !!! USE THE SAME URL YOU USED IN verifyCode !!!
+            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
 
-        loginBtn.disabled = true;
-        loginBtn.textContent = 'Verifying...';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Verifying...';
+            errorMsg.classList.add('hidden');
+
+            try {
+                // We send the admin password as the "passkey"
+                // The Google Script is already programmed to recognize this!
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        passkey: password,
+                        deviceId: 'ADMIN_DEVICE' // Device ID doesn't matter for Admin
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.isAdmin) {
+                    // Save session as Admin
+                    localStorage.setItem('jejak_session', JSON.stringify({
+                        valid: true,
+                        start: Date.now(),
+                        role: 'admin'
+                    }));
+
+                    // Update UI to show they are logged in
+                    document.getElementById('adminLoginForm').classList.add('hidden');
+
+                    // If you want to show a success message or redirect to map:
+                    document.getElementById('passkeyDate').textContent = `Authenticated as Admin`;
+                    document.getElementById('passkeyResult').textContent = "ACCESS GRANTED";
+                    document.getElementById('adminResult').classList.remove('hidden');
+
+                    // Optional: Automatically move to the map after 1.5 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+
+                } else {
+                    errorMsg.textContent = result.error || 'Invalid Admin Password.';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error in admin login:', error);
+                errorMsg.textContent = 'Network error. Check Google Script deployment.';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Get Access';
+            }
+        });
+    }
+
+    function setupGatekeeperLogic() {
+        const unlockBtn = document.getElementById('unlockBtn');
+        if (!unlockBtn) return;
+
+        unlockBtn.addEventListener('click', async () => {
+            const passcodeInput = document.getElementById('passcodeInput');
+            const enteredCode = passcodeInput.value.trim();
+            if (!enteredCode) return;
+
+            unlockBtn.disabled = true;
+            unlockBtn.textContent = 'Verifying...';
+
+            await verifyCode(enteredCode);
+
+            // If verification failed, reset the button
+            if (!localStorage.getItem('jejak_session')) {
+                unlockBtn.disabled = false;
+                unlockBtn.textContent = 'Verify & Unlock';
+            }
+        });
+    }
+
+    async function verifyCode(enteredCode) {
+        const errorMsg = document.getElementById('errorMsg');
         errorMsg.classList.add('hidden');
 
+        // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
+
         try {
-            // We send the admin password as the "passkey"
-            // The Google Script is already programmed to recognize this!
+            // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ 
-                    passkey: password,
-                    deviceId: 'ADMIN_DEVICE' // Device ID doesn't matter for Admin
+                body: JSON.stringify({
+                    passkey: enteredCode,
+                    deviceId: deviceId
                 })
             });
 
             const result = await response.json();
 
-            if (result.success && result.isAdmin) {
-                // Save session as Admin
+            if (result.success) {
+                // Save session
                 localStorage.setItem('jejak_session', JSON.stringify({
                     valid: true,
                     start: Date.now(),
-                    role: 'admin'
+                    role: result.isAdmin ? 'admin' : 'user'
                 }));
 
-                // Update UI to show they are logged in
-                document.getElementById('adminLoginForm').classList.add('hidden');
-                
-                // If you want to show a success message or redirect to map:
-                document.getElementById('passkeyDate').textContent = `Authenticated as Admin`;
-                document.getElementById('passkeyResult').textContent = "ACCESS GRANTED";
-                document.getElementById('adminResult').classList.remove('hidden');
+                // UI Transitions
+                document.getElementById('gatekeeper').style.opacity = 0;
+                document.getElementById('landing-page').style.opacity = 0;
 
-                // Optional: Automatically move to the map after 1.5 seconds
                 setTimeout(() => {
-                    location.reload(); 
-                }, 1500);
+                    document.getElementById('gatekeeper').remove();
+                    document.getElementById('landing-page').remove();
+                    document.getElementById('progress-container').classList.remove('hidden');
+
+                    // Start the app
+                    initializeGameAndMap();
+                    setupGameUIListeners();
+                }, 500);
 
             } else {
-                errorMsg.textContent = result.error || 'Invalid Admin Password.';
+                errorMsg.textContent = result.error || 'Invalid or expired passkey.';
                 errorMsg.classList.remove('hidden');
             }
         } catch (error) {
-            console.error('Error in admin login:', error);
-            errorMsg.textContent = 'Network error. Check Google Script deployment.';
-            errorMsg.classList.remove('hidden');
-        } finally {
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Get Access';
-        }
-    });
-}
-
-    function setupGatekeeperLogic() {
-    const unlockBtn = document.getElementById('unlockBtn');
-    if (!unlockBtn) return;
-
-    unlockBtn.addEventListener('click', async () => {
-        const passcodeInput = document.getElementById('passcodeInput');
-        const enteredCode = passcodeInput.value.trim();
-        if (!enteredCode) return;
-        
-        unlockBtn.disabled = true;
-        unlockBtn.textContent = 'Verifying...';
-        
-        await verifyCode(enteredCode);
-        
-        // If verification failed, reset the button
-        if (!localStorage.getItem('jejak_session')) {
-             unlockBtn.disabled = false;
-             unlockBtn.textContent = 'Verify & Unlock';
-        }
-    });
-}
-
-async function verifyCode(enteredCode) {
-    const errorMsg = document.getElementById('errorMsg');
-    errorMsg.classList.add('hidden');
-
-    // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
-
-    try {
-        // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
-        const response = await fetch(GOOGLE_SCRIPT_URL, { 
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                passkey: enteredCode, 
-                deviceId: deviceId 
-            })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Save session
-            localStorage.setItem('jejak_session', JSON.stringify({
-                valid: true,
-                start: Date.now(),
-                role: result.isAdmin ? 'admin' : 'user'
-            }));
-
-            // UI Transitions
-            document.getElementById('gatekeeper').style.opacity = 0;
-            document.getElementById('landing-page').style.opacity = 0;
-
-            setTimeout(() => {
-                document.getElementById('gatekeeper').remove();
-                document.getElementById('landing-page').remove();
-                document.getElementById('progress-container').classList.remove('hidden');
-                
-                // Start the app
-                initializeGameAndMap();
-                setupGameUIListeners();
-            }, 500);
-
-        } else {
-            errorMsg.textContent = result.error || 'Invalid or expired passkey.';
+            console.error('Verification Error:', error);
+            errorMsg.textContent = 'Network error. Make sure the script is deployed to "Anyone".';
             errorMsg.classList.remove('hidden');
         }
-    } catch (error) {
-        console.error('Verification Error:', error);
-        errorMsg.textContent = 'Network error. Make sure the script is deployed to "Anyone".';
-        errorMsg.classList.remove('hidden');
     }
-}
-    
+
     /**
      * Finds all DOM elements and attaches all in-game listeners.
      */
@@ -1089,7 +1089,7 @@ async function verifyCode(enteredCode) {
         if (logoElement) {
             logoElement.addEventListener('click', () => {
                 // Open the Badan Warisan Malaysia website in a new tab
-                window.open('https://badanwarisanmalaysia.org/', '_blank'); 
+                window.open('https://badanwarisanmalaysia.org/', '_blank');
             });
             // Optional: Change cursor to indicate clickability
             logoElement.style.cursor = 'pointer';
@@ -1113,7 +1113,7 @@ async function verifyCode(enteredCode) {
         siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
         siteModalHintBtn = document.getElementById('siteModalHintBtn');
         siteModalHintText = document.getElementById('siteModalHintText');
-        
+
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
         chatHistoryEl = document.getElementById('chatHistory');
@@ -1125,10 +1125,10 @@ async function verifyCode(enteredCode) {
         closePassportModal = document.getElementById('closePassportModal');
         passportInfo = document.getElementById('passportInfo');
         passportGrid = document.getElementById('passportGrid');
-        
+
         welcomeModal = document.getElementById('welcomeModal');
         closeWelcomeModal = document.getElementById('closeWelcomeModal');
-        
+
         // ADDED: New Modal Elements
         congratsModal = document.getElementById('congratsModal');
         closeCongratsModal = document.getElementById('closeCongratsModal');
@@ -1139,7 +1139,7 @@ async function verifyCode(enteredCode) {
         challengeRiddle = document.getElementById('challengeRiddle');
         challengeResult = document.getElementById('challengeResult');
         chaChingSound = document.getElementById('chaChingSound');
-        
+
         // --- Attach Listeners ---
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
@@ -1154,7 +1154,7 @@ async function verifyCode(enteredCode) {
         closeChatModal.addEventListener('click', () => {
             chatModal.classList.add('hidden');
         });
-        
+
         document.getElementById('btnPassport').addEventListener('click', () => {
             updatePassport();
             passportModal.classList.remove('hidden');
@@ -1177,71 +1177,71 @@ async function verifyCode(enteredCode) {
         siteModalAskAI.addEventListener('click', () => {
             const siteName = siteModalTitle.textContent;
             if (!siteName || siteName === "Site Title") return;
-            
+
             const question = `Tell me more about ${siteName}.`;
-            
+
             siteModal.classList.add('hidden');
             chatModal.classList.remove('hidden');
-            
+
             chatInput.value = question;
             handleSendMessage();
         });
-        
+
         siteModalDirections.addEventListener('click', () => {
             if (!currentModalSite) return;
-            
+
             const lat = currentModalSite.coordinates.marker[0];
             const lon = currentModalSite.coordinates.marker[1];
-            
+
             // === CRITICAL FIX ===
             // This is the correct, universal URL for Google Maps directions
             const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
-            
+
             window.open(url, '_blank');
         });
-        
+
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
         siteModalCheckInBtn.addEventListener('click', handleCheckIn);
-        
+
         // --- ADDED: NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
             closeWelcomeModal.addEventListener('click', () => {
                 welcomeModal.classList.add('hidden');
             });
         }
-        
+
         closeCongratsModal.addEventListener('click', () => {
             congratsModal.classList.add('hidden');
         });
-        
+
         shareWhatsAppBtn.addEventListener('click', () => {
             const message = "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨\n\nDiscover KL's history and start your own adventure here: https://bwm-kul-city-walk.vercel.app/";
             const whatsappMsg = encodeURIComponent(message);
             window.open(`https://wa.me/?text=${whatsappMsg}`, '_blank');
         });
-        
+
         btnChallenge.addEventListener('click', () => {
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
         });
-        
+
         closeChallengeModal.addEventListener('click', () => {
             challengeModal.classList.add('hidden');
         });
-        
+
         siteModalSolveChallengeBtn.addEventListener('click', () => {
             const dayOfYear = getDayOfYear();
             const riddleIndex = dayOfYear % allRiddles.length;
             const todayRiddle = allRiddles[riddleIndex];
-            
+
             // Mark as solved
             solvedRiddle = { day: dayOfYear, id: todayRiddle.a };
             localStorage.setItem('jejak_solved_riddle', JSON.stringify(solvedRiddle));
-            
+
             // Hide button in site modal
             siteModalSolveChallengeBtn.style.display = 'none';
             siteModal.classList.add('hidden');
-            
+
             // Show result in challenge modal
             updateChallengeModal();
             challengeModal.classList.remove('hidden');
@@ -1256,8 +1256,49 @@ async function verifyCode(enteredCode) {
         });
     }
 
-    
+
 
     // --- Run the app ---
     initApp();
+});
+
+// --- ZOOM FUNCTIONALITY ---
+document.addEventListener('DOMContentLoaded', () => {
+    const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
+    const btnTextSizeReset = document.getElementById('btnTextSizeReset');
+    const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
+    const contentText = document.getElementById('siteModalInfo');
+    const moreContentText = document.getElementById('siteModalMoreContent');
+
+    let currentTextSize = 100; // Percentage
+
+    function updateTextSize() {
+        if (contentText) contentText.style.fontSize = `${currentTextSize}%`;
+        if (moreContentText) moreContentText.style.fontSize = `${currentTextSize}%`;
+    }
+
+    if (btnTextSizeSmall) {
+        btnTextSizeSmall.addEventListener('click', () => {
+            if (currentTextSize > 80) {
+                currentTextSize -= 10;
+                updateTextSize();
+            }
+        });
+    }
+
+    if (btnTextSizeLarge) {
+        btnTextSizeLarge.addEventListener('click', () => {
+            if (currentTextSize < 200) {
+                currentTextSize += 10;
+                updateTextSize();
+            }
+        });
+    }
+
+    if (btnTextSizeReset) {
+        btnTextSizeReset.addEventListener('click', () => {
+            currentTextSize = 100;
+            updateTextSize();
+        });
+    }
 });
