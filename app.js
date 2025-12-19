@@ -74,6 +74,98 @@ let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challeng
 let chaChingSound;
 let siteModalHintBtn, siteModalHintText;
 
+// --- BADGE GENERATION LOGIC ---
+
+// 1. Setup Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Elements
+    const badgeModal = document.getElementById('badgeInputModal');
+    const closeBadgeBtn = document.getElementById('closeBadgeModal');
+    const btnGenerate = document.getElementById('btnGenerateBadge');
+    
+    const nameInput = document.getElementById('explorerNameInput');
+    const photoInput = document.getElementById('explorerPhotoInput');
+    
+    // Template Elements
+    const badgeName = document.getElementById('badgeNameDisplay');
+    const badgeDate = document.getElementById('badgeDateDisplay');
+    const badgePhoto = document.getElementById('badgeProfileImage');
+
+    // Close Modal Logic
+    if(closeBadgeBtn) {
+        closeBadgeBtn.addEventListener('click', () => {
+            badgeModal.classList.add('hidden');
+        });
+    }
+
+    // 2. The Main Generation Function
+    if(btnGenerate) {
+        btnGenerate.addEventListener('click', async () => {
+            // A. Update the Template with User Data
+            const userName = nameInput.value.trim() || "Master Explorer"; // Default if empty
+            badgeName.textContent = userName;
+            
+            // Set Date
+            const today = new Date();
+            badgeDate.textContent = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+
+            // Handle Photo
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    badgePhoto.src = e.target.result;
+                    // Wait a moment for image to load before capturing
+                    setTimeout(captureAndDownload, 100); 
+                }
+                reader.readAsDataURL(photoInput.files[0]);
+            } else {
+                // Use default if no photo uploaded
+                // Ensure you have a default image at this path or use a placeholder URL
+                badgePhoto.src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'; 
+                setTimeout(captureAndDownload, 100);
+            }
+        });
+    }
+
+    // 3. The Screenshot & Download Logic
+    function captureAndDownload() {
+        const badgeElement = document.getElementById('hiddenBadgeTemplate');
+        
+        // Show loading state
+        btnGenerate.textContent = "Generating...";
+        btnGenerate.disabled = true;
+
+        html2canvas(badgeElement, {
+            scale: 2, // High resolution
+            useCORS: true, // Allow loading external images
+            backgroundColor: null // Transparent background handling
+        }).then(canvas => {
+            // Create download link
+            const link = document.createElement('a');
+            link.download = `Heritage-Explorer-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            // Reset UI
+            btnGenerate.textContent = "✨ Generate & Download ID";
+            btnGenerate.disabled = false;
+            
+            // Close modal (optional)
+            // badgeModal.classList.add('hidden');
+            
+            // Play sound!
+            if(typeof chaChingSound !== 'undefined') chaChingSound.play();
+
+        }).catch(err => {
+            console.error("Badge generation failed:", err);
+            alert("Could not generate badge. Please try again.");
+            btnGenerate.textContent = "Try Again";
+            btnGenerate.disabled = false;
+        });
+    }
+});
+
 //BUG FIX
 // --- UTILITY FUNCTION FOR SAFELY MANAGING MARKER STATE ---
 function safelyUpdateMarkerVisitedState(marker, isVisited) {
