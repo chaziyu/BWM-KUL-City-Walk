@@ -5,6 +5,8 @@
 const HISTORY_WINDOW_SIZE = 10;
 const MAX_MESSAGES_PER_SESSION = 10;
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const DEFAULT_CENTER = [3.1495519988154683, 101.69609103393907];
+const ZOOM = 16;
 
 // --- GAME STATE ---
 let map = null;
@@ -486,8 +488,23 @@ function initializeGameAndMap() {
         }
     });
 
+    // GPS State
+    let gpsRetryCount = 0;
+    let gpsFailed = false;
+
     map.on('locationerror', (e) => {
         console.error("GPS Error:", e);
+
+        // Logic check for max retries on timeout
+        if (e.code === 3) { // TIMEOUT
+            gpsRetryCount++;
+            if (gpsRetryCount >= 2) {
+                console.warn("GPS Timed Out twice. Stopping location services.");
+                gpsFailed = true;
+                map.stopLocate(); // Stop trying
+                return; // Silent exit
+            }
+        }
 
         let errorMessage = "GPS Error: ";
         switch (e.code) {
@@ -534,12 +551,12 @@ function initializeGameAndMap() {
 
         if (activeFilterMode === 'must_visit') {
             // Must Visit Active
-            tabMustVisit.className = "px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 shadow-lg transition-all transform scale-105 border-indigo-700";
-            tabRecommended.className = "px-4 py-2 rounded-full text-sm font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 transition-all";
+            tabMustVisit.className = "w-full py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
+            tabRecommended.className = "w-full py-3 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
         } else {
             // Recommended Active
-            tabMustVisit.className = "px-4 py-2 rounded-full text-sm font-bold text-gray-500 bg-white border border-gray-200 hover:bg-gray-100 transition-all";
-            tabRecommended.className = "px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 shadow-lg transition-all transform scale-105 border-indigo-700";
+            tabMustVisit.className = "w-full py-3 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
+            tabRecommended.className = "w-full py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
         }
     }
 
@@ -1274,6 +1291,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
             if (map) {
+                // FALLBACK: If GPS failed, just recenter map
+                if (gpsFailed) {
+                    map.setView(DEFAULT_CENTER, ZOOM);
+                    return;
+                }
+
                 if (userMarker) {
                     // 1. If we have a user marker, zoom to it
                     map.setView(userMarker.getLatLng(), 18);
