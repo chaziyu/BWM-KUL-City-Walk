@@ -871,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gatekeeper = document.getElementById('gatekeeper');
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
 
-        if (sessionData && sessionData.valid && (Date.now() - sessionData.start < SESSION_DURATION)) {
+        if (sessionData && sessionData.valid) {
             // Session is VALID: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
