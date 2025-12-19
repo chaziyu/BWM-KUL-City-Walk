@@ -571,42 +571,81 @@ font {
 }
 
 
-/* Make widget smaller and cleaner */
+/* --- COMPACT FLOATING TRANSLATE WIDGET (TOP LEFT) --- */
 #google_translate_element {
-    /* Scale down and align to avoid progress bar overlap */
-    transform: scale(0.85);
-    transform-origin: top right;
-    margin-right: -5px;
-    /* Pull closer to edge */
-    margin-top: -5px;
-    /* Pull closer to top */
+    position: fixed !important;
+    top: 20px !important;
+    left: 20px !important;
+    right: auto !important;
+    z-index: 5000;
+    /* Below Landing Page (6000) but above Map (1) */
 
-    opacity: 0.8;
-    transition: opacity 0.3s ease;
+    /* Compact Styling */
+    transform: scale(1);
+    /* Reset scale, manage via width/height */
+    transform-origin: top left;
+
+    /* Glassmorphism to match app buttons */
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+    /* Smooth rounded corners */
+    padding: 0px;
+    /* Minimal padding */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+    /* Force specific dimensions to hide extra text/whitespace */
+    width: 140px !important;
+    height: 48px !important;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0.9;
+    transition: all 0.3s ease;
 }
 
 #google_translate_element:hover {
     opacity: 1;
+    transform: translateY(2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Hide 'Powered by Google' branding */
 .goog-te-gadget {
     color: transparent !important;
     font-size: 0 !important;
+    margin-top: 2px !important;
+    width: 100%;
+    height: 100%;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 .goog-te-gadget>span {
     display: none !important;
 }
 
+/* Style the internal Dropdown to look like a native button label */
 .goog-te-gadget .goog-te-combo {
-    color: #374151 !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 6px !important;
-    padding: 4px 8px !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    cursor: pointer;
+    color: #4b5563 !important;
+    /* Gray-700 */
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-weight: 700 !important;
+    /* Bold */
+    font-size: 14px !important;
+    background: transparent !important;
+    border: none !important;
     outline: none !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    width: 110% !important;
+    /* Slightly larger to hide browsers' default arrow if needed, or keeping it standard */
+    cursor: pointer;
+    text-align: center;
 }

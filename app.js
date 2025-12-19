@@ -448,7 +448,7 @@ function initializeGameAndMap() {
         let errorMessage = "GPS Error: ";
         switch (e.code) {
             case 1: // PERMISSION_DENIED
-                errorMessage += "Permission Denied.\n\nPLEASE FIX: Go to iPhone Settings > Privacy > Location Services > Safari Websites (or your browser) > Select 'While Using the App'.\n\nRefresh the page after changing this setting.";
+                errorMessage += "Permission Denied.\n\nPLEASE FIX: Go to your Device Settings > Privacy / Location Services > Allow Location for your browser.\n\nRefresh the page after changing this setting.";
                 break;
             case 2: // POSITION_UNAVAILABLE
                 errorMessage += "Position Unavailable.\n\nPlease move directly under the open sky. GPS signals are weak indoors.";

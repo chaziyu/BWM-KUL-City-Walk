@@ -47,6 +47,47 @@
     <script type="text/javascript"
         src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
+    <!-- ROBUST JS SUPPRESSION FOR GOOGLE TRANSLATE POPUPS -->
+    <script>
+        (function () {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element
+                            // 1. Remove Banner Frame (Top Bar)
+                            if (node.classList && (node.classList.contains('goog-te-banner-frame') || node.tagName === 'IFRAME' && node.id === ':1.container')) {
+                                node.remove();
+                                document.body.style.top = '0px'; // Force reset
+                            }
+                            // 2. Remove "Satisfied" Popups and Tooltips
+                            if (node.classList && (node.classList.contains('goog-te-balloon-frame') || node.classList.contains('goog-tooltip'))) {
+                                node.remove();
+                            }
+                            // 3. Remove by ID partial match (often used by balloons)
+                            if (node.id && node.id.includes('goog-gt-')) {
+                                node.remove();
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Start observing the document body for added nodes
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Fallback: Check every 500ms for sticky elements
+            setInterval(() => {
+                const popups = document.querySelectorAll('.goog-te-balloon-frame, .goog-te-banner-frame, .goog-tooltip, iframe[id^=":"]');
+                popups.forEach(el => el.remove());
+                
+                // Force Body Reset
+                if (document.body.style.top !== '0px') {
+                    document.body.style.top = '0px';
+                }
+            }, 1000);
+        })();
+    </script>
+
     <div id="landing-page"
         class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
         <div class="mb-10 animate-fade-in">
