@@ -114,20 +114,24 @@ document.addEventListener('DOMContentLoaded', () => {
             badgeDate.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
 
             // Handle Photo
+            // Handle Photo
             if (photoInput.files && photoInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     badgePhoto.onload = () => {
-                        captureAndDownload();
+                        // Tiny delay to ensure rendering matches DOM
+                        requestAnimationFrame(() => captureAndDownload());
                     };
                     badgePhoto.src = e.target.result;
                 }
                 reader.readAsDataURL(photoInput.files[0]);
             } else {
                 // Use default if no photo uploaded
-                // Ensure you have a default image at this path or use a placeholder URL
+                badgePhoto.crossOrigin = "anonymous"; // Important for external images
+                badgePhoto.onload = () => {
+                    requestAnimationFrame(() => captureAndDownload());
+                };
                 badgePhoto.src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-                setTimeout(captureAndDownload, 100);
             }
         });
     }
@@ -554,12 +558,12 @@ function initializeGameAndMap() {
 
         if (activeFilterMode === 'must_visit') {
             // Must Visit Active
-            tabMustVisit.className = "w-full py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
-            tabRecommended.className = "w-full py-3 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
+            tabMustVisit.className = "px-4 py-2 rounded-full text-xs font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
+            tabRecommended.className = "px-4 py-2 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
         } else {
             // Recommended Active
-            tabMustVisit.className = "w-full py-3 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
-            tabRecommended.className = "w-full py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
+            tabMustVisit.className = "px-4 py-2 rounded-full text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
+            tabRecommended.className = "px-4 py-2 rounded-full text-xs font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
         }
     }
 
