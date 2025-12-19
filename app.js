@@ -432,6 +432,9 @@ function initializeGameAndMap() {
 
             // Always attach the listener to handle re-adding to map (filtering)
             marker.on('add', (e) => {
+                // ADDED: Pin Drop Animation
+                e.target._icon?.classList.add('animate-pin-drop');
+
                 if (e.target.options.isVisited) {
                     safelyUpdateMarkerVisitedState(e.target, true);
                 }
@@ -886,7 +889,7 @@ async function handleSendMessage() {
 
     addChatMessage('user', userQuery);
     // Modified: Use skeleton loader instead of "..."
-    const thinkingEl = addChatMessage('ai', '<span class="skeleton text-xs px-8 rounded">Loading...</span>');
+    const thinkingEl = addChatMessage('ai', '<span class="skeleton-loading text-xs px-8 rounded">Loading...</span>');
 
     try {
         const response = await fetch('/api/chat', {
@@ -1626,7 +1629,12 @@ function showPreviewCard(site) {
 
     // Set Content
     previewTitle.textContent = site.id + '. ' + site.name;
+
+    // SKELETON LOADING FOR IMAGE
+    previewImage.classList.add('skeleton-loading');
     previewImage.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=Site';
+    previewImage.onload = () => previewImage.classList.remove('skeleton-loading');
+
     previewDist.textContent = 'Tap to read full history'; // Placeholder for distance if we had coords
 
     // Show Card
