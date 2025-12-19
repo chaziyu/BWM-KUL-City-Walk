@@ -1,12 +1,14 @@
 /* --- 1. MAP & LAYOUT SETTINGS --- */
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     overflow: hidden;
 }
-#map { 
-    width: 100vw; 
-    height: 100vh; 
+
+#map {
+    width: 100vw;
+    height: 100vh;
     height: 100dvh;
     z-index: 1;
     position: absolute;
@@ -18,12 +20,14 @@ body, html {
 #progress-container {
     pointer-events: none;
 }
-#progress-container > div {
+
+#progress-container>div {
     pointer-events: auto;
 }
 
 #progress-container {
-  padding-left: 50px; /* leave space for zoom controls */
+    padding-left: 50px;
+    /* leave space for zoom controls */
 }
 
 #progress-container {
@@ -42,6 +46,7 @@ body, html {
     background: none !important;
     backdrop-filter: none !important;
 }
+
 /* A subtle pulse for the progress bar head */
 #progressBar::after {
     content: '';
@@ -78,10 +83,38 @@ body, html {
 }
 
 /* --- 3. TRANSITIONS & ANIMATIONS --- */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-.animate-fade-in { animation: fadeIn 1s ease-out forwards; }
-@keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.animate-slide-up { opacity: 0; animation: slideUpFade 0.8s ease-out 0.3s forwards; }
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 1s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    opacity: 0;
+    animation: slideUpFade 0.8s ease-out 0.3s forwards;
+}
 
 /* --- 4. UNIFIED "HERITAGE GLASS" MODAL STYLE --- */
 .classic-modal-backdrop,
@@ -132,25 +165,29 @@ body, html {
     border-radius: 8px;
     overflow: hidden;
     border: 2px solid #eee;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
 .passport-stamp img {
     display: block;
     width: 100%;
-    height: 80px; /* Small square-ish image */
+    height: 80px;
+    /* Small square-ish image */
     object-fit: cover;
 }
+
 .passport-stamp p {
     font-size: 10px;
     font-weight: bold;
     text-align: center;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     padding: 4px;
     position: absolute;
     bottom: 0;
     width: 100%;
     color: #333;
 }
+
 .grayscale {
     filter: grayscale(100%);
     opacity: 0.6;
@@ -169,12 +206,14 @@ body, html {
 /* Inner Pin: Holds the color and animation */
 .user-location-pin {
     background-color: #007bff;
-    width: 100%;  /* Fill the wrapper */
-    height: 100%; /* Fill the wrapper */
+    width: 100%;
+    /* Fill the wrapper */
+    height: 100%;
+    /* Fill the wrapper */
     border-radius: 50%;
     border: 3px solid #ffffff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+
     /* Animation happens here, safely inside the wrapper */
     animation: pulse-animation-medium 1.5s infinite;
 }
@@ -186,10 +225,13 @@ body, html {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
     }
+
     70% {
-        transform: scale(1.2); /* This scale is now safe! */
+        transform: scale(1.2);
+        /* This scale is now safe! */
         box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
     }
+
     100% {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
@@ -198,31 +240,66 @@ body, html {
 
 /* Renamed old animation to medium */
 @keyframes pulse-animation-medium {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.7; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.4);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* ADDED: New animation speeds */
 @keyframes pulse-animation-slow {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.2); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 0.8; }
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
 }
 
 @keyframes pulse-animation-fast {
-    0% { transform: scale(1.2); opacity: 1; }
-    50% { transform: scale(1.6); opacity: 1; }
-    100% { transform: scale(1.2); opacity: 1; }
+    0% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.6);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
 }
 
 /* ADDED: Classes to trigger new animations */
 .pulse-slow {
     animation: pulse-animation-slow 3s infinite !important;
 }
+
 .pulse-medium {
     animation: pulse-animation-medium 1.5s infinite !important;
 }
+
 .pulse-fast {
     animation: pulse-animation-fast 0.7s infinite !important;
 }
@@ -231,26 +308,28 @@ body, html {
 /* --- 9. NEW UI ADDITIONS --- */
 #logoOverlay {
     position: fixed;
-    top: 15px; 
+    top: 15px;
     right: 15px;
     z-index: 1000;
     pointer-events: none;
-    
+
     background-color: white;
     border-radius: 8px;
     padding: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    width: 120px; 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    width: 120px;
 }
+
 #logoOverlay img {
-    width: 80px; 
+    width: 80px;
     height: 80px;
     display: block;
-    margin: 0 auto 8px auto; 
+    margin: 0 auto 8px auto;
 }
+
 #logoOverlay p {
     font-size: 10px;
-    font-weight: 600; 
+    font-weight: 600;
     color: #333;
     text-align: center;
     line-height: 1.2;
@@ -271,7 +350,7 @@ body, html {
 /* Visited Marker Override */
 .marker-visited .pin-head {
     /* Color for stamp/visited sites */
-    background-color: #DAA520 !important; 
+    background-color: #DAA520 !important;
     border-color: #fff !important;
 }
 
@@ -285,9 +364,12 @@ body, html {
 
 /* Apply the animation to the polyline's SVG path */
 .animated-trail {
-    stroke-dasharray: 20, 10; /* Must match the polyline setting */
-    stroke-dashoffset: 30;    /* Start offset */
-    animation: dash 5s linear infinite; /* Animation runs continuously */
+    stroke-dasharray: 20, 10;
+    /* Must match the polyline setting */
+    stroke-dashoffset: 30;
+    /* Start offset */
+    animation: dash 5s linear infinite;
+    /* Animation runs continuously */
 }
 
 /* --- 10. NEW ANIMATIONS: SKELETON & STAMP --- */
@@ -360,8 +442,9 @@ body, html {
 /* --- 5. BWM KUL CITY WALK LANDING PAGE (PROFESSIONAL LIGHT THEME) --- */
 #landing-page {
     /* Clean, soft white background with a subtle, non-distracting texture */
-    background: #fdfdff; 
-    color: #343a40; /* Charcoal text for high readability */
+    background: #fdfdff;
+    color: #343a40;
+    /* Charcoal text for high readability */
     text-align: center;
     padding: 100px 20px;
     height: 100vh;
@@ -370,23 +453,25 @@ body, html {
     justify-content: center;
     align-items: center;
     /* Clean transition for any full-page changes */
-    transition: background 0.5s ease; 
+    transition: background 0.5s ease;
 }
 
 #landing-page h1 {
     /* Strong, readable font size */
-    font-size: clamp(2.5rem, 6vw, 4rem); 
+    font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 800;
     /* Professional primary color (Deep Navy/Charcoal Blue) */
-    color: #172a3a; 
-    letter-spacing: -0.02em; /* Tighter letter-spacing for large, professional titles */
+    color: #172a3a;
+    letter-spacing: -0.02em;
+    /* Tighter letter-spacing for large, professional titles */
     margin-bottom: 0.5rem;
     /* Very subtle, professional shadow */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 #landing-page p {
-    color: #6c757d !important; /* Secondary gray for body text */
+    color: #6c757d !important;
+    /* Secondary gray for body text */
     font-size: clamp(1rem, 2.5vw, 1.25rem);
     max-width: 600px;
     line-height: 1.6;
@@ -397,25 +482,28 @@ body, html {
 /* Professional Button Style (Flat/Minimalist) */
 .glass-card-btn {
     /* Use the professional primary color for the background */
-    background-color: #007bff !important; 
+    background-color: #007bff !important;
     color: white !important;
     font-size: 1.1rem;
     font-weight: 600;
     padding: 15px 40px;
-    border-radius: 8px; /* Slightly rounded corners */
+    border-radius: 8px;
+    /* Slightly rounded corners */
     border: none !important;
-    box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3); /* Shadow tied to button color */
+    box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3);
+    /* Shadow tied to button color */
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     /* Remove any glass-morphic effects */
-    backdrop-filter: none; 
+    backdrop-filter: none;
 }
 
 .glass-card-btn:hover {
     /* Darker shade of primary color on hover */
-    background-color: #0056b3 !important; 
-    transform: translateY(-2px); /* Gentle lift on hover */
+    background-color: #0056b3 !important;
+    transform: translateY(-2px);
+    /* Gentle lift on hover */
     /* Increased shadow depth on hover */
-    box-shadow: 0 12px 20px rgba(0, 123, 255, 0.4); 
+    box-shadow: 0 12px 20px rgba(0, 123, 255, 0.4);
 }
 
 /* Secondary Button Style (Optional: Use for "Continue Saved Game") */
@@ -434,23 +522,33 @@ body, html {
 }
 
 
-/* --- 11. GOOGLE TRANSLATE CUSTOM STYLING --- */
-/* Hide the intrusive top bar */
-.goog-te-banner-frame.skiptranslate {
+
+/* --- 11. GOOGLE TRANSLATE CUSTOM STYLING (ROBUST) --- */
+/* Completely hide the top banner frame */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
 }
+
+/* Force body to top, overriding Google's inline style */
 body {
     top: 0px !important;
     position: static !important;
+    min-height: 100vh !important;
+    height: 100vh !important;
 }
 
 /* Hide annoying tooltips/popups */
 .goog-tooltip {
     display: none !important;
 }
+
 .goog-tooltip:hover {
     display: none !important;
 }
+
 .goog-text-highlight {
     background-color: transparent !important;
     border: none !important;
@@ -462,12 +560,15 @@ body {
     /* Scale down and align to avoid progress bar overlap */
     transform: scale(0.85);
     transform-origin: top right;
-    margin-right: -5px; /* Pull closer to edge */
-    margin-top: -5px;   /* Pull closer to top */
-    
+    margin-right: -5px;
+    /* Pull closer to edge */
+    margin-top: -5px;
+    /* Pull closer to top */
+
     opacity: 0.8;
     transition: opacity 0.3s ease;
 }
+
 #google_translate_element:hover {
     opacity: 1;
 }
@@ -477,9 +578,11 @@ body {
     color: transparent !important;
     font-size: 0 !important;
 }
-.goog-te-gadget > span {
+
+.goog-te-gadget>span {
     display: none !important;
 }
+
 .goog-te-gadget .goog-te-combo {
     color: #374151 !important;
     border: 1px solid #e5e7eb !important;

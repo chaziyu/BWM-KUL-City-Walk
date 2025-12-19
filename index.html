@@ -40,8 +40,25 @@
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
                 includedLanguages: 'en,ms,zh-CN,zh-TW,ta,id,ar,ja,ko,th,vi,fr,de,es,ru',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
             }, 'google_translate_element');
+
+            // --- FORCE FIX: Remove Google's Top Spacer ---
+            const observer = new MutationObserver(() => {
+                if (document.body.style.top && document.body.style.top !== '0px') {
+                    document.body.style.top = '0px';
+                    document.body.style.position = 'static';
+                }
+                const banner = document.querySelector('.goog-te-banner-frame');
+                if (banner) {
+                    banner.style.display = 'none';
+                    banner.style.visibility = 'hidden';
+                    banner.style.height = '0';
+                }
+            });
+            observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+            observer.observe(document.documentElement, { childList: true, subtree: true });
         }
     </script>
     <script type="text/javascript"
