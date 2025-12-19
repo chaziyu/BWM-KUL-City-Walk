@@ -34,7 +34,7 @@
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
-                // includedLanguages removed to support all languages
+                includedLanguages: 'en,ms,zh-CN,zh-TW,ta,id,ar,ja,ko,th,vi,fr,de,es,ru',
                 layout: google.translate.TranslateElement.InlineLayout.SIMPLE
             }, 'google_translate_element');
         }
