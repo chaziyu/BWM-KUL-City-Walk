@@ -203,6 +203,30 @@ html {
     border: none;
 }
 
+body {
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Inter', sans-serif;
+    /* PWA ENHANCEMENTS */
+    user-select: none;
+    -webkit-user-select: none;
+    /* Prevent text selection */
+    overscroll-behavior: none;
+    /* Prevent pull-to-refresh / rubber band */
+    touch-action: manipulation;
+    /* Remove tap delay */
+}
+
+/* GPU Acceleration for smoother modal transitions */
+.classic-modal-content,
+#previewCard,
+#filterTabs,
+#google_translate_element {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    /* Trigger Hardware Acceleration */
+}
+
+/* Leaflet Map Fixes */
 /* Inner Pin: Holds the color and animation */
 .user-location-pin {
     background-color: #007bff;

@@ -465,8 +465,11 @@ function initializeGameAndMap() {
             }
 
         });
+
         updateGameProgress();
         updatePassport();
+        // FIX: Apply initial filter immediately after loading data
+        updateVisibility();
     }).catch(err => console.error("Error loading Map Data:", err));
 
 
