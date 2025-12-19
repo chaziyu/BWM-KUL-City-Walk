@@ -377,7 +377,7 @@ function initializeGameAndMap() {
             }
             // END FIX
 
-            marker.on('click', () => handleMarkerClick(site, marker));
+            marker.on('click', () => showPreviewCard(site));
             markersLayer.addLayer(marker);
 
             // 4. Create the Polygon
@@ -397,7 +397,7 @@ function initializeGameAndMap() {
                     safelyUpdatePolygonVisitedState(site.id, true);
                 }
 
-                poly.on('click', () => handleMarkerClick(site, marker));
+                poly.on('click', () => showPreviewCard(site));
                 polygonsLayer.addLayer(poly);
             }
 
@@ -1302,3 +1302,63 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- PREVIEW CARD LOGIC ---
+let previewCard, previewImage, previewTitle, previewDist, previewOpenBtn, previewCloseBtn;
+let currentPreviewSiteId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize Elements
+    previewCard = document.getElementById('previewCard');
+    previewImage = document.getElementById('previewImage');
+    previewTitle = document.getElementById('previewTitle');
+    previewDist = document.getElementById('previewDist');
+    previewOpenBtn = document.getElementById('previewOpenBtn');
+    previewCloseBtn = document.getElementById('previewCloseBtn');
+
+    // 2. Close Handler
+    if (previewCloseBtn) {
+        previewCloseBtn.addEventListener('click', closePreviewCard);
+    }
+
+    // 3. Open Full Modal Handler
+    if (previewOpenBtn) {
+        previewOpenBtn.addEventListener('click', () => {
+            if (currentPreviewSiteId) {
+                openSiteModal(currentPreviewSiteId); // Call the original modal opener
+                closePreviewCard();
+            }
+        });
+    }
+});
+
+function showPreviewCard(site) {
+    if (!previewCard) return;
+
+    currentPreviewSiteId = site.id;
+
+    // Set Content
+    previewTitle.textContent = site.id + '. ' + site.name;
+    previewImage.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=Site';
+    previewDist.textContent = 'Tap to read full history'; // Placeholder for distance if we had coords
+
+    // Show Card
+    previewCard.classList.remove('hidden');
+    // Small delay to allow 'hidden' removal to register before transforming
+    setTimeout(() => {
+        previewCard.classList.remove('translate-y-[150%]');
+    }, 10);
+}
+
+function closePreviewCard() {
+    if (!previewCard) return;
+    previewCard.classList.add('translate-y-[150%]');
+    setTimeout(() => {
+        previewCard.classList.add('hidden');
+    }, 300); // Wait for animation
+}
+
+// Override the global click handler behavior via a flag or modifying the loop?
+// Better: We need to intercept where marker.on('click') is defined.
+// Since that is deep in 'initializeGameAndMap', we might need to patch it.
+

@@ -28,6 +28,20 @@
 
 <body class="overflow-hidden bg-gray-100">
 
+    <!-- Google Translate Widget -->
+    <div id="google_translate_element" class="absolute top-4 left-4 z-[5000]"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,ms,zh-CN,ta',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript"
+        src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
     <div id="landing-page"
         class="fixed inset-0 bg-white z-[6000] flex flex-col justify-center items-center p-6 text-center">
         <div class="mb-10 animate-fade-in">
@@ -194,6 +208,11 @@
                         Ask AI
                     </button>
                 </div>
+
+                <a id="siteModalNearbyBtn" href="#" target="_blank"
+                    class="block w-full text-center mt-2 bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition text-sm">
+                    🍔 Find Food & Stay Nearby
+                </a>
 
                 <div id="siteModalQuizArea" class="bg-gray-100 p-4 rounded-lg mt-4">
                     <p id="siteModalQuizQ" class="font-bold text-gray-800 mb-2">Quiz: Question loading...</p>
