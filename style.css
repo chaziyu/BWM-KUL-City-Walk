@@ -575,77 +575,76 @@ font {
 #google_translate_element {
     position: fixed !important;
     top: 90px !important;
-    /* Positioned below standard Leaflet zoom controls */
     left: 10px !important;
-    /* Aligned with Leaflet controls margin */
-    right: auto !important;
     z-index: 5000;
 
-    /* Smaller & More Transparent */
-    transform: scale(1);
-    transform-origin: top left;
-
-    /* High Transparency Glassmorphism */
-    background: rgba(255, 255, 255, 0.5) !important;
-    /* More transparent */
+    /* Button Container Style */
+    background: rgba(255, 255, 255, 0.6) !important;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 8px;
-    /* Slightly smaller radius */
-    padding: 0px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-    /* Smaller Dimensions */
-    width: 100px !important;
+    width: auto !important;
+    min-width: 80px;
     height: 30px !important;
-    overflow: hidden;
+    padding: 0 10px !important;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    opacity: 0.8;
-    transition: all 0.3s ease;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
 }
 
 #google_translate_element:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.8) !important;
-    /* Less transparent on hover */
-    transform: translateY(0px);
+    background: rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Hide 'Powered by Google' branding */
+/* THE HACK: Display Custom Text using CSS */
+#google_translate_element::before {
+    content: 'Translate';
+    /* Custom Label */
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5563;
+    display: block;
+    pointer-events: none;
+    /* Let clicks pass through to the select */
+    white-space: nowrap;
+}
+
+/* HIDE THE GOOGLE BRANDING COMPLETELY */
 .goog-te-gadget {
-    color: transparent !important;
-    font-size: 0 !important;
-    margin-top: 0px !important;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+    opacity: 0;
+    /* Make invisible but clickable */
 }
 
+/* Ensure the dropdown covers the whole button to capture clicks */
+.goog-te-gadget .goog-te-combo {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    cursor: pointer;
+}
+
+/* Hide branding elements */
 .goog-te-gadget>span {
     display: none !important;
 }
 
-/* Small, Compact Dropdown Text */
+/* Deprecated old styles overridden above */
 .goog-te-gadget .goog-te-combo {
-    color: #333 !important;
-    font-family: ui-sans-serif, system-ui, sans-serif !important;
-    font-weight: 600 !important;
-    font-size: 11px !important;
-    /* Smaller font */
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    margin: 0 !important;
-    padding: 0px !important;
-    width: 120% !important;
-    cursor: pointer;
-    text-align: center;
-    height: 100%;
+    display: block;
 }
