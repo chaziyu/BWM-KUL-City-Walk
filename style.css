@@ -241,6 +241,62 @@ body {
     animation: pulse-animation-medium 1.5s infinite;
 }
 
+/* --- ANIMATIONS & TRANSITIONS --- */
+
+@keyframes fadeScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateZ(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateZ(0);
+    }
+}
+
+.animate-fade-scale {
+    animation: fadeScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pinDrop {
+    0% {
+        transform: translateY(-20px) scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        transform: translateY(0) scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-pin-drop {
+    animation: pinDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-loading {
+    background: #f3f4f6;
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
 /* MAKE SURE YOU HAVE THIS KEYFRAME DEFINED! */
 /* If this is missing, the animation won't work */
 @keyframes pulse-animation-medium {
