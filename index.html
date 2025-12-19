@@ -29,7 +29,7 @@
 <body class="overflow-hidden bg-gray-100">
 
     <!-- Google Translate Widget -->
-    <div id="google_translate_element" class="absolute top-4 left-4 z-[5000]"></div>
+    <div id="google_translate_element" class="absolute top-4 right-4 z-[5000]"></div>
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
@@ -132,6 +132,27 @@
     <button id="btnRecenter"
         class="fixed bottom-6 right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[1000] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
         title="Back to Dataran Merdeka">📍</button>
+    <!-- PREVIEW CARD (Bottom Sheet) -->
+    <div id="previewCard"
+        class="fixed bottom-0 left-0 w-full bg-white rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[3000] transform transition-transform duration-300 translate-y-[150%] hidden flex flex-col">
+        <div class="w-full flex justify-center pt-3 pb-1">
+            <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+        </div>
+        <div class="p-4 flex gap-4 items-center">
+            <img id="previewImage" src="" alt="Site" class="w-20 h-20 rounded-lg object-cover bg-gray-200">
+            <div class="flex-1">
+                <h3 id="previewTitle" class="text-lg font-bold text-gray-900 leading-tight mb-1">Site Name</h3>
+                <p id="previewDist" class="text-sm text-gray-500 mb-2">Tap for details</p>
+                <button id="previewOpenBtn"
+                    class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition">
+                    Read Full History →
+                </button>
+            </div>
+            <button id="previewCloseBtn"
+                class="self-start text-gray-400 hover:text-gray-800 p-2 bg-gray-100 rounded-full">✕</button>
+        </div>
+    </div>
+
     <div class="fixed bottom-6 left-4 z-[1000] flex flex-col gap-3">
         <button id="btnChallenge"
             class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🏆</button>
@@ -209,10 +230,16 @@
                     </button>
                 </div>
 
-                <a id="siteModalNearbyBtn" href="#" target="_blank"
-                    class="block w-full text-center mt-2 bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition text-sm">
-                    🍔 Find Food & Stay Nearby
-                </a>
+                <div class="flex gap-2 mt-2">
+                    <a id="siteModalFoodBtn" href="#" target="_blank"
+                        class="flex-1 text-center bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition text-sm">
+                        🍔 Find Food
+                    </a>
+                    <a id="siteModalHotelBtn" href="#" target="_blank"
+                        class="flex-1 text-center bg-blue-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm">
+                        🛏️ Find Hotel
+                    </a>
+                </div>
 
                 <div id="siteModalQuizArea" class="bg-gray-100 p-4 rounded-lg mt-4">
                     <p id="siteModalQuizQ" class="font-bold text-gray-800 mb-2">Quiz: Question loading...</p>

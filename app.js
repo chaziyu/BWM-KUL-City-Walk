@@ -66,6 +66,7 @@ const allRiddles = [
 
 // --- DOM Elements ---
 let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalMoreBtn, siteModalMoreContent, siteModalMore;
+let siteModalFoodBtn, siteModalHotelBtn; // NEW BUTTONS
 let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
 let passportModal, closePassportModal, passportInfo, passportGrid;
 let welcomeModal, closeWelcomeModal;
@@ -376,8 +377,10 @@ function initializeGameAndMap() {
                 });
             }
             // END FIX
-
-            marker.on('click', () => showPreviewCard(site));
+            // 4. Attach Click Event
+            marker.on('click', () => {
+                showPreviewCard(site);
+            });
             markersLayer.addLayer(marker);
 
             // 4. Create the Polygon
@@ -1113,6 +1116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
         siteModalHintBtn = document.getElementById('siteModalHintBtn');
         siteModalHintText = document.getElementById('siteModalHintText');
+        siteModalFoodBtn = document.getElementById('siteModalFoodBtn'); // NEW
+        siteModalHotelBtn = document.getElementById('siteModalHotelBtn'); // NEW
 
         chatModal = document.getElementById('chatModal');
         closeChatModal = document.getElementById('closeChatModal');
@@ -1202,6 +1207,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
         siteModalCheckInBtn.addEventListener('click', handleCheckIn);
+
+        // --- NEW LISTENERS FOR FOOD & HOTEL ---
+        if (siteModalFoodBtn) {
+            siteModalFoodBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!currentModalSite) return;
+                const lat = currentModalSite.coordinates.marker[0];
+                const lon = currentModalSite.coordinates.marker[1];
+                const url = `https://www.google.com/maps/search/restaurants+near+${lat},${lon}`;
+                window.open(url, '_blank');
+            });
+        }
+
+        if (siteModalHotelBtn) {
+            siteModalHotelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!currentModalSite) return;
+                const lat = currentModalSite.coordinates.marker[0];
+                const lon = currentModalSite.coordinates.marker[1];
+                const url = `https://www.google.com/maps/search/hotels+near+${lat},${lon}`;
+                window.open(url, '_blank');
+            });
+        }
 
         // --- ADDED: NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
@@ -1325,8 +1353,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (previewOpenBtn) {
         previewOpenBtn.addEventListener('click', () => {
             if (currentPreviewSiteId) {
-                openSiteModal(currentPreviewSiteId); // Call the original modal opener
-                closePreviewCard();
+                // Find the site data and marker
+                const site = allSiteData.find(s => s.id === currentPreviewSiteId);
+                const marker = allMarkers[currentPreviewSiteId];
+
+                if (site && marker) {
+                    handleMarkerClick(site, marker); // Open the full modal
+                    closePreviewCard();
+                }
+            }
+        });
+    }
+
+    // 4. Allow clicking the card body to open details (UX enhancement)
+    if (previewCard) {
+        previewCard.addEventListener('click', (e) => {
+            // Prevent if clicking close button
+            if (e.target.closest('#previewCloseBtn')) return;
+
+            if (currentPreviewSiteId) {
+                previewOpenBtn.click();
             }
         });
     }
