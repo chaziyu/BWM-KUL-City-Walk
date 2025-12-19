@@ -44,20 +44,36 @@
                 autoDisplay: false
             }, 'google_translate_element');
 
-            // --- FORCE FIX: Remove Google's Top Spacer ---
-            const observer = new MutationObserver(() => {
+            // --- FORCE FIX: Remove Google's Top Spacer (Nuclear Option) ---
+            const killBanner = () => {
+                // 1. Reset Body
                 if (document.body.style.top && document.body.style.top !== '0px') {
                     document.body.style.top = '0px';
+                    document.body.style.marginTop = '0px'; // Also reset margin
                     document.body.style.position = 'static';
                 }
-                const banner = document.querySelector('.goog-te-banner-frame');
-                if (banner) {
-                    banner.style.display = 'none';
-                    banner.style.visibility = 'hidden';
-                    banner.style.height = '0';
-                }
-            });
-            observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+
+                // 2. Remove Banner iFrame
+                const banners = document.querySelectorAll('.goog-te-banner-frame');
+                banners.forEach(b => {
+                    b.style.display = 'none';
+                    b.style.height = '0';
+                    b.style.visibility = 'hidden';
+                    b.remove(); // Attempt to remove entirely
+                });
+
+                // 3. Remove "skiptranslate" class from body if it causes padding
+                // document.body.classList.remove('skiptranslate'); 
+                // (Careful: removing correct class might break translations, just hiding effects is safer)
+            };
+
+            // Run immediately and peridically
+            killBanner();
+            setInterval(killBanner, 1000); // Check every second just in case
+
+            // Watch for changes
+            const observer = new MutationObserver(killBanner);
+            observer.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
             observer.observe(document.documentElement, { childList: true, subtree: true });
         }
     </script>
