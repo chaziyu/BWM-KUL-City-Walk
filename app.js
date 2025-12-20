@@ -25,7 +25,7 @@ function openGoogleMaps(lat, lon, mode) {
 
     if (mode === 'directions') {
         // Universal syntax for directions
-        url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
+        url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
     } else if (mode === 'restaurants') {
         // Search query with location bias
         url = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
@@ -1669,6 +1669,7 @@ document.addEventListener('DOMContentLoaded', () => {
     previewCard = document.getElementById('previewCard');
     previewImage = document.getElementById('previewImage');
     previewTitle = document.getElementById('previewTitle');
+    previewDescription = document.getElementById('previewDescription'); // ADDED
     previewDist = document.getElementById('previewDist');
     previewOpenBtn = document.getElementById('previewOpenBtn');
     previewCloseBtn = document.getElementById('previewCloseBtn');
@@ -1717,7 +1718,23 @@ function showPreviewCard(site) {
     previewImage.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=Site';
     previewImage.onload = () => previewImage.classList.remove('skeleton-loading');
 
-    previewDist.textContent = STRINGS.preview.tapForDetails; // Placeholder for distance if we had coords
+    // DYNAMIC UNIQUENESS INFO
+    let uniqueText = STRINGS.preview.tapForDetails;
+    if (site.ai_context) {
+        // Try to find "Look For:" or "Don't Miss:"
+        const lookForMatch = site.ai_context.match(/(?:Look For|Don't Miss): (.*?)(?:\n|$)/);
+        if (lookForMatch) {
+            uniqueText = "👀 " + lookForMatch[1];
+        } else {
+            // Fallback to first sentence
+            uniqueText = site.ai_context.split('\n')[0];
+        }
+    } else if (site.info) {
+        uniqueText = site.info.split('.')[0] + '.';
+    }
+
+    if (previewDescription) previewDescription.textContent = uniqueText;
+    previewDist.textContent = STRINGS.preview.tapForDetails;
 
     // Show Card
     previewCard.classList.remove('hidden');
