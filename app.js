@@ -16,23 +16,30 @@ migrateData();
  * Opens Google Maps for directions or nearby search.
  * @param {number} lat - Latitude
  * @param {number} lon - Longitude
- * @param {string} mode - 'directions', 'restaurants', or 'hotels'
+ * @param {string} mode - 'directions', 'restaurants', 'hotels', 'walk' or 'transit'
+ * @param {string} [siteName] - Optional name of the location for richer place cards
  */
-function openGoogleMaps(lat, lon, mode) {
+function openGoogleMaps(lat, lon, mode, siteName = "") {
     const destination = `${lat},${lon}`;
     let externalUrl = '';
     let embedUrl = '';
 
-    if (mode === 'directions') {
+    // Determine the query text: use siteName if possible for richer cards
+    const placeQuery = siteName ? encodeURIComponent(siteName) : destination;
+
+    if (mode === 'directions' || mode === 'transit') {
         externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
-        // Use maps.google.com with output=embed for no-key directions
-        embedUrl = `https://maps.google.com/maps?daddr=${destination}&t=m&z=15&output=embed`;
+        // Legacy Embed: daddr (destination), dirflg=r (transit)
+        embedUrl = `https://maps.google.com/maps?daddr=${destination}&t=m&z=15&dirflg=r&output=embed`;
+    } else if (mode === 'walk') {
+        externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
+        embedUrl = `https://maps.google.com/maps?daddr=${destination}&t=m&z=15&dirflg=w&output=embed`;
     } else if (mode === 'restaurants') {
         externalUrl = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
-        embedUrl = `https://maps.google.com/maps?q=restaurants+near+${lat},${lon}&t=m&z=15&output=embed`;
+        embedUrl = `https://maps.google.com/maps?q=restaurants+near+${placeQuery}&t=m&z=15&output=embed`;
     } else if (mode === 'hotels') {
         externalUrl = `https://www.google.com/maps/search/hotels/@${lat},${lon},18z`;
-        embedUrl = `https://maps.google.com/maps?q=hotels+near+${lat},${lon}&t=m&z=15&output=embed`;
+        embedUrl = `https://maps.google.com/maps?q=hotels+near+${placeQuery}&t=m&z=15&output=embed`;
     }
 
     const directionsModal = document.getElementById('directionsModal');
@@ -41,11 +48,6 @@ function openGoogleMaps(lat, lon, mode) {
     const externalMapsLink = document.getElementById('externalMapsLink');
 
     if (directionsModal && directionsIframe) {
-        // Close modal first if it's already open
-        if (!directionsModal.classList.contains('hidden')) {
-            animateCloseModal(directionsModal);
-        }
-
         // Setup Iframe
         if (directionsLoading) directionsLoading.classList.remove('hidden');
         directionsIframe.onload = () => {
@@ -55,8 +57,33 @@ function openGoogleMaps(lat, lon, mode) {
         directionsIframe.src = embedUrl;
         if (externalMapsLink) externalMapsLink.href = externalUrl;
 
-        // Open Modal
-        animateOpenModal(directionsModal);
+        // --- Update Toggle Active State ---
+        const transitBtn = document.getElementById('mapModeTransit');
+        const foodBtn = document.getElementById('mapModeFood');
+        const hotelsBtn = document.getElementById('mapModeHotels');
+        const walkBtn = document.getElementById('mapModeWalk');
+
+        [transitBtn, foodBtn, hotelsBtn, walkBtn].forEach(btn => {
+            if (!btn) return;
+            btn.classList.remove('bg-indigo-100', 'text-indigo-700', 'border-indigo-200');
+            btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+        });
+
+        let activeBtn = null;
+        if (mode === 'transit' || mode === 'directions') activeBtn = transitBtn;
+        else if (mode === 'restaurants') activeBtn = foodBtn;
+        else if (mode === 'hotels') activeBtn = hotelsBtn;
+        else if (mode === 'walk') activeBtn = walkBtn;
+
+        if (activeBtn) {
+            activeBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            activeBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'border-indigo-200');
+        }
+
+        // Open Modal if hidden
+        if (directionsModal.classList.contains('hidden')) {
+            animateOpenModal(directionsModal);
+        }
     } else if (externalUrl) {
         window.open(externalUrl, '_blank');
     }
@@ -1755,7 +1782,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         siteModalDirections.addEventListener('click', () => {
             if (!currentModalSite) return;
-            openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'directions');
+            openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'directions', currentModalSite.name);
         });
 
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
@@ -1767,7 +1794,7 @@ document.addEventListener('DOMContentLoaded', () => {
             siteModalFoodBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'restaurants');
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'restaurants', currentModalSite.name);
             });
         }
 
@@ -1775,7 +1802,7 @@ document.addEventListener('DOMContentLoaded', () => {
             siteModalHotelBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'hotels');
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'hotels', currentModalSite.name);
             });
         }
 
@@ -1849,6 +1876,37 @@ document.addEventListener('DOMContentLoaded', () => {
             closeDirectionsModalBtn.addEventListener('click', () => {
                 animateCloseModal(directionsModal);
                 if (directionsIframe) directionsIframe.src = ""; // Clear source
+            });
+        }
+
+        // --- DIRECTIONS MODE TOGGLES (IN-MODAL) ---
+        const mapModeTransit = document.getElementById('mapModeTransit');
+        const mapModeFood = document.getElementById('mapModeFood');
+        const mapModeHotels = document.getElementById('mapModeHotels');
+        const mapModeWalk = document.getElementById('mapModeWalk');
+
+        if (mapModeTransit) {
+            mapModeTransit.addEventListener('click', () => {
+                if (!currentModalSite) return;
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'transit', currentModalSite.name);
+            });
+        }
+        if (mapModeFood) {
+            mapModeFood.addEventListener('click', () => {
+                if (!currentModalSite) return;
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'restaurants', currentModalSite.name);
+            });
+        }
+        if (mapModeHotels) {
+            mapModeHotels.addEventListener('click', () => {
+                if (!currentModalSite) return;
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'hotels', currentModalSite.name);
+            });
+        }
+        if (mapModeWalk) {
+            mapModeWalk.addEventListener('click', () => {
+                if (!currentModalSite) return;
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'walk', currentModalSite.name);
             });
         }
 
