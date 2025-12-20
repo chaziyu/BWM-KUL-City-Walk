@@ -2105,3 +2105,150 @@ if (closeUserGuideModalBtn && userGuideModal) {
     });
 }
 
+// --- PWA INSTALL PROMPT LOGIC ---
+let deferredPrompt = null;
+
+// Detect if app is already installed
+function isAppInstalled() {
+    // Check if running in standalone mode (installed PWA)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        return true;
+    }
+    // Check iOS standalone mode
+    if (window.navigator.standalone === true) {
+        return true;
+    }
+    return false;
+}
+
+// Detect device type
+function getDeviceType() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    // iOS detection
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return 'ios';
+    }
+
+    // Android detection
+    if (/android/i.test(userAgent)) {
+        return 'android';
+    }
+
+    // Desktop/other
+    return 'desktop';
+}
+
+// Show PWA install prompt
+function showPWAPrompt() {
+    const pwaPrompt = document.getElementById('pwaInstallPrompt');
+    const installBtn = document.getElementById('pwaInstallBtn');
+    const iosInstructions = document.getElementById('iosInstructions');
+    const genericInstructions = document.getElementById('genericInstructions');
+
+    if (!pwaPrompt) return;
+
+    const deviceType = getDeviceType();
+
+    // Show appropriate UI based on device
+    if (deviceType === 'ios') {
+        // iOS: Show manual instructions (no programmatic install)
+        iosInstructions.classList.remove('hidden');
+        installBtn.classList.add('hidden');
+        genericInstructions.classList.add('hidden');
+    } else if (deferredPrompt && deviceType === 'android') {
+        // Android/Chrome: Show install button
+        installBtn.classList.remove('hidden');
+        iosInstructions.classList.add('hidden');
+        genericInstructions.classList.add('hidden');
+    } else {
+        // Desktop/other: Show generic instructions
+        genericInstructions.classList.remove('hidden');
+        installBtn.classList.add('hidden');
+        iosInstructions.classList.add('hidden');
+    }
+
+    pwaPrompt.classList.remove('hidden');
+}
+
+// Setup PWA install prompt
+function setupPWAInstallPrompt() {
+    // Check if already installed
+    if (isAppInstalled()) {
+        console.log('PWA already installed');
+        return;
+    }
+
+    // Check if user already dismissed the prompt
+    const dismissedUntil = localStorage.getItem('pwa_prompt_dismissed');
+    if (dismissedUntil && new Date().getTime() < parseInt(dismissedUntil)) {
+        console.log('PWA prompt dismissed by user');
+        return;
+    }
+
+    // Check if user is logged in
+    const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
+    if (sessionData && sessionData.valid) {
+        console.log('User already logged in, skip PWA prompt');
+        return;
+    }
+
+    // Show prompt after 3 seconds delay (non-intrusive)
+    setTimeout(() => {
+        showPWAPrompt();
+    }, 3000);
+}
+
+// Capture the beforeinstallprompt event (Android/Chrome)
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('beforeinstallprompt event captured');
+    e.preventDefault(); // Prevent Chrome's default mini-infobar
+    deferredPrompt = e;
+});
+
+// Setup event listeners
+const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+const closePWAPrompt = document.getElementById('closePWAPrompt');
+const continueBrowser = document.getElementById('continueBrowser');
+const pwaPrompt = document.getElementById('pwaInstallPrompt');
+
+if (pwaInstallBtn) {
+    pwaInstallBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+
+        // Show the install prompt
+        deferredPrompt.prompt();
+
+        // Wait for the user's response
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response: ${outcome}`);
+
+        // Clear the deferredPrompt
+        deferredPrompt = null;
+
+        // Hide the prompt
+        if (pwaPrompt) pwaPrompt.classList.add('hidden');
+    });
+}
+
+if (closePWAPrompt) {
+    closePWAPrompt.addEventListener('click', () => {
+        if (pwaPrompt) pwaPrompt.classList.add('hidden');
+        // Remember dismissal for 7 days
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
+    });
+}
+
+if (continueBrowser) {
+    continueBrowser.addEventListener('click', () => {
+        if (pwaPrompt) pwaPrompt.classList.add('hidden');
+        // Remember dismissal for 7 days
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
+    });
+}
+
+// Initialize PWA prompt when page loads
+setupPWAInstallPrompt();
+

@@ -170,6 +170,77 @@
         </div>
     </div>
 
+    <!-- PWA INSTALL PROMPT -->
+    <div id="pwaInstallPrompt"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
+            <button id="closePWAPrompt"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+
+            <div class="text-center mb-4">
+                <div class="text-6xl mb-3">📱</div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Install for Best Experience!</h2>
+                <p class="text-gray-600 text-sm">Add BWM KUL City Walk to your home screen for:</p>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex items-start gap-3 bg-blue-50 p-3 rounded-lg">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Faster Loading</p>
+                        <p class="text-xs text-gray-600">Instant access like a native app</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-green-50 p-3 rounded-lg">
+                    <span class="text-2xl">📍</span>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Better GPS Performance</p>
+                        <p class="text-xs text-gray-600">More accurate location tracking</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-purple-50 p-3 rounded-lg">
+                    <span class="text-2xl">🎯</span>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Full Screen Mode</p>
+                        <p class="text-xs text-gray-600">Immersive heritage experience</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Android/Chrome Install Button -->
+            <button id="pwaInstallBtn"
+                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition shadow-lg mb-3 flex items-center justify-center gap-2 hidden">
+                <span class="text-xl">📥</span>
+                <span>Add to Home Screen</span>
+            </button>
+
+            <!-- iOS Instructions -->
+            <div id="iosInstructions" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+                <p class="font-semibold text-gray-900 text-sm mb-2">📱 For iPhone/iPad:</p>
+                <ol class="text-xs text-gray-700 space-y-1 list-decimal list-inside">
+                    <li>Tap the <strong>Share</strong> button <span class="inline-block">⎙</span> (bottom Safari bar)
+                    </li>
+                    <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                    <li>Tap <strong>"Add"</strong> to confirm</li>
+                </ol>
+            </div>
+
+            <!-- Generic Instructions -->
+            <div id="genericInstructions" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+                <p class="font-semibold text-gray-900 text-sm mb-2">📱 Installation:</p>
+                <p class="text-xs text-gray-700">Look for "Install" or "Add to Home Screen" option in your browser menu
+                    (usually ⋮ or ⋯)</p>
+            </div>
+
+            <button id="continueBrowser"
+                class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition text-sm">
+                Maybe Later, Continue in Browser
+            </button>
+
+            <p class="text-xs text-gray-500 text-center mt-3">You can always install later from your browser menu</p>
+        </div>
+    </div>
+
     <div id="gatekeeper"
         class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4 transition-opacity duration-500">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative animate-fade-scale">
