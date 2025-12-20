@@ -259,6 +259,40 @@
         </div>
     </div>
 
+    <!-- PWA/Browser Login Warning Modal -->
+    <div id="platformWarningModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
+            <div class="text-center mb-4">
+                <div id="warningIcon" class="text-6xl mb-3">⚠️</div>
+                <h2 id="warningTitle" class="text-2xl font-bold text-gray-900 mb-2">Important Notice</h2>
+            </div>
+
+            <div id="warningContent" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-4">
+                <p class="text-sm text-gray-800 leading-relaxed"></p>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
+                <p class="text-xs text-blue-900 font-semibold mb-2">🔒 Device Locking Explained:</p>
+                <p class="text-xs text-gray-700">Your passkey will be locked to <strong>one platform only</strong>
+                    (either PWA or Browser). This security feature prevents sharing passkeys across devices.</p>
+            </div>
+
+            <div class="space-y-3">
+                <button id="continueLoginBtn"
+                    class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg">
+                    I Understand, Continue Login
+                </button>
+                <button id="cancelLoginBtn"
+                    class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all duration-200">
+                    Cancel
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center mt-4">💡 Tip: We recommend using PWA for the best experience</p>
+        </div>
+    </div>
+
     <div id="staff-screen"
         class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white transition-opacity duration-500">
         <div

@@ -1250,45 +1250,94 @@ document.addEventListener('DOMContentLoaded', () => {
         return sessionData && sessionData.valid;
     }
 
-    // --- CHECK FOR URL PASSKEY (AUTO-LOGIN) ---
+    // --- CHECK FOR URL PASSKEY (AUTO-FILL ONLY) ---
     async function checkForURLPasskey() {
         const urlParams = new URLSearchParams(window.location.search);
         const urlCode = urlParams.get('code');
 
         if (urlCode && !isAuthorized()) {
-            console.log("Auto-login detected:", urlCode);
+            console.log("Magic link detected, auto-filling passkey:", urlCode);
 
             // Clean URL immediately for professional look
             const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
 
-            // Show Gatekeeper with loading state
+            // Show Gatekeeper with auto-filled passkey (but don't auto-login)
             const gatekeeper = document.getElementById('gatekeeper');
             const passcodeInput = document.getElementById('passcodeInput');
-            const unlockBtn = document.getElementById('unlockBtn');
             const landingPage = document.getElementById('landing-page');
 
             if (gatekeeper && landingPage) {
                 landingPage.classList.add('hidden');
                 gatekeeper.classList.remove('hidden');
+                // Auto-fill the passkey input, but let user click unlock manually
                 passcodeInput.value = urlCode;
-                unlockBtn.disabled = true;
-                unlockBtn.textContent = STRINGS.auth.verifying;
 
-                try {
-                    const success = await verifyCode(urlCode);
-                    // verifyCode handles all UI transitions and app initialization on success.
-                    if (!success) {
-                        unlockBtn.disabled = false;
-                        unlockBtn.textContent = STRINGS.auth.verifyUnlock;
-                    }
-                } catch (err) {
-                    console.error("Auto-login failed:", err);
-                    unlockBtn.disabled = false;
-                    unlockBtn.textContent = STRINGS.auth.verifyUnlock;
-                }
+                // SHOW PLATFORM WARNING BEFORE ALLOWING LOGIN
+                showPlatformWarning();
             }
         }
+    }
+
+    // --- PWA DETECTION ---
+    function isPWAMode() {
+        // Check if running in standalone mode (PWA)
+        return window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone || // iOS Safari standalone
+            document.referrer.includes('android-app://'); // Android TWA
+    }
+
+    // --- PLATFORM WARNING MODAL ---
+    function showPlatformWarning() {
+        const modal = document.getElementById('platformWarningModal');
+        const warningContent = document.querySelector('#warningContent p');
+        const continueBtn = document.getElementById('continueLoginBtn');
+        const cancelBtn = document.getElementById('cancelLoginBtn');
+        const unlockBtn = document.getElementById('unlockBtn');
+
+        // Determine platform and set appropriate warning
+        const isPWA = isPWAMode();
+
+        if (isPWA) {
+            // User is on PWA
+            warningContent.innerHTML = `
+                <strong>📱 You're using the PWA (App Mode)</strong><br><br>
+                Once you log in here, this passkey will be locked to the <strong>PWA only</strong>. 
+                You won't be able to use it in a regular browser on this device.<br><br>
+                If you prefer to use a browser instead, please close this app and open the link in your browser.
+            `;
+        } else {
+            // User is on Browser
+            warningContent.innerHTML = `
+                <strong>🌐 You're using a Browser</strong><br><br>
+                Once you log in here, this passkey will be locked to <strong>browser mode only</strong>. 
+                You won't be able to use it in the PWA (installed app) on this device.<br><br>
+                If you'd like the best experience with better GPS and offline features, we recommend installing the PWA first.
+            `;
+        }
+
+        // Show modal
+        modal.classList.remove('hidden');
+
+        // Disable unlock button until user confirms
+        unlockBtn.disabled = true;
+        unlockBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Continue button - allows login
+        continueBtn.onclick = () => {
+            modal.classList.add('hidden');
+            unlockBtn.disabled = false;
+            unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            unlockBtn.focus();
+        };
+
+        // Cancel button - clears input and hides warning
+        cancelBtn.onclick = () => {
+            modal.classList.add('hidden');
+            document.getElementById('passcodeInput').value = '';
+            unlockBtn.disabled = false;
+            unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        };
     }
 
     async function initApp() {
