@@ -23,6 +23,7 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 ## 🏗️ Technology Stack
 
 *   **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript.
+*   **Configuration:** `config.js` module for runtime settings.
 *   **Mapping:** Leaflet.js (OpenStreetMap adapters).
 *   **Backend (Serverless):** Vercel Serverless Functions.
 *   **Database:** Google Sheets (Published as CSV) for Passkeys.
@@ -35,7 +36,7 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 
 ### 1. Security & Access Control ("The Gatekeeper")
 *   **Dual Landing Page:** Separate flows for **Visitors** (Passkey entry) and **Staff** (Admin login).
-*   **24-Hour Session:** Login persists for 24 hours via local storage.
+*   **Permanent Session:** Login persists indefinitely until manually cleared.
 *   **Staff Dashboard:** Retrieves "Today's Passkey" from Google Sheets.
 
 ### 2. Smart Map Interface
@@ -81,6 +82,10 @@ Configure these in Vercel:
 | `GOOGLE_API_KEY` | Your Google Gemini API Key. | `AIzaSy...` |
 | `GOOGLE_SHEET_URL` | The CSV URL from Step 1. | `https://docs.google.com/...output=csv` |
 | `ADMIN_PASSWORD` | Secure password for Staff Dashboard. | `SecretPass!` |
+| `HISTORY_WINDOW_SIZE` | Chat history length (Optional, default 30). | `30` |
+| `MAX_MESSAGES_PER_SESSION` | Chat limit per session (Optional, default 10). | `10` |
+| `DEFAULT_CENTER` | Map start coordinates (Optional). | `[3.14, 101.69]` |
+| `ZOOM` | Default map zoom level (Optional). | `16` |
 
 ### Step 3: Local Development
 ```bash

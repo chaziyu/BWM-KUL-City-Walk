@@ -2,11 +2,7 @@
 //The garden flower stall is also not there anymore. Only the teochew association
 
 // --- CONFIGURATION ---
-const HISTORY_WINDOW_SIZE = 10;
-const MAX_MESSAGES_PER_SESSION = 10;
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-const DEFAULT_CENTER = [3.1495519988154683, 101.69609103393907];
-const ZOOM = 16;
+import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM } from './config.js';
 
 // --- GAME STATE ---
 let map = null;
@@ -1144,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Save session as Admin
                     localStorage.setItem('jejak_session', JSON.stringify({
                         valid: true,
-                        start: Date.now(),
+                        // start: Date.now(), // REMOVED for permanent session
                         role: 'admin'
                     }));
 
@@ -1223,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Save session
                 localStorage.setItem('jejak_session', JSON.stringify({
                     valid: true,
-                    start: Date.now(),
+                    // start: Date.now(), // REMOVED for permanent session
                     role: result.isAdmin ? 'admin' : 'user'
                 }));
 
