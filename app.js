@@ -1357,12 +1357,10 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }
 
-        // Continue button - allows login
-        continueBtn.onclick = () => {
+        // Continue button - proceeds with login
+        continueBtn.onclick = async () => {
             modal.classList.add('hidden');
-            unlockBtn.disabled = false;
-            unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            unlockBtn.focus();
+            await proceedWithLogin();
         };
 
         // Cancel button - clears input and hides warning
@@ -1372,6 +1370,38 @@ document.addEventListener('DOMContentLoaded', () => {
             unlockBtn.disabled = false;
             unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         };
+
+        // "What is PWA?" button - shows explanation modal
+        const whatIsPWABtn = document.getElementById('whatIsPWABtn');
+        if (whatIsPWABtn) {
+            whatIsPWABtn.onclick = () => {
+                showPWAExplanation();
+            };
+        }
+    }
+
+    // --- PWA EXPLANATION MODAL ---
+    function showPWAExplanation() {
+        const explanationModal = document.getElementById('pwaExplanationModal');
+        const closeBtn = document.getElementById('closePWAExplanation');
+        const gotItBtn = document.getElementById('gotItPWABtn');
+
+        // Show the explanation modal
+        explanationModal.classList.remove('hidden');
+
+        // Close button handler
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                explanationModal.classList.add('hidden');
+            };
+        }
+
+        // Got It button handler - close and return to platform warning
+        if (gotItBtn) {
+            gotItBtn.onclick = () => {
+                explanationModal.classList.add('hidden');
+            };
+        }
     }
 
     async function initApp() {
@@ -1653,17 +1683,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const enteredCode = passcodeInput.value.trim();
             if (!enteredCode) return;
 
-            unlockBtn.disabled = true;
-            unlockBtn.textContent = STRINGS.auth.verifying;
-
-            await verifyCode(enteredCode);
-
-            // If verification failed, reset the button
-            if (!localStorage.getItem('jejak_session')) {
-                unlockBtn.disabled = false;
-                unlockBtn.textContent = STRINGS.auth.verifyUnlock;
-            }
+            // Show platform warning for manual login too (not just magic links)
+            showPlatformWarning();
         });
+    }
+
+    async function proceedWithLogin() {
+        const passcodeInput = document.getElementById('passcodeInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const enteredCode = passcodeInput.value.trim();
+
+        if (!enteredCode) return;
+
+        unlockBtn.disabled = true;
+        unlockBtn.textContent = STRINGS.auth.verifying;
+
+        await verifyCode(enteredCode);
+
+        // If verification failed, reset the button
+        if (!localStorage.getItem('jejak_session')) {
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = STRINGS.auth.verifyUnlock;
+        }
     }
 
     async function verifyCode(enteredCode) {
