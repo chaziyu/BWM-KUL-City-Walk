@@ -45,9 +45,21 @@ function openGoogleMaps(lat, lon, mode, siteName = "") {
     const directionsModal = document.getElementById('directionsModal');
     const directionsIframe = document.getElementById('directionsIframe');
     const directionsLoading = document.getElementById('directionsLoading');
+    const directionsTitle = document.getElementById('directionsTitle');
     const externalMapsLink = document.getElementById('externalMapsLink');
 
     if (directionsModal && directionsIframe) {
+        // --- Update Dynamic Title with Action Icons ---
+        if (directionsTitle) {
+            let titleText = "Directions";
+            let icon = "🗺️";
+            if (mode === 'restaurants') { titleText = `Food Near ${siteName || 'Site'}`; icon = "🍔"; }
+            else if (mode === 'hotels') { titleText = `Hotels Near ${siteName || 'Site'}`; icon = "🏨"; }
+            else if (mode === 'transit' || mode === 'directions') { titleText = `Transit to ${siteName || 'Site'}`; icon = "🚇"; }
+            else if (mode === 'walk') { titleText = `Walk to ${siteName || 'Site'}`; icon = "🚶"; }
+
+            directionsTitle.innerHTML = `<span>${icon}</span> ${titleText}`;
+        }
         // Setup Iframe
         if (directionsLoading) directionsLoading.classList.remove('hidden');
         directionsIframe.onload = () => {
@@ -57,28 +69,6 @@ function openGoogleMaps(lat, lon, mode, siteName = "") {
         directionsIframe.src = embedUrl;
         if (externalMapsLink) externalMapsLink.href = externalUrl;
 
-        // --- Update Toggle Active State ---
-        const transitBtn = document.getElementById('mapModeTransit');
-        const foodBtn = document.getElementById('mapModeFood');
-        const hotelsBtn = document.getElementById('mapModeHotels');
-        const walkBtn = document.getElementById('mapModeWalk');
-
-        [transitBtn, foodBtn, hotelsBtn, walkBtn].forEach(btn => {
-            if (!btn) return;
-            btn.classList.remove('bg-indigo-100', 'text-indigo-700', 'border-indigo-200');
-            btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
-        });
-
-        let activeBtn = null;
-        if (mode === 'transit' || mode === 'directions') activeBtn = transitBtn;
-        else if (mode === 'restaurants') activeBtn = foodBtn;
-        else if (mode === 'hotels') activeBtn = hotelsBtn;
-        else if (mode === 'walk') activeBtn = walkBtn;
-
-        if (activeBtn) {
-            activeBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
-            activeBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'border-indigo-200');
-        }
 
         // Open Modal if hidden
         if (directionsModal.classList.contains('hidden')) {
@@ -1879,36 +1869,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- DIRECTIONS MODE TOGGLES (IN-MODAL) ---
-        const mapModeTransit = document.getElementById('mapModeTransit');
-        const mapModeFood = document.getElementById('mapModeFood');
-        const mapModeHotels = document.getElementById('mapModeHotels');
-        const mapModeWalk = document.getElementById('mapModeWalk');
-
-        if (mapModeTransit) {
-            mapModeTransit.addEventListener('click', () => {
-                if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'transit', currentModalSite.name);
-            });
-        }
-        if (mapModeFood) {
-            mapModeFood.addEventListener('click', () => {
-                if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'restaurants', currentModalSite.name);
-            });
-        }
-        if (mapModeHotels) {
-            mapModeHotels.addEventListener('click', () => {
-                if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'hotels', currentModalSite.name);
-            });
-        }
-        if (mapModeWalk) {
-            mapModeWalk.addEventListener('click', () => {
-                if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'walk', currentModalSite.name);
-            });
-        }
 
         shareWhatsAppBtn.addEventListener('click', () => {
             const count = visitedSites.length;
