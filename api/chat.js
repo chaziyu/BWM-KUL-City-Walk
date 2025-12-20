@@ -1,21 +1,26 @@
 // File: /api/chat.js
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const path = require('path');
+const fs = require('fs');
+
 const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js'); // 1. Import general info
 
 // --- OPTIMIZATION: GLOBAL CONTEXT CACHING ---
 // Variables declared here are cached across serverless invocations (Warm Start)
 let FINAL_SYSTEM_PROMPT = "";
 try {
-    const sites = require('../data.json');
+    const jsonPath = path.join(process.cwd(), 'data.json');
+    // Read file synchronously for startup
+    const sites = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     let siteContext = "\n--- HERITAGE SITES ---";
 
-     for (const site of sites) {
+    for (const site of sites) {
         const context = site.ai_context || site.info;
         if (context) {
             siteContext += `\n\n### ${site.name} (ID: ${site.id})\n${context}`;
         }
         // Combine immediately at startup
-    FINAL_SYSTEM_PROMPT = `${GENERAL_KNOWLEDGE}${siteContext}--- END CONTEXT ---`;
+        FINAL_SYSTEM_PROMPT = `${GENERAL_KNOWLEDGE}${siteContext}--- END CONTEXT ---`;
     }
 } catch (error) {
     console.error('Error preloading data.json (Cold Start):', error);
@@ -30,7 +35,7 @@ module.exports = async (request, response) => {
 
     try {
         // Use the original GOOGLE_API_KEY from your Vercel env
-        const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY; 
+        const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
         if (!GOOGLE_API_KEY) {
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
@@ -39,7 +44,7 @@ module.exports = async (request, response) => {
 
         // OPTIMIZED: Use cached global context
         const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
-        
+
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash-lite", // Using your original model name
             systemInstruction: FINAL_SYSTEM_PROMPT,
@@ -49,7 +54,7 @@ module.exports = async (request, response) => {
         const result = await chat.sendMessage(userQuery);
         const aiResponse = result.response;
         const text = aiResponse.text();
-            
+
         return response.status(200).json({ reply: text });
 
     } catch (error) {

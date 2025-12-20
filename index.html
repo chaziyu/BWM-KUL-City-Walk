@@ -90,16 +90,12 @@
             // Start observing the document body for added nodes
             observer.observe(document.body, { childList: true, subtree: true });
 
-            // Fallback: Check every 500ms for sticky elements
-            setInterval(() => {
+            // Fallback: Check ONCE after 2 seconds to catch stragglers, then stop.
+            setTimeout(() => {
                 const popups = document.querySelectorAll('.goog-te-balloon-frame, .goog-te-banner-frame, .goog-tooltip, iframe[id^=":"]');
                 popups.forEach(el => el.remove());
-
-                // Force Body Reset
-                if (document.body.style.top !== '0px') {
-                    document.body.style.top = '0px';
-                }
-            }, 1000);
+                if (document.body.style.top !== '0px') document.body.style.top = '0px';
+            }, 2000);
         })();
     </script>
 

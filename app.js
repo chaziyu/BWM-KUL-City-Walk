@@ -1328,6 +1328,28 @@ document.addEventListener('DOMContentLoaded', () => {
         welcomeModal = document.getElementById('welcomeModal');
         closeWelcomeModal = document.getElementById('closeWelcomeModal');
 
+        // --- AUDIO UNLOCK LOGIC ---
+        // Mobile browsers fix: Unlock audio context on first interaction
+        const unlockAudio = () => {
+            if (typeof chaChingSound !== 'undefined') {
+                chaChingSound.volume = 0;
+                chaChingSound.play().then(() => {
+                    chaChingSound.pause();
+                    chaChingSound.currentTime = 0;
+                    chaChingSound.volume = 1; // Restore volume
+                }).catch(() => { }); // Ignore errors
+
+                // Remove listeners once unlocked
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('touchstart', unlockAudio);
+                document.removeEventListener('keydown', unlockAudio);
+            }
+        };
+
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+
         // ADDED: New Modal Elements
         congratsModal = document.getElementById('congratsModal');
         closeCongratsModal = document.getElementById('closeCongratsModal');
@@ -1663,4 +1685,22 @@ function closePreviewCard() {
 // Override the global click handler behavior via a flag or modifying the loop?
 // Better: We need to intercept where marker.on('click') is defined.
 // Since that is deep in 'initializeGameAndMap', we might need to patch it.
+
+// Helper to open Google Maps with Universal Links
+function openGoogleMaps(lat, lon, mode) {
+    // Universal Google Maps URL structure
+    let query = `${lat},${lon}`;
+    if (mode === 'restaurants') query = `restaurants near ${lat},${lon}`;
+    if (mode === 'hotels') query = `hotels near ${lat},${lon}`;
+
+    // api=1 ensures it tries to open the app
+    let url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+
+    // For directions specifically
+    if (mode === 'directions') {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
+    }
+
+    window.open(url, '_blank');
+}
 
