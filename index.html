@@ -165,44 +165,45 @@
     </div>
 
     <div id="gatekeeper"
-        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4">
+        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4 transition-opacity duration-500">
         <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative animate-fade-scale">
             <button id="backToHome"
-                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">←
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
                 Back</button>
             <div class="mb-4 mt-2 text-5xl">🔐</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Visitor Access</h2>
             <p class="text-gray-600 mb-6 text-sm">Please enter the Passkey provided by the counter.</p>
             <input type="text" id="passcodeInput" placeholder="e.g. AB-12345"
-                class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition font-mono">
+                class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition-all duration-200 font-mono">
             <button id="unlockBtn"
-                class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Verify
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg">Verify
                 & Unlock</button>
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
         </div>
     </div>
 
     <div id="staff-screen"
-        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white">
+        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white transition-opacity duration-500">
         <div
             class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative text-gray-900 animate-fade-scale">
             <button id="closeStaffScreen"
-                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition">←
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
                 Back</button>
             <div class="mb-4 mt-2 text-5xl">🧑‍💼</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Staff Access</h2>
             <p class="text-gray-600 mb-6 text-sm">Enter the admin password to Login.</p>
             <div id="adminLoginForm">
                 <input type="password" id="adminPasswordInput" placeholder="Admin Password"
-                    class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition">
+                    class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition-all duration-200">
                 <button id="adminLoginBtn"
-                    class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition shadow-lg">Login</button>
+                    class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-lg">Login</button>
                 <p id="adminErrorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Wrong password.</p>
             </div>
             <div id="adminResult" class="hidden">
-                <p class="text-gray-600 mb-2" id="passkeyDate">Date: 2024-01-01</p>
+                <p class="text-gray-600 mb-2" id="passkeyDate"></p>
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
-                    <p class="text-2xl font-bold font-mono text-blue-600 mb-1" id="passkeyResult">AB-1234</p>
+                    <p class="text-2xl font-bold font-mono text-blue-600 mb-1" id="passkeyResult">Click "Generate New
+                        Passkey" to create a code</p>
                     <p id="adminStatusMsg" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hidden">
                         New Code Generated!</p>
                 </div>
@@ -320,18 +321,18 @@
                 <!-- Zoom Controls -->
                 <div class="flex gap-2 mb-2">
                     <button id="btnTextSizeSmall"
-                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700">A-</button>
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200">A-</button>
                     <button id="btnTextSizeReset"
-                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700">Reset</button>
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200">Reset</button>
                     <button id="btnTextSizeLarge"
-                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700">A+</button>
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200">A+</button>
                 </div>
 
                 <p id="siteModalInfo" class="text-gray-700 mb-4">Site info loading...</p>
                 <!-- More Info: Collapsible detailed description -->
                 <div id="siteModalMore" class="mb-4">
                     <button id="siteModalMoreBtn"
-                        class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-700 transition mb-2 text-sm">More
+                        class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-700 transition-all duration-200 mb-2 text-sm">More
                         info</button>
                     <div id="siteModalMoreContent"
                         class="mt-2 text-gray-700 hidden whitespace-pre-line bg-gray-100 border border-gray-200 rounded-lg p-3">
@@ -339,33 +340,33 @@
                 </div>
 
                 <button id="siteModalCheckInBtn"
-                    class="w-full bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-800 transition mb-4 text-sm">
+                    class="w-full bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-800 transition-all duration-200 mb-4 text-sm">
                     Check In to this Site
                 </button>
 
                 <button id="siteModalSolveChallengeBtn"
-                    class="w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-600 transition mb-4 text-sm hidden">
+                    class="w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-600 transition-all duration-200 mb-4 text-sm hidden">
                     🏆 Solve Daily Challenge
                 </button>
 
                 <div class="flex gap-2">
                     <button id="siteModalDirections"
-                        class="flex-1 bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 transition text-sm">
+                        class="flex-1 bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 transition-all duration-200 text-sm">
                         Get Directions
                     </button>
                     <button id="siteModalAskAI"
-                        class="flex-1 bg-gray-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-gray-700 transition text-sm">
+                        class="flex-1 bg-gray-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-gray-700 transition-all duration-200 text-sm">
                         Ask AI
                     </button>
                 </div>
 
                 <div class="flex gap-2 mt-2">
                     <a id="siteModalFoodBtn" href="#" target="_blank"
-                        class="flex-1 text-center bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition text-sm">
+                        class="flex-1 text-center bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm">
                         🍔 Find Food
                     </a>
                     <a id="siteModalHotelBtn" href="#" target="_blank"
-                        class="flex-1 text-center bg-blue-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm">
+                        class="flex-1 text-center bg-blue-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm">
                         🛏️ Find Hotel
                     </a>
                 </div>

@@ -35,11 +35,15 @@ function openGoogleMaps(lat, lon, mode, siteName = "") {
         externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
         embedUrl = `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=w&output=embed`;
     } else if (mode === 'restaurants') {
-        externalUrl = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
-        embedUrl = `https://maps.google.com/maps?q=restaurants+near+${placeQuery}&t=m&z=15&output=embed`;
+        // Search restaurants centered on the heritage site location, not user location
+        externalUrl = `https://www.google.com/maps/search/restaurants/@${lat},${lon},16z`;
+        // For embed: explicitly center on site coordinates and search nearby
+        embedUrl = `https://maps.google.com/maps?q=restaurants&sll=${lat},${lon}&t=m&z=16&output=embed`;
     } else if (mode === 'hotels') {
-        externalUrl = `https://www.google.com/maps/search/hotels/@${lat},${lon},18z`;
-        embedUrl = `https://maps.google.com/maps?q=hotels+near+${placeQuery}&t=m&z=15&output=embed`;
+        // Search hotels centered on the heritage site location, not user location
+        externalUrl = `https://www.google.com/maps/search/hotels/@${lat},${lon},16z`;
+        // For embed: explicitly center on site coordinates and search nearby
+        embedUrl = `https://maps.google.com/maps?q=hotels&sll=${lat},${lon}&t=m&z=16&output=embed`;
     }
 
     const directionsModal = document.getElementById('directionsModal');
