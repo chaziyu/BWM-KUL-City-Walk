@@ -1528,7 +1528,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const errorMsg = document.getElementById('adminErrorMsg');
             const loginBtn = document.getElementById('adminLoginBtn');
 
-            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuX1n9H-RJZ-N0vPQalzfiedq3ax07lKZ9gtajm4C8PEN4hauSblZTyzQAWYjItIKpOw/exec";
+            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
             loginBtn.disabled = true;
             loginBtn.textContent = STRINGS.auth.verifying;
@@ -1592,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const switchToMapBtn = document.getElementById('adminSwitchToMapBtn');
 
         let lastGeneratedCode = "";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuX1n9H-RJZ-N0vPQalzfiedq3ax07lKZ9gtajm4C8PEN4hauSblZTyzQAWYjItIKpOw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
         generateBtn.onclick = async () => {
             // Retrieve admin password from session (works after reload)
@@ -1712,7 +1712,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.add('hidden');
 
         // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuX1n9H-RJZ-N0vPQalzfiedq3ax07lKZ9gtajm4C8PEN4hauSblZTyzQAWYjItIKpOw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
         try {
             // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
