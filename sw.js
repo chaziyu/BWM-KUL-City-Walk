@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bwm-kul-v1';
+const CACHE_NAME = 'bwm-kul-v2';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
