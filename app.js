@@ -2,31 +2,41 @@
 //The garden flower stall is also not there anymore. Only the teochew association
 
 // --- CONFIGURATION ---
-import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM } from './config.js';
+import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './config.js';
+import { migrateData } from './storage-migration.js';
+
+// --- DATA MIGRATION ---
+// Run migration before loading any state variables
+migrateData();
+
+// --- HELPER FUNCTIONS ---
+
+/**
+ * Opens Google Maps for directions or nearby search.
+ * @param {number} lat - Latitude
+ * @param {number} lon - Longitude
+ * @param {string} mode - 'directions', 'restaurants', or 'hotels'
+ */
+function openGoogleMaps(lat, lon, mode) {
+    let url = '';
+    if (mode === 'directions') {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
+    } else if (mode === 'restaurants') {
+        url = `https://www.google.com/maps/search/restaurants+near+${lat},${lon}`;
+    } else if (mode === 'hotels') {
+        url = `https://www.google.com/maps/search/hotels+near+${lat},${lon}`;
+    }
+    if (url) window.location.href = url;
+}
 
 // --- GAME STATE ---
 let map = null;
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
 let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
-// Data cleanup: remove deprecated site IDs (8 and 10) from stored state
-/*
-(() => {
-    const removedIds = ['8', '10'];
-    const normalize = (ids) => (Array.isArray(ids) ? ids.map(String).filter(id => !removedIds.includes(id)) : []);
-    const newVisited = normalize(visitedSites);
-    const newDiscovered = normalize(discoveredSites);
-    if (newVisited.length !== visitedSites.length) {
-        visitedSites = newVisited;
-        localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
-    }
-    if (newDiscovered.length !== discoveredSites.length) {
-        discoveredSites = newDiscovered;
-        localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
-    }
-})();
-*/
 const TOTAL_SITES = 11;
 let allSiteData = [];
+// NEW: Cached array of main heritage sites (numerical IDs) for performance
+let mainSites = [];
 let chatHistory = [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
 let currentModalSite = null; // To track the currently open pin
@@ -36,7 +46,7 @@ let solvedRiddle = JSON.parse(localStorage.getItem('jejak_solved_riddle')) || {}
 // Get or Create a unique Device ID for this browser
 let markersLayer = null;  // New: Layer group for markers
 let polygonsLayer = null; // New: Layer group for polygons
-const ZOOM_THRESHOLD = 18; // New: Define the zoom level where the switch happens
+// ZOOM_THRESHOLD imported from config.js
 let allMarkers = {}; // NEW: Global object to store all Leaflet marker objects by site ID.
 let allPolygons = {}; // NEW: Global object to store all Leaflet polygon objects by site ID.
 const VISITED_POLYGON_COLOR = '#007bff'; // Blue color for visited polygons
@@ -180,6 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
 //BUG FIX
 // --- UTILITY FUNCTION FOR SAFELY MANAGING MARKER STATE ---
 function safelyUpdateMarkerVisitedState(marker, isVisited) {
+    if (!marker) return; // Defensive check
+
     // 1. Persist state on the Leaflet object (Custom Property)
     marker.options.isVisited = isVisited;
 
@@ -197,11 +209,12 @@ function safelyUpdateMarkerVisitedState(marker, isVisited) {
 function safelyUpdatePolygonVisitedState(siteId, isVisited) {
     const polygon = allPolygons[siteId];
     if (polygon) {
+        // NEW HELPER: Safely updates the polygon's color
         if (isVisited) {
             polygon.setStyle({
                 color: VISITED_POLYGON_COLOR, // Blue Outline
                 fillColor: VISITED_POLYGON_COLOR, // Blue Fill
-                fillOpacity: 0.2 // Reduced opacity for visited
+                fillOpacity: POLYGON_OPACITY // Reduced opacity for visited
             });
         } else {
             // Logic to revert to original colors if needed (for completeness)
@@ -310,6 +323,8 @@ function initializeGameAndMap() {
 
     // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
     map.on('zoomend', updateVisibility); // <--- FIX IS HERE
+    // NEW: Handle resize events (e.g. device rotation) to keep markers/polygons in sync
+    window.addEventListener('resize', updateVisibility);
 
     // MODIFIED: Reverted to the original map style
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -387,6 +402,10 @@ function initializeGameAndMap() {
 
     fetch('data.json').then(res => res.json()).then(sites => {
         allSiteData = sites;
+        // CACHE MAIN SITES (Performance Optimization)
+        mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
+        console.log("Loaded sites:", allSiteData.length);
+
         sites.forEach(site => {
 
             // 1. FIX: DEFINE THE VARIABLE HERE!
@@ -883,7 +902,13 @@ function handleCheckIn() {
 
 async function handleSendMessage() {
     const userQuery = chatInput.value.trim();
-    if (!userQuery || userMessageCount >= MAX_MESSAGES_PER_SESSION) return;
+    const limit = Number(MAX_MESSAGES_PER_SESSION); // Explicit cast
+
+    // Strict check before sending
+    if (!userQuery || userMessageCount >= limit) {
+        if (userMessageCount >= limit) disableChatUI(true); // Ensure UI reflects state
+        return;
+    }
 
     chatInput.value = "";
     chatInput.disabled = true;
@@ -924,10 +949,13 @@ async function handleSendMessage() {
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
-    if (userMessageCount < MAX_MESSAGES_PER_SESSION) {
+    // Only re-enable if we haven't hit the limit
+    if (userMessageCount < limit) {
         chatInput.disabled = false;
         chatSendBtn.disabled = false;
         chatInput.focus();
+    } else {
+        disableChatUI(true); // Explicitly disable if limit reached
     }
 }
 
@@ -950,8 +978,8 @@ function addChatMessage(role, text) {
 
 function updateGameProgress() {
     const count = visitedSites.length;
-    // Calculate total based on numerical IDs (1-13)
-    const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
+    // Use cached mainSites
+    const mainSitesTotal = mainSites.length || TOTAL_SITES;
 
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
@@ -995,11 +1023,10 @@ function disableChatUI(flag) {
 }
 
 function updatePassport() {
-    if (!passportInfo || !passportGrid || allSiteData.length === 0) {
+    if (!passportInfo || !passportGrid || mainSites.length === 0) {
         return;
     }
 
-    const mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
     const visitedCount = visitedSites.length;
 
     passportInfo.textContent = `You have visited ${visitedCount} of the ${mainSites.length} heritage buildings in Kuala Lumpur!`;
@@ -1386,29 +1413,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         siteModalDirections.addEventListener('click', () => {
             if (!currentModalSite) return;
-
-            const lat = currentModalSite.coordinates.marker[0];
-            const lon = currentModalSite.coordinates.marker[1];
-
-            // === CRITICAL FIX ===
-            // This is the correct, universal URL for Google Maps directions
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
-
-            window.location.href = url;
+            openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'directions');
         });
 
         // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
         siteModalCheckInBtn.addEventListener('click', handleCheckIn);
 
         // --- NEW LISTENERS FOR FOOD & HOTEL ---
+        // --- NEW LISTENERS FOR FOOD & HOTEL ---
         if (siteModalFoodBtn) {
             siteModalFoodBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (!currentModalSite) return;
-                const lat = currentModalSite.coordinates.marker[0];
-                const lon = currentModalSite.coordinates.marker[1];
-                const url = `https://www.google.com/maps/search/restaurants+near+${lat},${lon}`;
-                window.location.href = url;
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'restaurants');
             });
         }
 
@@ -1416,10 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
             siteModalHotelBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (!currentModalSite) return;
-                const lat = currentModalSite.coordinates.marker[0];
-                const lon = currentModalSite.coordinates.marker[1];
-                const url = `https://www.google.com/maps/search/hotels+near+${lat},${lon}`;
-                window.location.href = url;
+                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'hotels');
             });
         }
 
@@ -1537,8 +1551,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- ZOOM FUNCTIONALITY ---
+// Globals for Preview Card (referenced by helpers)
+let previewCard, previewImage, previewTitle, previewDist, previewOpenBtn, previewCloseBtn;
+let currentPreviewSiteId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
-    const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
     const btnTextSizeReset = document.getElementById('btnTextSizeReset');
     const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
     const contentText = document.getElementById('siteModalInfo');
@@ -1562,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnTextSizeLarge) {
         btnTextSizeLarge.addEventListener('click', () => {
-            if (currentTextSize < 200) {
+            if (currentTextSize < MAX_FONT_SIZE) { // Use constant
                 currentTextSize += 10;
                 updateTextSize();
             }
@@ -1575,55 +1592,42 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTextSize();
         });
     }
-});
 
-// --- PREVIEW CARD LOGIC ---
-let previewCard, previewImage, previewTitle, previewDist, previewOpenBtn, previewCloseBtn;
-let currentPreviewSiteId = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialize Elements
+    // --- PREVIEW CARD LOGIC ---
     previewCard = document.getElementById('previewCard');
     previewImage = document.getElementById('previewImage');
     previewTitle = document.getElementById('previewTitle');
     previewDist = document.getElementById('previewDist');
     previewOpenBtn = document.getElementById('previewOpenBtn');
     previewCloseBtn = document.getElementById('previewCloseBtn');
+    // Ensure currentPreviewSiteId is global or scoped correctly (it is global)
 
-    // 2. Close Handler
     if (previewCloseBtn) {
         previewCloseBtn.addEventListener('click', closePreviewCard);
     }
 
-    // 3. Open Full Modal Handler
     if (previewOpenBtn) {
         previewOpenBtn.addEventListener('click', () => {
             if (currentPreviewSiteId) {
-                // Find the site data and marker
                 const site = allSiteData.find(s => s.id === currentPreviewSiteId);
                 const marker = allMarkers[currentPreviewSiteId];
-
                 if (site && marker) {
-                    handleMarkerClick(site, marker); // Open the full modal
+                    handleMarkerClick(site, marker);
                     closePreviewCard();
                 }
             }
         });
     }
 
-    // 4. Allow clicking the card body to open details (UX enhancement)
     if (previewCard) {
         previewCard.addEventListener('click', (e) => {
-            // Prevent if clicking close button
             if (e.target.closest('#previewCloseBtn')) return;
-
-            if (currentPreviewSiteId) {
-                previewOpenBtn.click();
-            }
+            if (currentPreviewSiteId) previewOpenBtn.click();
         });
     }
-});
+}); // END DOMContentLoaded
 
+// --- PREVIEW CARD HELPER FUNCTIONS ---
 function showPreviewCard(site) {
     if (!previewCard) return;
 
