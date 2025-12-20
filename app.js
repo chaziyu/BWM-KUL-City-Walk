@@ -1415,7 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const errorMsg = document.getElementById('adminErrorMsg');
             const loginBtn = document.getElementById('adminLoginBtn');
 
-            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
+            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuX1n9H-RJZ-N0vPQalzfiedq3ax07lKZ9gtajm4C8PEN4hauSblZTyzQAWYjItIKpOw/exec";
 
             loginBtn.disabled = true;
             loginBtn.textContent = STRINGS.auth.verifying;
@@ -1479,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const switchToMapBtn = document.getElementById('adminSwitchToMapBtn');
 
         let lastGeneratedCode = "";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuX1n9H-RJZ-N0vPQalzfiedq3ax07lKZ9gtajm4C8PEN4hauSblZTyzQAWYjItIKpOw/exec";
 
         generateBtn.onclick = async () => {
             // Retrieve admin password from session (works after reload)
@@ -1588,7 +1588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.add('hidden');
 
         // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuX1n9H-RJZ-N0vPQalzfiedq3ax07lKZ9gtajm4C8PEN4hauSblZTyzQAWYjItIKpOw/exec";
 
         try {
             // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
@@ -2080,5 +2080,28 @@ function closePreviewCard() {
 // Better: We need to intercept where marker.on('click') is defined.
 // Since that is deep in 'initializeGameAndMap', we might need to patch it.
 
+// --- USER GUIDE MODAL LOGIC ---
+// Setup listeners for pre-login help button
+const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
+const userGuideModal = document.getElementById('userGuideModal');
+const closeUserGuideModal = document.getElementById('closeUserGuideModal');
+const closeUserGuideModalBtn = document.getElementById('closeUserGuideModalBtn');
 
+if (btnPreLoginHelp && userGuideModal) {
+    btnPreLoginHelp.addEventListener('click', () => {
+        userGuideModal.classList.remove('hidden');
+    });
+}
+
+if (closeUserGuideModal && userGuideModal) {
+    closeUserGuideModal.addEventListener('click', () => {
+        userGuideModal.classList.add('hidden');
+    });
+}
+
+if (closeUserGuideModalBtn && userGuideModal) {
+    closeUserGuideModalBtn.addEventListener('click', () => {
+        userGuideModal.classList.add('hidden');
+    });
+}
 

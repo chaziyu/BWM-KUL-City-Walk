@@ -159,8 +159,14 @@
                 BWM Staff Login
             </button>
         </div>
-        <div class="mt-auto mb-6 text-[10px] md:text-xs text-gray-400 animate-fade-in max-w-[80%]">
-            <p>A SULAM Project by Universiti Malaya & BWM</p>
+        <div class="mt-auto mb-6 space-y-3 w-full max-w-xs">
+            <button id="btnPreLoginHelp"
+                class="w-full flex justify-center items-center py-3 px-4 border border-gray-300 text-sm font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all">
+                <span class="mr-2">ℹ️</span>
+                How to Use This App
+            </button>
+            <p class="text-[10px] md:text-xs text-gray-400 animate-fade-in">A SULAM Project by Universiti Malaya & BWM
+            </p>
         </div>
     </div>
 
@@ -305,6 +311,66 @@
             <button id="closeWelcomeModal"
                 class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Start
                 Exploring</button>
+        </div>
+    </div>
+
+    <div id="userGuideModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="userGuideTitle">
+        <div class="classic-modal-content p-6 animate-fade-scale max-h-[85vh] overflow-y-auto">
+            <button id="closeUserGuideModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <div class="text-center mb-4">
+                <div class="text-5xl mb-3">📖</div>
+                <h2 id="userGuideTitle" class="text-2xl font-bold text-gray-800 mb-2">How to Use This App</h2>
+            </div>
+
+            <div class="text-left space-y-4 text-gray-700">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <h3 class="font-bold text-blue-900 mb-2">📍 What is BWM KUL City Walk?</h3>
+                    <p class="text-sm">An interactive heritage trail that guides you through 11 historic sites in Kuala
+                        Lumpur. Collect stamps, learn history, and explore KL's architectural gems!</p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">🔑 How to Get Started</h3>
+                    <ol class="list-decimal list-inside text-sm space-y-2 ml-2">
+                        <li><strong>Get Your Passkey:</strong> Visit the BWM counter or ticket booth to receive a unique
+                            daily passkey</li>
+                        <li><strong>Enter Passkey:</strong> Click "Enter with Passkey" and type the code provided</li>
+                        <li><strong>Start Exploring:</strong> The interactive map will open, showing all heritage sites
+                        </li>
+                    </ol>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">🎮 Key Features</h3>
+                    <ul class="text-sm space-y-2">
+                        <li><strong>🗺️ Interactive Map:</strong> Tap any site marker to learn its history</li>
+                        <li><strong>📖 Digital Passport:</strong> Answer quiz questions to collect stamps</li>
+                        <li><strong>💬 AI Tour Guide:</strong> Ask questions about the sites</li>
+                        <li><strong>📍 GPS Navigation:</strong> Get walking directions to each site</li>
+                        <li><strong>🏆 Daily Challenge:</strong> Solve riddles to discover mystery locations</li>
+                        <li><strong>🎓 Explorer Badge:</strong> Download your personalized completion certificate</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">❓ Need Help While Exploring?</h3>
+                    <p class="text-sm">Look for the purple <strong>?</strong> button in the bottom-right corner after
+                        login. It provides a quick interactive tour of all features!</p>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                    <h3 class="font-bold text-green-900 mb-2">💡 Pro Tip</h3>
+                    <p class="text-sm">The app works best outdoors with GPS enabled. Make sure location services are
+                        turned on for the best experience!</p>
+                </div>
+            </div>
+
+            <button id="closeUserGuideModalBtn"
+                class="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">
+                Got it, Let's Start!
+            </button>
         </div>
     </div>
 
