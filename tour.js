@@ -169,18 +169,25 @@ function startTour() {
 function endTour() {
     tourActive = false;
     const tourOverlay = document.getElementById('tourOverlay');
-    tourOverlay.classList.add('hidden');
 
-    // Mark tutorial as completed
-    const userProgress = JSON.parse(localStorage.getItem('userProgress') || '{}');
-    userProgress.tutorialCompleted = true;
-    localStorage.setItem('userProgress', JSON.stringify(userProgress));
+    // Add closing animation
+    tourOverlay.classList.add('modal-closing');
 
-    // Remove pulse animation from help button
-    const btnHelp = document.getElementById('btnHelp');
-    if (btnHelp) {
-        btnHelp.classList.remove('animate-pulse-once');
-    }
+    setTimeout(() => {
+        tourOverlay.classList.add('hidden');
+        tourOverlay.classList.remove('modal-closing');
+
+        // Mark tutorial as completed inside the timeout/cleanup
+        const userProgress = JSON.parse(localStorage.getItem('userProgress') || '{}');
+        userProgress.tutorialCompleted = true;
+        localStorage.setItem('userProgress', JSON.stringify(userProgress));
+
+        // Remove pulse animation from help button
+        const btnHelp = document.getElementById('btnHelp');
+        if (btnHelp) {
+            btnHelp.classList.remove('animate-pulse-once');
+        }
+    }, 400); // 400ms matches cinematicFadeOut
 }
 
 function showTourStep(stepIndex) {
@@ -257,8 +264,14 @@ function positionTooltip(tooltip, targetRect, position) {
 }
 
 // Initialize tour system when DOM is ready
+// EXPORT for Code Splitting
+export { initTourSystem, startTour };
+
+// Remove auto-execution for module support
+/*
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTourSystem);
 } else {
     initTourSystem();
 }
+*/

@@ -113,7 +113,24 @@ npm install
 
 # Run locally (Requires Vercel CLI for API functions)
 vercel dev
+
+### ⚠️ Local Development Note (Important)
+This project uses ES6 Modules (`import`/`export`), which **cannot** runs directly from the file system (e.g., `file:///path/to/index.html`). You must use a local HTTP server.
+
+**Option 1: Using Node.js (Recommended)**
+```bash
+# Start a local server
+npx serve .
+# Then open http://localhost:3000
 ```
+
+**Option 2: Using Python**
+```bash
+# Start a simple HTTP server
+python -m http.server 8000
+# Then open http://localhost:8000
+```
+
 
 ### Environment Variables
 

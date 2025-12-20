@@ -35,4 +35,12 @@ In your Vercel Project Dashboard:
 3.  **Test Persistence:** 
     *   Refresh the page. You should stay logged in (no Landing Page).
     *   Close and reopen the tab. You should stay logged in.
+    *   Close and reopen the tab. You should stay logged in.
 4.  **Test Config:** Verify that chat history limit and map zoom reflect your settings.
+
+## 5️⃣ Local Preview (Development)
+If you want to test the build locally before deploying:
+1.  Run `npx serve .` in the project root.
+2.  Open `http://localhost:3000`.
+3.  **Note:** Direct file access (`index.html`) will fail due to ES Module security policies.
+

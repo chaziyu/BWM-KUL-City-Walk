@@ -6,6 +6,28 @@ import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZO
 import { migrateData } from './storage-migration.js';
 import { STRINGS } from './localization.js';
 
+// --- UTILITIES ---
+const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const log = DEBUG ? console.log.bind(console) : () => { };
+
+/**
+ * Debounce function to limit execution frequency
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Wait time in ms
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+
 // --- DATA MIGRATION ---
 // Run migration before loading any state variables
 migrateData();
@@ -88,6 +110,13 @@ function animateOpenModal(modal) {
     if (!modal) return;
     modal.classList.remove('hidden', 'modal-closing');
     modal.classList.add('modal-opening');
+
+    // ACCESSIBILITY: Set focus to the first focusable element inside the modal
+    const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const firstFocusableElement = modal.querySelectorAll(focusableElements)[0];
+    if (firstFocusableElement) {
+        setTimeout(() => firstFocusableElement.focus(), 100); // Small delay for visibility
+    }
 }
 
 function animateCloseModal(modal) {
@@ -97,8 +126,70 @@ function animateCloseModal(modal) {
     setTimeout(() => {
         modal.classList.add('hidden');
         modal.classList.remove('modal-closing');
+        // Return focus to the trigger button if needed (Context specific, skipping generic implementation to avoid errors)
     }, 400); // Match CSS cinematicFadeOut duration
 }
+
+// NEW: Helper for smooth screen transitions (e.g. Landing -> Gatekeeper)
+function animateScreenSwitch(fromScreen, toScreen) {
+    if (!fromScreen || !toScreen) return;
+
+    // 1. Fade out current screen
+    fromScreen.classList.add('modal-closing'); // Clean fade out
+
+    setTimeout(() => {
+        fromScreen.classList.add('hidden');
+        fromScreen.classList.remove('modal-closing');
+
+        // 2. Show next screen with entry animation
+        toScreen.classList.remove('hidden');
+        // Re-trigger animation if class exists, or add it
+        toScreen.classList.remove('animate-fade-scale');
+        void toScreen.offsetWidth; // Trigger reflow
+        toScreen.classList.add('animate-fade-scale');
+    }, 400);
+}
+
+// ACCESSIBILITY: Global Key Listener for Escape and Tab Trapping
+document.addEventListener('keydown', (e) => {
+    // 1. Close Modals on ESC
+    if (e.key === 'Escape') {
+        const sensitiveModals = ['#gatekeeper', '#landing-page']; // Don't close these on ESC
+        const openModals = document.querySelectorAll('[role="dialog"]:not(.hidden)');
+
+        openModals.forEach(modal => {
+            if (!sensitiveModals.includes('#' + modal.id)) {
+                animateCloseModal(modal);
+                // Special case handling for overlays
+                if (modal.id === 'badgeInputModal') modal.classList.add('hidden');
+            }
+        });
+    }
+
+    // 2. Trap Focus in Modals
+    if (e.key === 'Tab') {
+        const openModal = document.querySelector('[role="dialog"]:not(.hidden)');
+        if (openModal) {
+            const focusableElements = openModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusableElements.length === 0) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) { /* Shift + Tab */
+                if (document.activeElement === firstElement) {
+                    lastElement.focus();
+                    e.preventDefault();
+                }
+            } else { /* Tab */
+                if (document.activeElement === lastElement) {
+                    firstElement.focus();
+                    e.preventDefault();
+                }
+            }
+        }
+    }
+});
 
 // --- HISTORY API HELPER ---
 function openModalState(modalId) {
@@ -423,6 +514,20 @@ function getSiteColors(site) {
     }
 }
 
+// --- RELEASE RESOURCES ---
+function destroyMap() {
+    if (map) {
+        map.remove(); // Removes from DOM and cleans up Leaflet listeners
+        map = null;
+        allMarkers = {};
+        allPolygons = {};
+        markersLayer = null;
+        polygonsLayer = null;
+        userMarker = null;
+        log("Map destroyed and resources released.");
+    }
+}
+
 // --- CORE GAME & MAP INITIALIZATION ---
 function initializeGameAndMap() {
     if (map) return;
@@ -522,7 +627,7 @@ function initializeGameAndMap() {
         allSiteData = sites;
         // CACHE MAIN SITES (Performance Optimization)
         mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
-        console.log("Loaded sites:", allSiteData.length);
+        log("Loaded sites:", allSiteData.length);
 
         sites.forEach(site => {
 
@@ -637,13 +742,16 @@ function initializeGameAndMap() {
         weight: 1
     }).addTo(map);
 
+    // Create debounced version to limit proximity calculations
+    const debouncedProximityPulse = debounce(updateProximityPulse, 500);
+
     map.on('locationfound', (e) => {
         userMarker.setLatLng(e.latlng);
         userCircle.setLatLng(e.latlng).setRadius(Math.min(e.accuracy / 2, 100));
 
         // --- ADDED: Proximity Feature Logic ---
         if (allSiteData.length > 0) {
-            updateProximityPulse(e.latlng);
+            debouncedProximityPulse(e.latlng);
         }
     });
 
@@ -652,7 +760,7 @@ function initializeGameAndMap() {
     let gpsFailed = false;
 
     map.on('locationerror', (e) => {
-        console.error("GPS Error:", e);
+        if (DEBUG) console.error("GPS Error:", e);
 
         // Logic check for max retries on timeout
         if (e.code === 3) { // TIMEOUT
@@ -1475,11 +1583,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- THIS FUNCTION ATTACHES LISTENERS TO THE LANDING PAGE ---
     function setupLandingPage() {
         document.getElementById('btnVisitor').addEventListener('click', () => {
-            document.getElementById('landing-page').classList.add('hidden');
-
-            const gatekeeper = document.getElementById('gatekeeper');
-            gatekeeper.classList.remove('hidden');
-            //gatekeeper.style.display = 'flex';
+            animateScreenSwitch(
+                document.getElementById('landing-page'),
+                document.getElementById('gatekeeper')
+            );
         });
 
         document.getElementById('btnStaff').addEventListener('click', () => {
@@ -1487,15 +1594,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('backToHome').addEventListener('click', () => {
-            document.getElementById('gatekeeper').classList.add('hidden');
-            document.getElementById('landing-page').classList.remove('hidden');
+            animateScreenSwitch(
+                document.getElementById('gatekeeper'),
+                document.getElementById('landing-page')
+            );
         });
 
         const closeStaffBtn = document.getElementById('closeStaffScreen');
         if (closeStaffBtn) {
             closeStaffBtn.addEventListener('click', () => {
-                document.getElementById('staff-screen').classList.add('hidden');
-                document.getElementById('landing-page').classList.remove('hidden');
+                animateScreenSwitch(
+                    document.getElementById('staff-screen'),
+                    document.getElementById('landing-page')
+                );
             });
         }
 
@@ -1507,8 +1618,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOGIN & MODAL FUNCTIONS ---
 
     function showAdminCode() {
-        document.getElementById('landing-page').classList.add('hidden');
-        document.getElementById('staff-screen').classList.remove('hidden');
+        animateScreenSwitch(
+            document.getElementById('landing-page'),
+            document.getElementById('staff-screen')
+        );
     }
 
 
@@ -1527,6 +1640,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('adminPasswordInput').value;
             const errorMsg = document.getElementById('adminErrorMsg');
             const loginBtn = document.getElementById('adminLoginBtn');
+
+            // NEW: Allow Enter key to submit
+            const passwordInput = document.getElementById('adminPasswordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        loginBtn.click();
+                    }
+                });
+            }
 
             const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
@@ -2375,4 +2499,37 @@ if (continueBrowser) {
 
 // Initialize PWA prompt when page loads
 setupPWAInstallPrompt();
+
+// --- OPTIMIZATION: DYNAMIC IMPORT FOR TOUR SYSTEM ---
+// Load Tour System on idle (2s delay) or user interaction
+const loadTourSystem = async (autoStart = false) => {
+    try {
+        const module = await import('./tour.js');
+        module.initTourSystem();
+        if (autoStart) module.startTour();
+        return module;
+    } catch (err) {
+        console.error('Failed to load tour system:', err);
+    }
+};
+
+// 1. Load on Idle (to check for first-time user auto-start)
+setTimeout(() => {
+    loadTourSystem();
+}, 2000);
+
+// 2. Load on Help Button Click (Immediate)
+const btnHelp = document.getElementById('btnHelp');
+if (btnHelp) {
+    btnHelp.addEventListener('click', (e) => {
+        // If tour already loaded (listener replaced), this won't fire/matter?
+        // Actually initTourSystem attaches its own listener.
+        // We want to capture the FIRST click if it hasn't loaded yet.
+        if (!btnHelp.dataset.tourSetup) {
+            e.preventDefault();
+            e.stopPropagation();
+            loadTourSystem(true); // Load AND start
+        }
+    }, { once: true }); // Only need this bootstrap once. initTourSystem handles future clicks.
+}
 
