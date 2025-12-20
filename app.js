@@ -1435,9 +1435,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success && result.isAdmin) {
+                    // Store admin session with password for persistent access
                     localStorage.setItem('jejak_session', JSON.stringify({
                         valid: true,
-                        role: 'admin'
+                        role: 'admin',
+                        adminPassword: password  // Store password for API calls after reload
                     }));
                     showAdminTools();
                 } else {
@@ -1480,7 +1482,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
 
         generateBtn.onclick = async () => {
-            const password = document.getElementById('adminPasswordInput').value || "";
+            // Retrieve admin password from session (works after reload)
+            const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
+            const password = sessionData?.adminPassword || document.getElementById('adminPasswordInput').value || "";
+
+            if (!password) {
+                alert('Session expired. Please log in again.');
+                return;
+            }
+
             generateBtn.disabled = true;
             generateBtn.textContent = "Generating...";
             statusMsg.classList.add('hidden');
