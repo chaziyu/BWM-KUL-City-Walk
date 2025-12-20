@@ -57,33 +57,63 @@ function initTourSystem() {
     const tourBack = document.getElementById('tourBack');
     const tourSkip = document.getElementById('tourSkip');
 
-    if (!btnHelp || !tourOverlay) return;
+    if (!tourOverlay) {
+        console.warn('Tour overlay not found');
+        return;
+    }
 
-    // Help button click -> start tour
-    btnHelp.addEventListener('click', () => {
-        startTour();
+    // Setup help button if it exists
+    function setupHelpButton() {
+        const helpBtn = document.getElementById('btnHelp');
+        if (helpBtn && !helpBtn.dataset.tourSetup) {
+            helpBtn.dataset.tourSetup = 'true'; // Mark as setup to avoid duplicates
+            helpBtn.addEventListener('click', () => {
+                console.log('Help button clicked - starting tour');
+                startTour();
+            });
+            console.log('Help button tour listener attached');
+        }
+    }
+
+    // Try to setup immediately
+    setupHelpButton();
+
+    // Also watch for the button to appear (in case it loads after login)
+    const observer = new MutationObserver(() => {
+        setupHelpButton();
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
     });
 
     // Tour navigation
-    tourNext.addEventListener('click', () => {
-        if (currentTourStep < tourSteps.length - 1) {
-            currentTourStep++;
-            showTourStep(currentTourStep);
-        } else {
+    if (tourNext) {
+        tourNext.addEventListener('click', () => {
+            if (currentTourStep < tourSteps.length - 1) {
+                currentTourStep++;
+                showTourStep(currentTourStep);
+            } else {
+                endTour();
+            }
+        });
+    }
+
+    if (tourBack) {
+        tourBack.addEventListener('click', () => {
+            if (currentTourStep > 0) {
+                currentTourStep--;
+                showTourStep(currentTourStep);
+            }
+        });
+    }
+
+    if (tourSkip) {
+        tourSkip.addEventListener('click', () => {
             endTour();
-        }
-    });
-
-    tourBack.addEventListener('click', () => {
-        if (currentTourStep > 0) {
-            currentTourStep--;
-            showTourStep(currentTourStep);
-        }
-    });
-
-    tourSkip.addEventListener('click', () => {
-        endTour();
-    });
+        });
+    }
 
     // Auto-start tour for first-time users
     checkFirstTimeUser();

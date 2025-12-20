@@ -2193,10 +2193,10 @@ function setupPWAInstallPrompt() {
         return;
     }
 
-    // Show prompt after 3 seconds delay (non-intrusive)
+    // Show prompt after 0.8 seconds delay (fast but not jarring)
     setTimeout(() => {
         showPWAPrompt();
-    }, 3000);
+    }, 800);
 }
 
 // Capture the beforeinstallprompt event (Android/Chrome)
