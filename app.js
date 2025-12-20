@@ -19,20 +19,21 @@ migrateData();
  * @param {string} mode - 'directions', 'restaurants', or 'hotels'
  */
 function openGoogleMaps(lat, lon, mode) {
-    // Universal Google Maps URL structure
-    let query = `${lat},${lon}`;
-    if (mode === 'restaurants') query = `restaurants near ${lat},${lon}`;
-    if (mode === 'hotels') query = `hotels near ${lat},${lon}`;
+    // Standardize coordinates
+    const destination = `${lat},${lon}`;
+    let url = '';
 
-    // api=1 ensures it tries to open the app
-    let url = `https://www.google.com/maps/search/?api=1&query=${query}`;
-
-    // For directions specifically
     if (mode === 'directions') {
-        url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
+        // Universal syntax for directions
+        url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
+    } else if (mode === 'restaurants') {
+        // Search query with location bias
+        url = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
+    } else if (mode === 'hotels') {
+        url = `https://www.google.com/maps/search/hotels/@${lat},${lon},18z`;
     }
 
-    window.open(url, '_blank');
+    if (url) window.open(url, '_blank');
 }
 
 // --- GAME STATE ---
@@ -159,6 +160,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // UNHIDE TEMPLATE FOR CAPTURE
         badgeElement.style.opacity = '1';
         badgeElement.style.zIndex = '-50'; // Keep behind
+
+        // DYNAMIC STATUS UPDATE
+        const statusEl = document.getElementById('badgeStatusStamp');
+        if (statusEl) {
+            const visitedCount = visitedSites.length;
+            const total = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
+            const isComplete = visitedCount >= total;
+
+            if (isComplete) {
+                statusEl.innerHTML = '<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>COMPLETED</div>';
+            } else {
+                statusEl.innerHTML = `<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>${visitedCount}/${total} VISITED</div>`;
+            }
+        }
 
         html2canvas(badgeElement, {
             scale: 2, // High resolution
@@ -325,7 +340,16 @@ function initializeGameAndMap() {
     if (map) return;
 
     // 1. Initialize the map object FIRST (Disable default zoom control)
-    map = L.map('map', { zoomControl: false }).setView([3.1495519988154683, 101.69609103393907], 16);
+    // ADDED: maxBounds to prevent panning away from KL
+    map = L.map('map', {
+        zoomControl: false,
+        minZoom: 14,
+        maxBounds: [
+            [3.13, 101.67], // Southwest corner
+            [3.17, 101.72]  // Northeast corner
+        ],
+        maxBoundsViscosity: 1.0 // Bounce back immediately
+    }).setView(DEFAULT_CENTER, 16);
 
     // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
     map.on('zoomend', updateVisibility); // <--- FIX IS HERE
@@ -634,31 +658,53 @@ function initializeGameAndMap() {
 // --- GAME LOGIC FUNCTIONS ---
 
 // ADDED: Proximity Pulse Function
+// ADDED: Proximity Pulse Function with Performance Optimization
+let currentPulseClass = ''; // Track current state
+
 function updateProximityPulse(userLatLng) {
     if (!userMarker || !userMarker._icon) return;
 
     let closestDist = Infinity;
-    const undiscoveredSites = allSiteData.filter(site =>
+
+    // Check all main sites (using cached array if available)
+    const sitesToCheck = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites : allSiteData;
+
+    // Filter out visited ones for the pulse (we want to guide them to NEW things)
+    const activeSites = sitesToCheck.filter(site =>
         !visitedSites.includes(site.id) && !discoveredSites.includes(site.id)
     );
 
-    undiscoveredSites.forEach(site => {
-        const siteLatLng = L.latLng(site.coordinates[0], site.coordinates[1]);
-        const dist = userLatLng.distanceTo(siteLatLng);
-        if (dist < closestDist) {
-            closestDist = dist;
+    activeSites.forEach(site => {
+        let latlng = null;
+        if (Array.isArray(site.coordinates)) {
+            latlng = site.coordinates;
+        } else if (site.coordinates && site.coordinates.marker) {
+            latlng = site.coordinates.marker;
+        }
+
+        if (latlng) {
+            const dist = userLatLng.distanceTo(latlng);
+            if (dist < closestDist) closestDist = dist;
         }
     });
 
-    const pinElement = userMarker._icon;
-    pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
+    // Determine target class
+    let newClass = 'pulse-slow';
+    if (closestDist < 75) newClass = 'pulse-fast';
+    else if (closestDist < 250) newClass = 'pulse-medium';
 
-    if (closestDist < 75) { // Under 75 meters
-        pinElement.classList.add('pulse-fast');
-    } else if (closestDist < 250) { // Under 250 meters
-        pinElement.classList.add('pulse-medium');
-    } else { // Far away
-        pinElement.classList.add('pulse-slow');
+    // OPTIMIZATION: Only touch DOM if class is different
+    if (currentPulseClass !== newClass) {
+        // Support both direct icon and inner wrapper depending on icon type
+        const pinElement = userMarker._icon.querySelector('.user-location-pin') || userMarker._icon;
+
+        // Remove old classes
+        pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
+
+        // Add new class
+        pinElement.classList.add(newClass);
+
+        currentPulseClass = newClass;
     }
 }
 
@@ -997,16 +1043,7 @@ function updateGameProgress() {
     }
 }
 
-// function updateGameProgress() {
-//     const visitedCount = visitedSites.length;
-//     const mainSitesTotal = allSiteData.filter(site => !isNaN(parseInt(site.id))).length || TOTAL_SITES;
 
-//     if (document.getElementById('progressBar') && document.getElementById('progressText')) {
-//         const percent = (visitedCount / mainSitesTotal) * 100;
-//         document.getElementById('progressBar').style.width = `${percent}%`;
-//         document.getElementById('progressText').textContent = `${visitedCount}/${mainSitesTotal} Sites`;
-//     }
-// }
 
 function updateChatUIWithCount() {
     if (!chatLimitText) return;
@@ -1369,47 +1406,49 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Attach Listeners ---
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
-            if (map) {
-                // FALLBACK: If GPS failed, just recenter map
-                if (gpsFailed) {
-                    map.setView(DEFAULT_CENTER, ZOOM);
-                    return;
-                }
+            if (!map) return;
 
-                if (userMarker) {
-                    // 1. If we have a user marker, zoom to it
-                    map.setView(userMarker.getLatLng(), 18);
-                } else if (navigator.geolocation) {
-                    // 2. Try to get fresh location
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            const { latitude, longitude } = pos.coords;
-                            map.setView([latitude, longitude], 18);
-                        },
-                        (err) => {
-                            // 3. Fallback to center
-                            console.warn("Recenter failed:", err);
-                            map.setView([3.1495519988154683, 101.69609103393907], 16);
-                        },
-                        { enableHighAccuracy: true }
-                    );
-                } else {
-                    // 4. Fallback if no geolocation support
-                    map.setView([3.1495519988154683, 101.69609103393907], 16);
-                }
+            // 1. If we have a valid user marker (not 0,0), use it
+            const currentPos = userMarker ? userMarker.getLatLng() : null;
+            if (currentPos && (currentPos.lat !== 0 || currentPos.lng !== 0)) {
+                map.setView(currentPos, 18);
+                // Also try to refresh high accuracy
+                map.locate({ setView: true, maxZoom: 18, enableHighAccuracy: true });
+            } else {
+                // 2. Force a location search
+                alert(STRINGS.game.findingLocation || "Locating you...");
+                map.locate({ setView: true, maxZoom: 18, enableHighAccuracy: true });
             }
+        });
+
+        // --- HISTORY API HELPER ---
+        function openModalState(modalId) {
+            window.history.pushState({ modal: modalId }, '', window.location.pathname);
+        }
+
+        // --- BACK BUTTON HANDLER ---
+        window.addEventListener('popstate', (event) => {
+            const modals = document.querySelectorAll('.fixed.inset-0.z-\\[5000\\], .fixed.inset-0.z-\\[4000\\]'); // Select your modal classes
+            // Or better: generic hide all known modals
+            [siteModal, chatModal, passportModal, welcomeModal, congratsModal, challengeModal, document.getElementById('badgeInputModal')].forEach(m => {
+                if (m) m.classList.add('hidden');
+            });
+            if (typeof closePreviewCard === 'function') closePreviewCard();
         });
 
         document.getElementById('btnChat').addEventListener('click', () => {
             chatModal.classList.remove('hidden');
+            openModalState('chatModal');
         });
         closeChatModal.addEventListener('click', () => {
             chatModal.classList.add('hidden');
+            // Optional: window.history.back(); if you want to pop state, but complicates things. leaving distinct state is safer.
         });
 
         document.getElementById('btnPassport').addEventListener('click', () => {
             updatePassport();
             passportModal.classList.remove('hidden');
+            openModalState('passportModal');
         });
         closePassportModal.addEventListener('click', () => {
             passportModal.classList.add('hidden');
@@ -1519,7 +1558,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         shareWhatsAppBtn.addEventListener('click', () => {
-            const text = "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨";
+            const count = visitedSites.length;
+            const total = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
+            const text = (count >= total)
+                ? "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨"
+                : `I'm exploring Kuala Lumpur's Heritage Sites! I've visited ${count}/${total} so far on the BWM KUL City Walk. 🏛️✨`;
+
             const url = 'https://bwm-kul-city-walk.vercel.app/';
 
             if (navigator.share) {
@@ -1638,9 +1682,12 @@ document.addEventListener('DOMContentLoaded', () => {
         previewOpenBtn.addEventListener('click', () => {
             if (currentPreviewSiteId) {
                 const site = allSiteData.find(s => s.id === currentPreviewSiteId);
-                const marker = allMarkers[currentPreviewSiteId];
                 if (site && marker) {
                     handleMarkerClick(site, marker);
+                    // Explicitly show modal and push state
+                    siteModal.classList.remove('hidden');
+                    openModalState('siteModal');
+
                     closePreviewCard();
                 }
             }
