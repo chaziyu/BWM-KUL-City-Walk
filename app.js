@@ -1682,6 +1682,7 @@ document.addEventListener('DOMContentLoaded', () => {
         previewOpenBtn.addEventListener('click', () => {
             if (currentPreviewSiteId) {
                 const site = allSiteData.find(s => s.id === currentPreviewSiteId);
+                const marker = allMarkers[currentPreviewSiteId];
                 if (site && marker) {
                     handleMarkerClick(site, marker);
                     // Explicitly show modal and push state
