@@ -784,14 +784,16 @@ function initializeGameAndMap() {
             case 3: // TIMEOUT
                 errorMessage += "Request Timed Out.\n\nStandard GPS failed. We will try a lower accuracy method now...";
                 // Fallback attempt with lower accuracy
-                alert(errorMessage); // Alert first so they know
+                errorMessage += "Request Timed Out.\n\nStandard GPS failed. We will try a lower accuracy method now...";
+                // Fallback attempt with lower accuracy
+                console.warn(errorMessage); // Suppressed alert as per user request
                 map.locate({ watch: true, enableHighAccuracy: false, maximumAge: 10000 });
                 return; // Exit here to avoid double alert
             default:
                 errorMessage += e.message + "\n\nEnsure Location Services are ON and you are using HTTPS.";
         }
 
-        alert(errorMessage);
+        console.warn(errorMessage); // Suppressed alert as per user request
     });
 
     // Modified to include timeout and maximumAge to prevent infinite hanging
@@ -1980,6 +1982,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 map.setView(config.DEFAULT_CENTER, config.ZOOM);
             });
         });
+
+        // --- NEW: Preview Card "Read Full History" Listener ---
+        const pOB = document.getElementById('previewOpenBtn');
+        if (pOB) {
+            pOB.addEventListener('click', () => {
+                const sid = document.getElementById('previewCard')?.dataset?.siteId;
+                if (sid) { // Find site by string ID (to support '1' vs 1)
+                    const site = allSiteData.find(s => s.id == sid);
+                    if (site) handleMarkerClick(site, null);
+                }
+            });
+        }
 
         // Back button handler is already defined below
 
