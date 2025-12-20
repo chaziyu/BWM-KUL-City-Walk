@@ -19,15 +19,20 @@ migrateData();
  * @param {string} mode - 'directions', 'restaurants', or 'hotels'
  */
 function openGoogleMaps(lat, lon, mode) {
-    let url = '';
+    // Universal Google Maps URL structure
+    let query = `${lat},${lon}`;
+    if (mode === 'restaurants') query = `restaurants near ${lat},${lon}`;
+    if (mode === 'hotels') query = `hotels near ${lat},${lon}`;
+
+    // api=1 ensures it tries to open the app
+    let url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+
+    // For directions specifically
     if (mode === 'directions') {
         url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
-    } else if (mode === 'restaurants') {
-        url = `https://www.google.com/maps/search/restaurants+near+${lat},${lon}`;
-    } else if (mode === 'hotels') {
-        url = `https://www.google.com/maps/search/hotels+near+${lat},${lon}`;
     }
-    if (url) window.location.href = url;
+
+    window.open(url, '_blank');
 }
 
 // --- GAME STATE ---
@@ -1686,21 +1691,5 @@ function closePreviewCard() {
 // Better: We need to intercept where marker.on('click') is defined.
 // Since that is deep in 'initializeGameAndMap', we might need to patch it.
 
-// Helper to open Google Maps with Universal Links
-function openGoogleMaps(lat, lon, mode) {
-    // Universal Google Maps URL structure
-    let query = `${lat},${lon}`;
-    if (mode === 'restaurants') query = `restaurants near ${lat},${lon}`;
-    if (mode === 'hotels') query = `hotels near ${lat},${lon}`;
 
-    // api=1 ensures it tries to open the app
-    let url = `https://www.google.com/maps/search/?api=1&query=${query}`;
-
-    // For directions specifically
-    if (mode === 'directions') {
-        url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
-    }
-
-    window.open(url, '_blank');
-}
 
