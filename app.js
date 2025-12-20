@@ -161,17 +161,36 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeElement.style.opacity = '1';
         badgeElement.style.zIndex = '-50'; // Keep behind
 
-        // DYNAMIC STATUS UPDATE
-        const statusEl = document.getElementById('badgeStatusStamp');
-        if (statusEl) {
-            const visitedCount = visitedSites.length;
-            const total = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
-            const isComplete = visitedCount >= total;
+        // DYNAMIC STATUS & CAPTION UPDATE
+        const statusDisplay = document.getElementById('badgeStatusDisplay');
+        const captionDisplay = document.getElementById('badgeCaptionDisplay');
+        const statusStamp = document.getElementById('badgeStatusStamp');
 
+        if (statusDisplay && captionDisplay && statusStamp) {
+            const visitedCount = visitedSites.length;
+            const mainSitesTotal = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
+            const isComplete = visitedCount >= mainSitesTotal;
+
+            // 1. Determine Title based on count
+            let title = STRINGS.game.badgeLevels.beginner;
+            if (visitedCount >= 10) title = STRINGS.game.badgeLevels.master;
+            else if (visitedCount >= 6) title = STRINGS.game.badgeLevels.specialist;
+            else if (visitedCount >= 3) title = STRINGS.game.badgeLevels.explorer;
+
+            statusDisplay.textContent = title;
+
+            // 2. Determine Caption
+            const caption = isComplete
+                ? STRINGS.game.badgeCaptions.complete
+                : STRINGS.game.badgeCaptions.partial(visitedCount);
+
+            captionDisplay.textContent = `"${caption}"`;
+
+            // 3. Update Red Stamp
             if (isComplete) {
-                statusEl.innerHTML = '<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>COMPLETED</div>';
+                statusStamp.innerHTML = '<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>COMPLETED</div>';
             } else {
-                statusEl.innerHTML = `<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>${visitedCount}/${total} VISITED</div>`;
+                statusStamp.innerHTML = `<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>${visitedCount}/${mainSitesTotal} VISITED</div>`;
             }
         }
 
@@ -738,8 +757,42 @@ function handleMarkerClick(site, marker) {
         return;
     }
 
+    // Ensure preview card is closed if it was open
+    closePreviewCard();
+
     currentModalSite = site;
     currentModalMarker = marker; // Store the marker reference
+
+    // --- STAGGERED ENTRANCE RESET ---
+    const elementsToStagger = [
+        siteModalTitle,
+        siteModalInfo,
+        document.getElementById('siteModalMore'),
+        document.getElementById('siteModalCheckInBtn'),
+        document.getElementById('siteModalSolveChallengeBtn'),
+        document.querySelector('#siteModal .flex.gap-2'), // Directions/AskAI row
+        document.querySelectorAll('#siteModal .flex.gap-2')[1] // Food/Hotel row
+    ];
+
+    elementsToStagger.forEach((el, index) => {
+        if (!el) return;
+        // If it's a NodeList (from querySelectorAll), handle each
+        if (el instanceof NodeList) {
+            el.forEach(subEl => {
+                subEl.classList.remove('animate-staggered');
+                subEl.style.opacity = '0';
+                void subEl.offsetWidth; // trigger reflow
+                subEl.classList.add('animate-staggered');
+                subEl.style.animationDelay = `${0.1 + (index * 0.1)}s`;
+            });
+        } else {
+            el.classList.remove('animate-staggered');
+            el.style.opacity = '0';
+            void el.offsetWidth; // trigger reflow
+            el.classList.add('animate-staggered');
+            el.style.animationDelay = `${0.1 + (index * 0.1)}s`;
+        }
+    });
 
     // 1. Basic Site Info
     siteModalLabel.textContent = site.id ? `${site.id}.` : "";
@@ -1122,12 +1175,84 @@ function updatePassport() {
 // --- APP STARTUP & LANDING PAGE LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
 
-    function initApp() {
-        const landingPage = document.getElementById('landing-page');
-        const gatekeeper = document.getElementById('gatekeeper');
+    // Helper to check if user is authorized
+    function isAuthorized() {
+        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
+        return sessionData && sessionData.valid;
+    }
+
+    // --- CHECK FOR URL PASSKEY (AUTO-LOGIN) ---
+    async function checkForURLPasskey() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCode = urlParams.get('code');
+
+        if (urlCode && !isAuthorized()) {
+            console.log("Auto-login detected:", urlCode);
+
+            // Clean URL immediately for professional look
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+
+            // Show Gatekeeper with loading state
+            const gatekeeper = document.getElementById('gatekeeper');
+            const passcodeInput = document.getElementById('passcodeInput');
+            const unlockBtn = document.getElementById('unlockBtn');
+            const landingPage = document.getElementById('landing-page');
+
+            if (gatekeeper && landingPage) {
+                landingPage.classList.add('hidden');
+                gatekeeper.classList.remove('hidden');
+                passcodeInput.value = urlCode;
+                unlockBtn.disabled = true;
+                unlockBtn.textContent = STRINGS.auth.verifying;
+
+                try {
+                    const success = await verifyCode(urlCode);
+                    // verifyCode handles all UI transitions and app initialization on success.
+                    if (!success) {
+                        unlockBtn.disabled = false;
+                        unlockBtn.textContent = STRINGS.auth.verifyUnlock;
+                    }
+                } catch (err) {
+                    console.error("Auto-login failed:", err);
+                    unlockBtn.disabled = false;
+                    unlockBtn.textContent = STRINGS.auth.verifyUnlock;
+                }
+            }
+        }
+    }
+
+    async function initApp() {
+        // Run auto-login check
+        await checkForURLPasskey();
+
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
 
         if (sessionData && sessionData.valid) {
+            const gatekeeper = document.getElementById('gatekeeper');
+            const landingPage = document.getElementById('landing-page');
+            const staffScreen = document.getElementById('staff-screen');
+
+            // --- ADMIN PERSISTENCE ---
+            if (sessionData.role === 'admin') {
+                if (landingPage) landingPage.remove();
+                if (gatekeeper) gatekeeper.remove();
+
+                // Show Staff Screen Tools directly
+                if (staffScreen) {
+                    staffScreen.classList.remove('hidden');
+                    document.getElementById('adminLoginForm').classList.add('hidden');
+                    document.getElementById('adminResult').classList.remove('hidden');
+
+                    // We need to trigger the setup logic to attach listeners to the Result UI
+                    setupAdminLoginLogic();
+                    // Note: setupAdminLoginLogic needs to be "re-entrant" or handle the result state
+                }
+                return; // Stop here, don't show map yet
+            }
+
+            // --- USER PERSISTENCE ---
+            // const sessionData = JSON.parse(localStorage.getItem('jejak_session')); // No longer needed directly here
 
             // --- DAILY RATE LIMIT RESET ---
             const todayStr = new Date().toDateString();
@@ -1210,12 +1335,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         if (!adminLoginBtn) return;
 
+        // NEW: If already logged in, just show tools
+        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
+        if (sessionData && sessionData.valid && sessionData.role === 'admin') {
+            showAdminTools();
+        }
+
         adminLoginBtn.addEventListener('click', async () => {
             const password = document.getElementById('adminPasswordInput').value;
             const errorMsg = document.getElementById('adminErrorMsg');
             const loginBtn = document.getElementById('adminLoginBtn');
 
-            // !!! USE THE SAME URL YOU USED IN verifyCode !!!
             const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
 
             loginBtn.disabled = true;
@@ -1223,91 +1353,24 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMsg.classList.add('hidden');
 
             try {
-                // We send the admin password as the "passkey"
-                // The Google Script is already programmed to recognize this!
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'cors',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         passkey: password,
-                        deviceId: 'ADMIN_DEVICE' // Device ID doesn't matter for Admin
+                        deviceId: 'ADMIN_DEVICE'
                     })
                 });
 
                 const result = await response.json();
 
                 if (result.success && result.isAdmin) {
-                    // Save session as Admin
                     localStorage.setItem('jejak_session', JSON.stringify({
                         valid: true,
-                        // start: Date.now(), // REMOVED for permanent session
                         role: 'admin'
                     }));
-
-                    // Update UI to show they are logged in
-                    document.getElementById('adminLoginForm').classList.add('hidden');
-                    document.getElementById('adminResult').classList.remove('hidden');
-
-                    document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
-                    document.getElementById('passkeyResult').textContent = STRINGS.auth.adminSuccess;
-
-                    // Initialize Admin UI elements
-                    const generateBtn = document.getElementById('adminGenerateBtn');
-                    const shareBtn = document.getElementById('adminShareBtn');
-                    const statusMsg = document.getElementById('adminStatusMsg');
-                    const resultText = document.getElementById('passkeyResult');
-
-                    generateBtn.textContent = STRINGS.auth.adminGenerateBtn;
-                    shareBtn.textContent = STRINGS.auth.adminShareBtn;
-
-                    let lastGeneratedCode = "";
-
-                    generateBtn.addEventListener('click', async () => {
-                        generateBtn.disabled = true;
-                        generateBtn.textContent = "Generating...";
-                        statusMsg.classList.add('hidden');
-
-                        try {
-                            const genResponse = await fetch(GOOGLE_SCRIPT_URL, {
-                                method: 'POST',
-                                mode: 'cors',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({
-                                    action: 'generate',
-                                    passkey: password, // Send admin password as auth
-                                    deviceId: 'ADMIN_DEVICE'
-                                })
-                            });
-
-                            const genResult = await genResponse.json();
-                            if (genResult.success) {
-                                lastGeneratedCode = genResult.code;
-                                resultText.textContent = genResult.code;
-                                statusMsg.textContent = STRINGS.auth.adminGenSuccess;
-                                statusMsg.classList.remove('hidden');
-                                shareBtn.classList.remove('hidden');
-                            } else {
-                                alert("Failed to generate code: " + (genResult.error || "Unknown error"));
-                            }
-                        } catch (err) {
-                            console.error("Generation error:", err);
-                            alert("Technical error during generation.");
-                        } finally {
-                            generateBtn.disabled = false;
-                            generateBtn.textContent = STRINGS.auth.adminGenerateBtn;
-                        }
-                    });
-
-                    shareBtn.addEventListener('click', () => {
-                        if (!lastGeneratedCode) return;
-
-                        const subject = encodeURIComponent(STRINGS.auth.emailSubject);
-                        const body = encodeURIComponent(STRINGS.auth.emailBody.replace('[CODE]', lastGeneratedCode));
-
-                        // Open Gmail/Default Mail app
-                        window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-                    });
+                    showAdminTools();
                 } else {
                     errorMsg.textContent = result.error || STRINGS.auth.invalidAdmin;
                     errorMsg.classList.remove('hidden');
@@ -1321,6 +1384,88 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginBtn.textContent = STRINGS.auth.login;
             }
         });
+    }
+
+    // --- REUSABLE ADMIN TOOL HANDLER ---
+    function showAdminTools() {
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('adminResult').classList.remove('hidden');
+        document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
+
+        const generateBtn = document.getElementById('adminGenerateBtn');
+        const shareBtn = document.getElementById('adminShareBtn');
+        const statusMsg = document.getElementById('adminStatusMsg');
+        const resultText = document.getElementById('passkeyResult');
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        const switchToMapBtn = document.getElementById('adminSwitchToMapBtn');
+
+        let lastGeneratedCode = "";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
+
+        generateBtn.onclick = async () => {
+            const password = document.getElementById('adminPasswordInput').value || "";
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Generating...";
+            statusMsg.classList.add('hidden');
+
+            try {
+                const genResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'generate',
+                        passkey: password,
+                        deviceId: 'ADMIN_DEVICE'
+                    })
+                });
+
+                const genResult = await genResponse.json();
+                if (genResult.success) {
+                    lastGeneratedCode = genResult.code;
+                    resultText.textContent = genResult.code;
+                    statusMsg.textContent = STRINGS.auth.adminGenSuccess;
+                    statusMsg.classList.remove('hidden');
+                    shareBtn.classList.remove('hidden');
+                } else {
+                    alert("Failed: " + (genResult.error || "Check password"));
+                }
+            } catch (err) {
+                console.error("Gen error:", err);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = STRINGS.auth.adminGenerateBtn;
+            }
+        };
+
+        shareBtn.onclick = () => {
+            if (!lastGeneratedCode) return;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?code=${lastGeneratedCode}`;
+            const subject = encodeURIComponent(STRINGS.auth.emailSubject);
+            const body = encodeURIComponent(STRINGS.auth.emailBody.replace('[CODE]', lastGeneratedCode).replace('[LINK]', shareUrl));
+            window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+        };
+
+        logoutBtn.onclick = () => {
+            localStorage.removeItem('jejak_session');
+            window.location.reload();
+        };
+
+        switchToMapBtn.onclick = () => {
+            document.getElementById('staff-screen').classList.add('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+            if (!map) {
+                initializeGameAndMap();
+                setupGameUIListeners();
+            }
+            const adminToggle = document.getElementById('btnAdminToggle');
+            if (adminToggle) {
+                adminToggle.classList.remove('hidden');
+                adminToggle.onclick = () => {
+                    document.getElementById('staff-screen').classList.remove('hidden');
+                };
+            }
+        };
     }
 
     function setupGatekeeperLogic() {
@@ -1494,6 +1639,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // --- PREMIUM MODAL ANIMATION HELPERS ---
+        function animateOpenModal(modal) {
+            if (!modal) return;
+            modal.classList.remove('hidden', 'modal-closing');
+            modal.classList.add('modal-opening');
+        }
+
+        function animateCloseModal(modal) {
+            if (!modal || modal.classList.contains('hidden')) return;
+            modal.classList.remove('modal-opening');
+            modal.classList.add('modal-closing');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('modal-closing');
+            }, 400); // Match CSS cinematicFadeOut duration
+        }
+
         // --- HISTORY API HELPER ---
         function openModalState(modalId) {
             window.history.pushState({ modal: modalId }, '', window.location.pathname);
@@ -1501,34 +1663,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- BACK BUTTON HANDLER ---
         window.addEventListener('popstate', (event) => {
-            const modals = document.querySelectorAll('.fixed.inset-0.z-\\[5000\\], .fixed.inset-0.z-\\[4000\\]'); // Select your modal classes
-            // Or better: generic hide all known modals
+            // Close all known modals with animation
             [siteModal, chatModal, passportModal, welcomeModal, congratsModal, challengeModal, document.getElementById('badgeInputModal')].forEach(m => {
-                if (m) m.classList.add('hidden');
+                if (m && !m.classList.contains('hidden')) animateCloseModal(m);
             });
             if (typeof closePreviewCard === 'function') closePreviewCard();
         });
 
         document.getElementById('btnChat').addEventListener('click', () => {
-            chatModal.classList.remove('hidden');
+            animateOpenModal(chatModal);
             openModalState('chatModal');
         });
         closeChatModal.addEventListener('click', () => {
-            chatModal.classList.add('hidden');
-            // Optional: window.history.back(); if you want to pop state, but complicates things. leaving distinct state is safer.
+            animateCloseModal(chatModal);
         });
 
         document.getElementById('btnPassport').addEventListener('click', () => {
             updatePassport();
-            passportModal.classList.remove('hidden');
+            animateOpenModal(passportModal);
             openModalState('passportModal');
         });
         closePassportModal.addEventListener('click', () => {
-            passportModal.classList.add('hidden');
+            animateCloseModal(passportModal);
         });
 
         closeSiteModal.addEventListener('click', () => {
-            siteModal.classList.add('hidden');
+            animateCloseModal(siteModal);
         });
 
         chatSendBtn.addEventListener('click', handleSendMessage);
@@ -1544,8 +1704,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const question = `Tell me more about ${siteName}.`;
 
-            siteModal.classList.add('hidden');
-            chatModal.classList.remove('hidden');
+            siteModal.classList.add('hidden'); // Close site modal immediately to prevent overlap transition
+            animateOpenModal(chatModal);
 
             chatInput.value = question;
             handleSendMessage();
@@ -1601,7 +1761,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- NEW LISTENERS FOR NEW FEATURES ---
         if (closeWelcomeModal) {
             closeWelcomeModal.addEventListener('click', () => {
-                welcomeModal.classList.add('hidden');
+                animateCloseModal(welcomeModal);
             });
         }
 
@@ -1627,7 +1787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         closeCongratsModal.addEventListener('click', () => {
-            congratsModal.classList.add('hidden');
+            animateCloseModal(congratsModal);
         });
 
         shareWhatsAppBtn.addEventListener('click', () => {
@@ -1655,11 +1815,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btnChallenge.addEventListener('click', () => {
             updateChallengeModal();
-            challengeModal.classList.remove('hidden');
+            animateOpenModal(challengeModal);
         });
 
         closeChallengeModal.addEventListener('click', () => {
-            challengeModal.classList.add('hidden');
+            animateCloseModal(challengeModal);
         });
 
         siteModalSolveChallengeBtn.addEventListener('click', () => {
@@ -1677,7 +1837,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Show result in challenge modal
             updateChallengeModal();
-            challengeModal.classList.remove('hidden');
+            animateOpenModal(challengeModal);
             // BOMBASTIC: Trigger Small Confetti Burst!
             if (typeof confetti === 'function') {
                 confetti({
@@ -1690,6 +1850,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load persisted chat history
         loadChatHistory();
+
+        // --- NEW: ANIMATED CLOSING FOR BADGE MODAL ---
+        const badgeInputModal = document.getElementById('badgeInputModal');
+        const closeBadgeModal = document.getElementById('closeBadgeModal');
+        if (closeBadgeModal) {
+            closeBadgeModal.addEventListener('click', () => {
+                animateCloseModal(badgeInputModal);
+            });
+        }
     }
 
 
@@ -1760,12 +1929,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const site = allSiteData.find(s => s.id === currentPreviewSiteId);
                 const marker = allMarkers[currentPreviewSiteId];
                 if (site && marker) {
+                    // Explicitly close preview first for smoother transition
+                    closePreviewCard();
+
                     handleMarkerClick(site, marker);
                     // Explicitly show modal and push state
-                    siteModal.classList.remove('hidden');
+                    animateOpenModal(siteModal);
                     openModalState('siteModal');
-
-                    closePreviewCard();
                 }
             }
         });

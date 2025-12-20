@@ -70,81 +70,148 @@ html {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     background: rgba(255, 255, 255, 0.85) !important;
-    /* Slightly more opaque */
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(255, 255, 255, 0.5) inset;
+    /* PREMIUM SPRING TRANSITION */
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 #btnChat:active,
 #btnPassport:active,
 #btnRecenter:active,
 #btnChallenge:active {
-    transform: scale(0.95);
+    transform: scale(0.85) translateY(2px);
 }
 
 /* --- 3. TRANSITIONS & ANIMATIONS --- */
-@keyframes fadeIn {
+@keyframes cinematicFadeIn {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        backdrop-filter: blur(0);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        backdrop-filter: blur(8px);
     }
 }
 
-.animate-fade-in {
-    animation: fadeIn 1s ease-out forwards;
-}
-
-@keyframes slideUpFade {
+@keyframes cinematicFadeOut {
     from {
-        opacity: 0;
-        transform: translateY(20px);
+        opacity: 1;
+        backdrop-filter: blur(8px);
     }
 
     to {
-        opacity: 1;
-        transform: translateY(0);
+        opacity: 0;
+        backdrop-filter: blur(0);
     }
 }
 
-.animate-slide-up {
-    opacity: 0;
-    animation: slideUpFade 0.8s ease-out 0.3s forwards;
+@keyframes pageSlideOpen {
+    0% {
+        transform: translateY(100%) scale(0.95);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pageSlideClose {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100%) scale(0.95);
+        opacity: 0;
+    }
+}
+
+@keyframes bubbleIn {
+    0% {
+        transform: scale(0.8) translateY(10px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes staggeredEntrance {
+    from {
+        transform: translateY(15px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-staggered {
+    animation: staggeredEntrance 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.chat-bubble {
+    animation: bubbleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* --- 4. UNIFIED "HERITAGE GLASS" MODAL STYLE --- */
 .classic-modal-backdrop,
 .modern-modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.4);
-    /* Lighter dark overlay */
+    background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 2000;
+    z-index: 8000;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.5s ease;
+    transition: opacity 0.4s ease;
+}
+
+.classic-modal-backdrop.hidden-animate,
+.modern-modal-backdrop.hidden-animate {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .classic-modal-content,
 .modern-modal-content {
-    background: rgba(255, 255, 255, 0.85);
-    /* Frosted Glass */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    width: 90%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    width: 92%;
     max-width: 500px;
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    /* Springy pop */
     position: relative;
     overflow: hidden;
+    /* Physics-based slide up */
+    transform: translateY(0);
+    transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.modal-opening .classic-modal-content,
+.modal-opening .modern-modal-content {
+    animation: pageSlideOpen 0.6s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.modal-closing .classic-modal-content,
+.modal-closing .modern-modal-content {
+    animation: pageSlideClose 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.modal-closing {
+    animation: cinematicFadeOut 0.4s forwards;
 }
 
 .modern-modal-content {

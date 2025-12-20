@@ -13,7 +13,7 @@ export const STRINGS = {
         adminShareBtn: "Share via Email",
         adminGenSuccess: "New Passkey Generated!",
         emailSubject: "Your BWM KUL City Walk Access Code",
-        emailBody: "Hello!\n\nThank you for joining the BWM KUL City Walk. Here is your unique access code:\n\nCODE: [CODE]\n\nStart your journey here: https://bwm-kul-city-walk.vercel.app/\n\nEnjoy your walk!"
+        emailBody: "Hello!\n\nThank you for joining the BWM KUL City Walk. Here is your unique access code:\n\nCODE: [CODE]\n\nONE-CLICK LOGIN: [LINK]\n\nEnjoy your walk!"
     },
     game: {
         progress: (visited, total) => `You have visited ${visited} of the ${total} heritage buildings in Kuala Lumpur!`,
@@ -29,6 +29,16 @@ export const STRINGS = {
         generatingBadge: "Generating...",
         generateBadge: "✨ Generate & Download ID",
         tryAgain: "Try Again",
+        badgeLevels: {
+            beginner: "Heritage Beginner",
+            explorer: "Heritage Explorer",
+            specialist: "Heritage Specialist",
+            master: "Master Explorer"
+        },
+        badgeCaptions: {
+            partial: (count) => `The bearer of this document has successfully navigated and documented ${count} designated heritage sites within the historic core of Kuala Lumpur.`,
+            complete: "The bearer of this document has successfully navigated and documented all 11 designated heritage sites within the historic core of Kuala Lumpur."
+        },
         badgeError: "Could not generate badge. Please try again."
     },
     chat: {
