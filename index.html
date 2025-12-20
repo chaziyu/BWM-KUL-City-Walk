@@ -253,14 +253,15 @@
 
 
 
-    <button id="btnAdminToggle"
-        class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200 hidden"
-        title="Switch to Admin Tools">🛠️</button>
-    <button id="btnChat"
-        class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
-    <button id="btnRecenter"
-        class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
-        title="Back to Dataran Merdeka">📍</button>
+    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-[2500] flex flex-col gap-3">
+        <button id="btnAdminToggle"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200 hidden"
+            title="Switch to Admin Tools">🛠️</button>
+        <button id="btnChat"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
+        <button id="btnRecenter"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+            title="Back to Dataran Merdeka">📍</button>
     </div>
     <!-- PREVIEW CARD (Bottom Sheet) -->
     <div id="previewCard"
@@ -398,6 +399,47 @@
                         class="flex-1 border-2 border-gray-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 transition">
                     <button id="chatSendBtn"
                         class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIRECTIONS VIEWER (Embedded Map) -->
+    <div id="directionsModal" class="modern-modal-backdrop fixed inset-0 z-[8500] hidden" role="dialog"
+        aria-modal="true" aria-labelledby="directionsTitle">
+        <div class="modern-modal-content animate-fade-scale flex flex-col h-[85vh] max-w-2xl">
+            <div class="flex justify-between items-center p-4 border-b bg-white rounded-t-3xl">
+                <h2 id="directionsTitle" class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span>🗺️</span> Directions
+                </h2>
+                <button id="closeDirectionsModal"
+                    class="text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            </div>
+
+            <div class="flex-1 bg-gray-100 flex flex-col overflow-hidden relative">
+                <!-- Loading Shimmer -->
+                <div id="directionsLoading" class="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin">
+                        </div>
+                        <p class="text-sm font-bold text-gray-600 animate-pulse">Loading Route...</p>
+                    </div>
+                </div>
+
+                <iframe id="directionsIframe" class="w-full h-full border-none" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+
+            <div class="p-4 border-t bg-white rounded-b-3xl">
+                <div class="flex gap-2">
+                    <button id="closeDirectionsModalBtn"
+                        class="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-200 transition">
+                        Back to Walk
+                    </button>
+                    <a id="externalMapsLink" href="#" target="_blank"
+                        class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition text-center flex items-center justify-center gap-2">
+                        <span>📱</span> Open in App
+                    </a>
                 </div>
             </div>
         </div>

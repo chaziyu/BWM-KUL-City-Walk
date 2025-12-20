@@ -19,21 +19,47 @@ migrateData();
  * @param {string} mode - 'directions', 'restaurants', or 'hotels'
  */
 function openGoogleMaps(lat, lon, mode) {
-    // Standardize coordinates
     const destination = `${lat},${lon}`;
-    let url = '';
+    let externalUrl = '';
+    let embedUrl = '';
 
     if (mode === 'directions') {
-        // Universal syntax for directions
-        url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
+        externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
+        // Use maps.google.com with output=embed for no-key directions
+        embedUrl = `https://maps.google.com/maps?daddr=${destination}&t=m&z=15&output=embed`;
     } else if (mode === 'restaurants') {
-        // Search query with location bias
-        url = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
+        externalUrl = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
+        embedUrl = `https://maps.google.com/maps?q=restaurants+near+${lat},${lon}&t=m&z=15&output=embed`;
     } else if (mode === 'hotels') {
-        url = `https://www.google.com/maps/search/hotels/@${lat},${lon},18z`;
+        externalUrl = `https://www.google.com/maps/search/hotels/@${lat},${lon},18z`;
+        embedUrl = `https://maps.google.com/maps?q=hotels+near+${lat},${lon}&t=m&z=15&output=embed`;
     }
 
-    if (url) window.open(url, '_blank');
+    const directionsModal = document.getElementById('directionsModal');
+    const directionsIframe = document.getElementById('directionsIframe');
+    const directionsLoading = document.getElementById('directionsLoading');
+    const externalMapsLink = document.getElementById('externalMapsLink');
+
+    if (directionsModal && directionsIframe) {
+        // Close modal first if it's already open
+        if (!directionsModal.classList.contains('hidden')) {
+            animateCloseModal(directionsModal);
+        }
+
+        // Setup Iframe
+        if (directionsLoading) directionsLoading.classList.remove('hidden');
+        directionsIframe.onload = () => {
+            if (directionsLoading) directionsLoading.classList.add('hidden');
+        };
+
+        directionsIframe.src = embedUrl;
+        if (externalMapsLink) externalMapsLink.href = externalUrl;
+
+        // Open Modal
+        animateOpenModal(directionsModal);
+    } else if (externalUrl) {
+        window.open(externalUrl, '_blank');
+    }
 }
 
 // --- GAME STATE ---
@@ -1392,6 +1418,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('adminResult').classList.remove('hidden');
         document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
 
+        // NEW: Hide the redundant "Back" button once logged in
+        const closeStaffBtn = document.getElementById('closeStaffScreen');
+        if (closeStaffBtn) closeStaffBtn.classList.add('hidden');
+
+        // Show the admin toggle on the map
+        const btnAdminToggle = document.getElementById('btnAdminToggle');
+        if (btnAdminToggle) btnAdminToggle.classList.remove('hidden');
+
         const generateBtn = document.getElementById('adminGenerateBtn');
         const shareBtn = document.getElementById('adminShareBtn');
         const statusMsg = document.getElementById('adminStatusMsg');
@@ -1790,6 +1824,26 @@ document.addEventListener('DOMContentLoaded', () => {
             animateCloseModal(congratsModal);
         });
 
+        // --- DIRECTIONS VIEWER LISTENERS ---
+        const directionsModal = document.getElementById('directionsModal');
+        const directionsIframe = document.getElementById('directionsIframe');
+        const closeDirectionsModal = document.getElementById('closeDirectionsModal');
+        const closeDirectionsModalBtn = document.getElementById('closeDirectionsModalBtn');
+
+        if (closeDirectionsModal) {
+            closeDirectionsModal.addEventListener('click', () => {
+                animateCloseModal(directionsModal);
+                if (directionsIframe) directionsIframe.src = ""; // Clear source
+            });
+        }
+
+        if (closeDirectionsModalBtn) {
+            closeDirectionsModalBtn.addEventListener('click', () => {
+                animateCloseModal(directionsModal);
+                if (directionsIframe) directionsIframe.src = ""; // Clear source
+            });
+        }
+
         shareWhatsAppBtn.addEventListener('click', () => {
             const count = visitedSites.length;
             const total = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
@@ -1966,19 +2020,20 @@ function showPreviewCard(site) {
     previewDist.textContent = STRINGS.preview.tapForDetails; // Placeholder for distance if we had coords
 
     // Show Card
-    previewCard.classList.remove('hidden');
-    // Small delay to allow 'hidden' removal to register before transforming
-    setTimeout(() => {
-        previewCard.classList.remove('translate-y-[150%]');
-    }, 10);
+    previewCard.classList.remove('hidden', 'preview-card-closing');
+    previewCard.classList.add('preview-card-opening');
 }
 
 function closePreviewCard() {
-    if (!previewCard) return;
-    previewCard.classList.add('translate-y-[150%]');
+    if (!previewCard || previewCard.classList.contains('hidden')) return;
+
+    previewCard.classList.remove('preview-card-opening');
+    previewCard.classList.add('preview-card-closing');
+
     setTimeout(() => {
         previewCard.classList.add('hidden');
-    }, 300); // Wait for animation
+        previewCard.classList.remove('preview-card-closing');
+    }, 400); // Wait for animation
 }
 
 // Override the global click handler behavior via a flag or modifying the loop?
