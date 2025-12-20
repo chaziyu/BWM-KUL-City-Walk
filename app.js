@@ -29,11 +29,11 @@ function openGoogleMaps(lat, lon, mode, siteName = "") {
 
     if (mode === 'directions' || mode === 'transit') {
         externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
-        // Legacy Embed: daddr (destination), dirflg=r (transit)
-        embedUrl = `https://maps.google.com/maps?daddr=${destination}&t=m&z=15&dirflg=r&output=embed`;
+        // Legacy Embed: saddr=My+Location triggers route visualization on the map
+        embedUrl = `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=r&output=embed`;
     } else if (mode === 'walk') {
         externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
-        embedUrl = `https://maps.google.com/maps?daddr=${destination}&t=m&z=15&dirflg=w&output=embed`;
+        embedUrl = `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=w&output=embed`;
     } else if (mode === 'restaurants') {
         externalUrl = `https://www.google.com/maps/search/restaurants/@${lat},${lon},18z`;
         embedUrl = `https://maps.google.com/maps?q=restaurants+near+${placeQuery}&t=m&z=15&output=embed`;
