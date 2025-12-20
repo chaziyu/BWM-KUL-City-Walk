@@ -2502,34 +2502,6 @@ setupPWAInstallPrompt();
 
 // --- OPTIMIZATION: DYNAMIC IMPORT FOR TOUR SYSTEM ---
 // Load Tour System on idle (2s delay) or user interaction
-const loadTourSystem = async (autoStart = false) => {
-    try {
-        const module = await import('./tour.js');
-        module.initTourSystem();
-        if (autoStart) module.startTour();
-        return module;
-    } catch (err) {
-        console.error('Failed to load tour system:', err);
-    }
-};
-
-// 1. Load on Idle (to check for first-time user auto-start)
-setTimeout(() => {
-    loadTourSystem();
-}, 2000);
-
-// 2. Load on Help Button Click (Immediate)
-const btnHelp = document.getElementById('btnHelp');
-if (btnHelp) {
-    btnHelp.addEventListener('click', (e) => {
-        // If tour already loaded (listener replaced), this won't fire/matter?
-        // Actually initTourSystem attaches its own listener.
-        // We want to capture the FIRST click if it hasn't loaded yet.
-        if (!btnHelp.dataset.tourSetup) {
-            e.preventDefault();
-            e.stopPropagation();
-            loadTourSystem(true); // Load AND start
-        }
-    }, { once: true }); // Only need this bootstrap once. initTourSystem handles future clicks.
-}
+// --- TOUR SYSTEM REMOVED ---
+// (User requested removal of help button functionality)
 
