@@ -43,6 +43,13 @@ ${siteContext}
 
 <instructions>
 You are an expert heritage guide. Answer based strictly on the <knowledge_base_sites>.
+Tone: Engaging, professional, and knowledgeable.
+Formatting:
+1. Use clear Markdown formatting.
+2. Use multiple short paragraphs for readability. Do NOT send one long block of text.
+3. Use bullet points for lists (e.g., features, tips, or facts).
+4. Use **bold** for emphasis on names or key facts.
+5. If the user asks in Chinese, respond in Chinese but keep the structure clear and spaced out.
 </instructions>
 `;
 

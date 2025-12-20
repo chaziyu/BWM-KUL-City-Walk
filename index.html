@@ -35,6 +35,7 @@
     <script
         src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --content-font-size: 100%;
@@ -205,8 +206,22 @@
             </div>
             <div id="adminResult" class="hidden">
                 <p class="text-gray-600 mb-2" id="passkeyDate">Date: 2024-01-01</p>
-                <p class="text-2xl font-bold font-mono text-blue-600" id="passkeyResult">AB-1234</p>
-                <p class="text-gray-500 text-sm mt-4"></p>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
+                    <p class="text-2xl font-bold font-mono text-blue-600 mb-1" id="passkeyResult">AB-1234</p>
+                    <p id="adminStatusMsg" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hidden">
+                        New Code Generated!</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="adminGenerateBtn"
+                        class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md flex items-center justify-center">
+                        <span class="mr-2">🪄</span> Generate New Passkey
+                    </button>
+                    <button id="adminShareBtn"
+                        class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-md hidden flex items-center justify-center">
+                        <span class="mr-2">📧</span> Share via Email
+                    </button>
+                </div>
 
                 <div class="mt-6 border-t pt-4">
                     <p class="text-xs text-gray-500">To check your AI API usage and quota, log in to your Google Cloud

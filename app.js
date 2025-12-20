@@ -44,7 +44,7 @@ const TOTAL_SITES = 11;
 let allSiteData = [];
 // NEW: Cached array of main heritage sites (numerical IDs) for performance
 let mainSites = [];
-let chatHistory = [];
+let chatHistory = JSON.parse(localStorage.getItem('jejak_chat_history')) || [];
 let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
 let currentModalSite = null; // To track the currently open pin
 let currentModalMarker = null; // To track the currently open marker
@@ -988,12 +988,15 @@ async function handleSendMessage() {
 
         chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
         chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
+        localStorage.setItem('jejak_chat_history', JSON.stringify(chatHistory));
 
         userMessageCount++;
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
 
-        thinkingEl.querySelector('p:last-child').innerHTML = data.reply; // Select the content paragraph
+        // Render Markdown for AI reply
+        thinkingEl.querySelector('p:last-child').innerHTML = (typeof marked !== 'undefined') ? marked.parse(data.reply) : data.reply;
+        thinkingEl.classList.add('chat-bubble'); // Ensure styling applies
 
     } catch (error) {
         console.error("Chat error:", error);
@@ -1013,17 +1016,32 @@ async function handleSendMessage() {
 
 function addChatMessage(role, text) {
     const messageEl = document.createElement('div');
-    const name = (role === 'user') ? STRINGS.chat.userName : STRINGS.chat.aiName;
-    const align = (role === 'user') ? 'self-end' : 'self-start';
-    const bg = (role === 'user') ? 'bg-white' : 'bg-blue-100';
-    const textCol = (role === 'user') ? 'text-gray-900' : 'text-blue-900';
+    const name = (role === 'user' || role === 'user') ? STRINGS.chat.userName : STRINGS.chat.aiName;
+    const align = (role === 'user' || role === 'user') ? 'self-end' : 'self-start';
+    const bg = (role === 'user' || role === 'user') ? 'bg-white' : 'bg-blue-100';
+    const textCol = (role === 'user' || role === 'user') ? 'text-gray-900' : 'text-blue-900';
 
-    messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align}`;
-    messageEl.innerHTML = `<p class="font-bold text-sm">${name}</p><p>${text}</p>`;
+    // Parse markdown for AI messages (model role)
+    const content = (role === 'model' && typeof marked !== 'undefined') ? marked.parse(text) : text;
+
+    messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align} chat-bubble`;
+    messageEl.innerHTML = `<p class="font-bold text-sm mb-1">${name}</p><div>${content}</div>`;
 
     chatHistoryEl.appendChild(messageEl);
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
     return messageEl;
+}
+
+/**
+ * NEW: Loads chat history from localStorage and populates the UI
+ */
+function loadChatHistory() {
+    if (!chatHistoryEl) return;
+    chatHistoryEl.innerHTML = ""; // Clear loader if any
+    chatHistory.forEach(msg => {
+        const text = msg.parts ? msg.parts[0].text : msg.text;
+        addChatMessage(msg.role, text);
+    });
 }
 
 // --- UI UPDATE FUNCTIONS ---
@@ -1110,6 +1128,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
 
         if (sessionData && sessionData.valid) {
+
+            // --- DAILY RATE LIMIT RESET ---
+            const todayStr = new Date().toDateString();
+            const lastActiveDay = localStorage.getItem('jejak_last_active_day');
+
+            if (lastActiveDay !== todayStr) {
+                console.log("New day detected. Resetting chat limit.");
+                userMessageCount = 0;
+                localStorage.setItem('jejak_message_count', '0');
+                localStorage.setItem('jejak_last_active_day', todayStr);
+            }
+            // -----------------------------
+
             // Session is VALID: Go straight to map
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
@@ -1185,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const loginBtn = document.getElementById('adminLoginBtn');
 
             // !!! USE THE SAME URL YOU USED IN verifyCode !!!
-            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
+            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
 
             loginBtn.disabled = true;
             loginBtn.textContent = STRINGS.auth.verifying;
@@ -1216,17 +1247,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Update UI to show they are logged in
                     document.getElementById('adminLoginForm').classList.add('hidden');
-
-                    // If you want to show a success message or redirect to map:
-                    document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
-                    document.getElementById('passkeyResult').textContent = STRINGS.auth.adminSuccess;
                     document.getElementById('adminResult').classList.remove('hidden');
 
-                    // Optional: Automatically move to the map after 1.5 seconds
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+                    document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
+                    document.getElementById('passkeyResult').textContent = STRINGS.auth.adminSuccess;
 
+                    // Initialize Admin UI elements
+                    const generateBtn = document.getElementById('adminGenerateBtn');
+                    const shareBtn = document.getElementById('adminShareBtn');
+                    const statusMsg = document.getElementById('adminStatusMsg');
+                    const resultText = document.getElementById('passkeyResult');
+
+                    generateBtn.textContent = STRINGS.auth.adminGenerateBtn;
+                    shareBtn.textContent = STRINGS.auth.adminShareBtn;
+
+                    let lastGeneratedCode = "";
+
+                    generateBtn.addEventListener('click', async () => {
+                        generateBtn.disabled = true;
+                        generateBtn.textContent = "Generating...";
+                        statusMsg.classList.add('hidden');
+
+                        try {
+                            const genResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                                method: 'POST',
+                                mode: 'cors',
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify({
+                                    action: 'generate',
+                                    passkey: password, // Send admin password as auth
+                                    deviceId: 'ADMIN_DEVICE'
+                                })
+                            });
+
+                            const genResult = await genResponse.json();
+                            if (genResult.success) {
+                                lastGeneratedCode = genResult.code;
+                                resultText.textContent = genResult.code;
+                                statusMsg.textContent = STRINGS.auth.adminGenSuccess;
+                                statusMsg.classList.remove('hidden');
+                                shareBtn.classList.remove('hidden');
+                            } else {
+                                alert("Failed to generate code: " + (genResult.error || "Unknown error"));
+                            }
+                        } catch (err) {
+                            console.error("Generation error:", err);
+                            alert("Technical error during generation.");
+                        } finally {
+                            generateBtn.disabled = false;
+                            generateBtn.textContent = STRINGS.auth.adminGenerateBtn;
+                        }
+                    });
+
+                    shareBtn.addEventListener('click', () => {
+                        if (!lastGeneratedCode) return;
+
+                        const subject = encodeURIComponent(STRINGS.auth.emailSubject);
+                        const body = encodeURIComponent(STRINGS.auth.emailBody.replace('[CODE]', lastGeneratedCode));
+
+                        // Open Gmail/Default Mail app
+                        window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+                    });
                 } else {
                     errorMsg.textContent = result.error || STRINGS.auth.invalidAdmin;
                     errorMsg.classList.remove('hidden');
@@ -1269,7 +1350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.add('hidden');
 
         // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEqtEHyDUwdvEUNeXvPhrJDUoa4228azFVorWzyzuA0FFj-44qcem3kOw-wTXNtY4bPw/exec";
 
         try {
             // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
@@ -1614,6 +1695,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         });
+
+        // Load persisted chat history
+        loadChatHistory();
     }
 
 

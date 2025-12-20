@@ -733,3 +733,32 @@ font {
 .goog-te-gadget .goog-te-combo {
     display: block;
 }
+
+/* --- 12. CHAT MARKDOWN STYLES --- */
+.chat-bubble p {
+    margin-bottom: 0.75rem;
+}
+
+.chat-bubble p:last-child {
+    margin-bottom: 0;
+}
+
+.chat-bubble ul,
+.chat-bubble ol {
+    margin-bottom: 0.75rem;
+    padding-left: 1.25rem;
+    list-style-type: disc;
+}
+
+.chat-bubble li {
+    margin-bottom: 0.25rem;
+}
+
+.chat-bubble strong {
+    font-weight: 700;
+}
+
+.chat-bubble a {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
