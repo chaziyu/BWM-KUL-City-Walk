@@ -1294,6 +1294,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const continueBtn = document.getElementById('continueLoginBtn');
         const cancelBtn = document.getElementById('cancelLoginBtn');
         const unlockBtn = document.getElementById('unlockBtn');
+        const passkeyDisplay = document.getElementById('passkeyDisplay');
+        const copyBtn = document.getElementById('copyPasskeyBtn');
+        const copySuccess = document.getElementById('copySuccess');
+
+        // Get the passkey value from the input field
+        const passkey = document.getElementById('passcodeInput').value;
+
+        // Display the passkey in the modal
+        if (passkeyDisplay) {
+            passkeyDisplay.value = passkey;
+        }
 
         // Determine platform and set appropriate warning
         const isPWA = isPWAMode();
@@ -1322,6 +1333,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // Disable unlock button until user confirms
         unlockBtn.disabled = true;
         unlockBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Copy button functionality
+        if (copyBtn) {
+            copyBtn.onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText(passkey);
+                    // Show success message
+                    if (copySuccess) {
+                        copySuccess.classList.remove('hidden');
+                        copyBtn.innerHTML = '<span>✓</span><span>Copied!</span>';
+                        setTimeout(() => {
+                            copySuccess.classList.add('hidden');
+                            copyBtn.innerHTML = '<span>📋</span><span>Copy</span>';
+                        }, 2000);
+                    }
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    // Fallback for older browsers
+                    passkeyDisplay.select();
+                    document.execCommand('copy');
+                }
+            };
+        }
 
         // Continue button - allows login
         continueBtn.onclick = () => {

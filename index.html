@@ -272,10 +272,25 @@
                 <p class="text-sm text-gray-800 leading-relaxed"></p>
             </div>
 
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
                 <p class="text-xs text-blue-900 font-semibold mb-2">🔒 Device Locking Explained:</p>
                 <p class="text-xs text-gray-700">Your passkey will be locked to <strong>one platform only</strong>
                     (either PWA or Browser). This security feature prevents sharing passkeys across devices.</p>
+            </div>
+
+            <!-- Copy Passkey Section -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                <p class="text-xs text-gray-600 font-semibold mb-2">📋 Your Passkey:</p>
+                <div class="flex gap-2">
+                    <input id="passkeyDisplay" type="text" readonly
+                        class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-mono text-sm text-gray-800 font-bold uppercase tracking-widest">
+                    <button id="copyPasskeyBtn"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-semibold text-sm flex items-center gap-1 whitespace-nowrap">
+                        <span>📋</span>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <p id="copySuccess" class="text-xs text-green-600 font-semibold mt-2 hidden">✓ Copied to clipboard!</p>
             </div>
 
             <div class="space-y-3">
