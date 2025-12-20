@@ -4,6 +4,7 @@
 // --- CONFIGURATION ---
 import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './config.js';
 import { migrateData } from './storage-migration.js';
+import { STRINGS } from './localization.js';
 
 // --- DATA MIGRATION ---
 // Run migration before loading any state variables
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const badgeElement = document.getElementById('hiddenBadgeTemplate');
 
         // Show loading state
-        btnGenerate.textContent = "Generating...";
+        btnGenerate.textContent = STRINGS.game.generatingBadge;
         btnGenerate.disabled = true;
 
         // UNHIDE TEMPLATE FOR CAPTURE
@@ -169,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
             link.click();
 
             // Reset UI
-            btnGenerate.textContent = "✨ Generate & Download ID";
+            btnGenerate.textContent = STRINGS.game.generateBadge;
             btnGenerate.disabled = false;
 
             // Play sound!
@@ -180,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
             badgeElement.style.opacity = '0';
 
             console.error("Badge generation failed:", err);
-            alert("Could not generate badge. Please try again.");
-            btnGenerate.textContent = "Try Again";
+            alert(STRINGS.game.badgeError);
+            btnGenerate.textContent = STRINGS.game.tryAgain;
             btnGenerate.disabled = false;
         });
     }
@@ -674,9 +675,9 @@ function updateChallengeModal() {
     challengeRiddle.textContent = `"${todayRiddle.q}"`;
 
     if (solvedRiddle.day === dayOfYear && solvedRiddle.id === todayRiddle.a) {
-        challengeResult.textContent = "You've already solved today's challenge. Well done!";
+        challengeResult.textContent = STRINGS.game.challengeSolved;
     } else {
-        challengeResult.textContent = "Find the heritage site that matches this riddle and click 'Solve Challenge' in its pop-up!";
+        challengeResult.textContent = STRINGS.game.challengeHint;
     }
 }
 
@@ -786,7 +787,7 @@ function handleMarkerClick(site, marker) {
                 // Check Answer
                 if (opt === site.quiz.a) {
                     // CORRECT
-                    siteModalQuizResult.textContent = "Correct! Well done!";
+                    siteModalQuizResult.textContent = STRINGS.game.quizCorrect;
                     siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
                     siteModalQuizResult.classList.remove('hidden');
 
@@ -826,7 +827,7 @@ function handleMarkerClick(site, marker) {
 
                 } else {
                     // WRONG
-                    siteModalQuizResult.textContent = "Not quite, try again!";
+                    siteModalQuizResult.textContent = STRINGS.game.quizWrong;
                     siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-red-600";
                     siteModalQuizResult.classList.remove('hidden');
 
@@ -894,7 +895,7 @@ function handleCheckIn() {
 
         // Update the button state
         siteModalCheckInBtn.disabled = true;
-        siteModalCheckInBtn.textContent = 'Visited';
+        siteModalCheckInBtn.textContent = STRINGS.game.visitedBtn;
         siteModalCheckInBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
         siteModalCheckInBtn.classList.remove('bg-purple-700', 'hover:bg-purple-800', 'text-white');
     }
@@ -945,7 +946,7 @@ async function handleSendMessage() {
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('p:last-child').textContent = "Sorry, I couldn't connect. Please try again.";
+        thinkingEl.querySelector('p:last-child').textContent = STRINGS.chat.error;
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
@@ -961,7 +962,7 @@ async function handleSendMessage() {
 
 function addChatMessage(role, text) {
     const messageEl = document.createElement('div');
-    const name = (role === 'user') ? 'You' : 'AI Guide';
+    const name = (role === 'user') ? STRINGS.chat.userName : STRINGS.chat.aiName;
     const align = (role === 'user') ? 'self-end' : 'self-start';
     const bg = (role === 'user') ? 'bg-white' : 'bg-blue-100';
     const textCol = (role === 'user') ? 'text-gray-900' : 'text-blue-900';
@@ -987,7 +988,7 @@ function updateGameProgress() {
     if (progressBar && progressText) {
         const percentage = (count / mainSitesTotal) * 100;
         progressBar.style.width = `${percentage}%`;
-        progressText.textContent = `${count}/${mainSitesTotal} Sites`;
+        progressText.textContent = STRINGS.game.progressShort(count, mainSitesTotal);
     }
 }
 
@@ -1017,8 +1018,8 @@ function disableChatUI(flag) {
     chatInput.disabled = flag;
     chatSendBtn.disabled = flag;
     if (flag) {
-        chatLimitText.textContent = "You have used all your messages for this session.";
-        chatInput.placeholder = "No messages remaining.";
+        chatLimitText.textContent = STRINGS.chat.limitReached;
+        chatInput.placeholder = STRINGS.chat.limitReached;
     }
 }
 
@@ -1029,7 +1030,7 @@ function updatePassport() {
 
     const visitedCount = visitedSites.length;
 
-    passportInfo.textContent = `You have visited ${visitedCount} of the ${mainSites.length} heritage buildings in Kuala Lumpur!`;
+    passportInfo.textContent = STRINGS.game.progress(visitedCount, mainSites.length);
     passportGrid.innerHTML = "";
 
     mainSites.forEach(site => {
@@ -1145,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPSOwI9RSslAOcJSynxHScgz-aw7glqIeRS1OxCXanEkh0Bzk_iSBtuLLRSL97QSfTyw/exec";
 
             loginBtn.disabled = true;
-            loginBtn.textContent = 'Verifying...';
+            loginBtn.textContent = STRINGS.auth.verifying;
             errorMsg.classList.add('hidden');
 
             try {
@@ -1175,8 +1176,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('adminLoginForm').classList.add('hidden');
 
                     // If you want to show a success message or redirect to map:
-                    document.getElementById('passkeyDate').textContent = `Authenticated as Admin`;
-                    document.getElementById('passkeyResult').textContent = "ACCESS GRANTED";
+                    document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
+                    document.getElementById('passkeyResult').textContent = STRINGS.auth.adminSuccess;
                     document.getElementById('adminResult').classList.remove('hidden');
 
                     // Optional: Automatically move to the map after 1.5 seconds
@@ -1185,16 +1186,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 1500);
 
                 } else {
-                    errorMsg.textContent = result.error || 'Invalid Admin Password.';
+                    errorMsg.textContent = result.error || STRINGS.auth.invalidAdmin;
                     errorMsg.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Error in admin login:', error);
-                errorMsg.textContent = 'Network error. Check Google Script deployment.';
+                errorMsg.textContent = STRINGS.auth.networkError;
                 errorMsg.classList.remove('hidden');
             } finally {
                 loginBtn.disabled = false;
-                loginBtn.textContent = 'Get Access';
+                loginBtn.textContent = STRINGS.auth.login;
             }
         });
     }
@@ -1209,14 +1210,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!enteredCode) return;
 
             unlockBtn.disabled = true;
-            unlockBtn.textContent = 'Verifying...';
+            unlockBtn.textContent = STRINGS.auth.verifying;
 
             await verifyCode(enteredCode);
 
             // If verification failed, reset the button
             if (!localStorage.getItem('jejak_session')) {
                 unlockBtn.disabled = false;
-                unlockBtn.textContent = 'Verify & Unlock';
+                unlockBtn.textContent = STRINGS.auth.verifyUnlock;
             }
         });
     }
@@ -1265,12 +1266,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 500);
 
             } else {
-                errorMsg.textContent = result.error || 'Invalid or expired passkey.';
+                errorMsg.textContent = result.error || STRINGS.auth.invalidPasskey;
                 errorMsg.classList.remove('hidden');
             }
         } catch (error) {
             console.error('Verification Error:', error);
-            errorMsg.textContent = 'Network error. Make sure the script is deployed to "Anyone".';
+            errorMsg.textContent = STRINGS.auth.networkError;
             errorMsg.classList.remove('hidden');
         }
     }
@@ -1564,8 +1565,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTextSize = 100; // Percentage
 
     function updateTextSize() {
-        if (contentText) contentText.style.fontSize = `${currentTextSize}%`;
-        if (moreContentText) moreContentText.style.fontSize = `${currentTextSize}%`;
+        // Updated: Use CSS Variable interaction
+        document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
     }
 
     if (btnTextSizeSmall) {
@@ -1641,7 +1642,7 @@ function showPreviewCard(site) {
     previewImage.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=Site';
     previewImage.onload = () => previewImage.classList.remove('skeleton-loading');
 
-    previewDist.textContent = 'Tap to read full history'; // Placeholder for distance if we had coords
+    previewDist.textContent = STRINGS.preview.tapForDetails; // Placeholder for distance if we had coords
 
     // Show Card
     previewCard.classList.remove('hidden');

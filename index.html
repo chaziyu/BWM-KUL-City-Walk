@@ -35,6 +35,15 @@
     <script
         src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --content-font-size: 100%;
+        }
+        /* Apply the variable to specific text containers */
+        #siteModalInfo, #siteModalMoreContent {
+            font-size: var(--content-font-size);
+        }
+    </style>
 </head>
 
 <body class="overflow-hidden bg-gray-100">
@@ -254,9 +263,10 @@
 
 
 
-    <div id="welcomeModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden">
+    <div id="welcomeModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="welcomeTitle">
         <div class="classic-modal-content p-6 text-center animate-fade-scale">
-            <h2 class="text-2xl font-bold text-gray-800 mb-3">Welcome to BWM KUL City Walk!</h2>
+            <h2 id="welcomeTitle" class="text-2xl font-bold text-gray-800 mb-3">Welcome to BWM KUL City Walk!</h2>
             <p class="text-gray-600 mb-6">Explore the 24 pins to discover the city's history. Collect all 11 stamps from
                 the main sites to complete your passport!</p>
             <button id="closeWelcomeModal"
@@ -265,7 +275,8 @@
         </div>
     </div>
 
-    <div id="siteModal" class="classic-modal-backdrop fixed inset-0 hidden">
+    <div id="siteModal" class="classic-modal-backdrop fixed inset-0 hidden" role="dialog" aria-modal="true"
+        aria-labelledby="siteModalTitle">
         <div class="classic-modal-content animate-fade-scale">
             <div class="relative">
                 <img id="siteModalImage" src="https://placehold.co/600x400/eee/ccc?text=Site+Image" alt="Heritage Site"
@@ -345,10 +356,11 @@
         </div>
     </div>
 
-    <div id="chatModal" class="modern-modal-backdrop fixed inset-0 hidden">
+    <div id="chatModal" class="modern-modal-backdrop fixed inset-0 hidden" role="dialog" aria-modal="true"
+        aria-labelledby="chatModalTitle">
         <div class="modern-modal-content animate-fade-scale">
             <div class="flex justify-between items-center p-4 border-b">
-                <h2 class="text-xl font-bold text-gray-900">AI Tour Guide</h2>
+                <h2 id="chatModalTitle" class="text-xl font-bold text-gray-900">AI Tour Guide</h2>
                 <button id="closeChatModal" class="text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
             </div>
             <div id="chatHistory" class="flex-1 p-4 space-y-4 overflow-y-auto bg-gray-50 flex flex-col">
@@ -369,11 +381,12 @@
         </div>
     </div>
 
-    <div id="passportModal" class="classic-modal-backdrop fixed inset-0 z-[9000] hidden">
+    <div id="passportModal" class="classic-modal-backdrop fixed inset-0 z-[9000] hidden" role="dialog" aria-modal="true"
+        aria-labelledby="passportTitle">
         <div class="classic-modal-content p-6 text-center animate-fade-scale">
             <button id="closePassportModal"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">My Passport</h2>
+            <h2 id="passportTitle" class="text-2xl font-bold text-gray-800 mb-2">My Passport</h2>
             <p id="passportInfo" class="text-gray-600 mb-6 text-sm italic">Visited <span id="visitedCount">0</span> of
                 11 heritage buildings in Kuala Lumpur</p>
 
@@ -394,12 +407,13 @@
         </div>
     </div>
 
-    <div id="congratsModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden">
+    <div id="congratsModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="congratsTitle">
         <div class="classic-modal-content p-6 text-center animate-fade-scale">
             <button id="closeCongratsModal"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
             <div class="text-6xl mb-4">🎉</div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-3">Congratulations!</h2>
+            <h2 id="congratsTitle" class="text-2xl font-bold text-gray-800 mb-3">Congratulations!</h2>
             <p class="text-gray-600 mb-6">You have visited all 11 heritage buildings in Kuala Lumpur and completed the
                 BWM KUL City Walk Passport!</p>
             <button id="shareWhatsAppBtn"
@@ -413,12 +427,13 @@
         </div>
     </div>
 
-    <div id="challengeModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden">
+    <div id="challengeModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="challengeTitle">
         <div class="classic-modal-content p-6 text-center animate-fade-scale">
             <button id="closeChallengeModal"
                 class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
             <div class="text-6xl mb-4">🏆</div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-3">Daily Challenge</h2>
+            <h2 id="challengeTitle" class="text-2xl font-bold text-gray-800 mb-3">Daily Challenge</h2>
             <p id="challengeRiddle" class="text-gray-600 mb-4">Riddle loading...</p>
             <p id="challengeResult" class="font-bold text-green-600"></p>
         </div>
@@ -426,12 +441,13 @@
 
 
     <div id="badgeInputModal"
-        class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10000]">
+        class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10000]" role="dialog"
+        aria-modal="true" aria-labelledby="badgeTitle">
         <div
             class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl relative border-4 border-yellow-500 animate-fade-scale">
             <button id="closeBadgeModal" class="absolute top-2 right-2 text-gray-500 hover:text-red-500">✕</button>
 
-            <h2 class="text-xl font-bold text-center mb-1 text-yellow-700">🏆 LEGENDARY STATUS</h2>
+            <h2 id="badgeTitle" class="text-xl font-bold text-center mb-1 text-yellow-700">🏆 LEGENDARY STATUS</h2>
             <p class="text-sm text-center text-gray-500 mb-4">Personalize your Explorer ID</p>
 
             <div class="space-y-4">
