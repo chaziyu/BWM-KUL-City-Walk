@@ -51,8 +51,8 @@
 
 <body class="overflow-hidden bg-gray-100">
 
-    <!-- Google Translate Widget -->
-    <div id="google_translate_element" class="absolute top-4 right-4 z-[5000]"></div>
+    <!-- Google Translate Widget (Aligned with Zoom buttons) -->
+    <div id="google_translate_element" class="fixed top-[calc(5rem+env(safe-area-inset-top))] right-4 z-[5000]"></div>
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
@@ -117,11 +117,6 @@
     </div>
     <!-- End Map Filter Tabs -->
 
-    <!-- CHAT BUTTON (Bottom Right - Above Recenter) -->
-    <button id="btnChat"
-        class="fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">
-        💬
-    </button>
 
     <!-- GLOBAL UI ZOOM CONTROLS (Moved to align under language button) -->
     <div class="fixed top-[calc(5rem+env(safe-area-inset-top))] left-4 z-[1000] flex flex-col gap-2 pt-2">
@@ -250,9 +245,13 @@
 
 
 
-    <button id="btnRecenter"
-        class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl z-[2100] hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
-        title="Back to Dataran Merdeka">📍</button>
+    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-[1000] flex flex-col gap-3">
+        <button id="btnChat"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
+        <button id="btnRecenter"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+            title="Back to Dataran Merdeka">📍</button>
+    </div>
     <!-- PREVIEW CARD (Bottom Sheet) -->
     <div id="previewCard"
         class="fixed bottom-[env(safe-area-inset-bottom)] left-0 w-full bg-white rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[3000] transform transition-transform duration-300 translate-y-[150%] hidden flex flex-col pb-8">

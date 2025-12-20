@@ -1488,18 +1488,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('btnRecenter').addEventListener('click', () => {
             if (!map) return;
-
-            // 1. If we have a valid user marker (not 0,0), use it
-            const currentPos = userMarker ? userMarker.getLatLng() : null;
-            if (currentPos && (currentPos.lat !== 0 || currentPos.lng !== 0)) {
-                map.setView(currentPos, 18);
-                // Also try to refresh high accuracy
-                map.locate({ setView: true, maxZoom: 18, enableHighAccuracy: true });
-            } else {
-                // 2. Force a location search
-                alert(STRINGS.game.findingLocation || "Locating you...");
-                map.locate({ setView: true, maxZoom: 18, enableHighAccuracy: true });
-            }
+            // Revert back to focusing on map center (Dataran Merdeka)
+            import('./config.js').then(config => {
+                map.setView(config.DEFAULT_CENTER, config.ZOOM);
+            });
         });
 
         // --- HISTORY API HELPER ---
