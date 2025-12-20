@@ -1636,21 +1636,22 @@ document.addEventListener('DOMContentLoaded', () => {
             showAdminTools();
         }
 
-        adminLoginBtn.addEventListener('click', async () => {
-            const password = document.getElementById('adminPasswordInput').value;
-            const errorMsg = document.getElementById('adminErrorMsg');
-            const loginBtn = document.getElementById('adminLoginBtn');
+        // NEW: Allow Enter key to submit (Moved outside click handler)
+        const passwordInput = document.getElementById('adminPasswordInput');
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    adminLoginBtn.click();
+                }
+            });
+        }
 
-            // NEW: Allow Enter key to submit
-            const passwordInput = document.getElementById('adminPasswordInput');
-            if (passwordInput) {
-                passwordInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        loginBtn.click();
-                    }
-                });
-            }
+        adminLoginBtn.addEventListener('click', async () => {
+            const password = passwordInput ? passwordInput.value : ''; // Use existing ref or get value
+            const errorMsg = document.getElementById('adminErrorMsg');
+            // loginBtn is adminLoginBtn
+            const loginBtn = adminLoginBtn;
 
             const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
