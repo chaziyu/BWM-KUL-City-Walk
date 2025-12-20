@@ -51,42 +51,66 @@ let currentTourStep = 0;
 let tourActive = false;
 
 function initTourSystem() {
-    const btnHelp = document.getElementById('btnHelp');
+    console.log('🎓 Initializing Tour System');
     const tourOverlay = document.getElementById('tourOverlay');
     const tourNext = document.getElementById('tourNext');
     const tourBack = document.getElementById('tourBack');
     const tourSkip = document.getElementById('tourSkip');
 
     if (!tourOverlay) {
-        console.warn('Tour overlay not found');
+        console.error('❌ Tour overlay not found - tour system disabled');
         return;
     }
+
+    console.log('✅ Tour overlay found');
 
     // Setup help button if it exists
     function setupHelpButton() {
         const helpBtn = document.getElementById('btnHelp');
-        if (helpBtn && !helpBtn.dataset.tourSetup) {
-            helpBtn.dataset.tourSetup = 'true'; // Mark as setup to avoid duplicates
-            helpBtn.addEventListener('click', () => {
-                console.log('Help button clicked - starting tour');
-                startTour();
-            });
-            console.log('Help button tour listener attached');
+
+        if (!helpBtn) {
+            console.log('⏳ Help button not found yet, will retry...');
+            return false;
         }
+
+        if (helpBtn.dataset.tourSetup === 'true') {
+            console.log('ℹ️ Help button already setup');
+            return true;
+        }
+
+        // Mark as setup to avoid duplicates
+        helpBtn.dataset.tourSetup = 'true';
+
+        // Add click handler
+        helpBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Help button clicked - starting tour');
+            startTour();
+        }, { passive: false });
+
+        console.log('✅ Help button tour listener attached successfully');
+        return true;
     }
 
     // Try to setup immediately
-    setupHelpButton();
+    const initialSetup = setupHelpButton();
 
-    // Also watch for the button to appear (in case it loads after login)
-    const observer = new MutationObserver(() => {
-        setupHelpButton();
-    });
+    // If not found immediately, watch for it to appear
+    if (!initialSetup) {
+        console.log('👀 Setting up MutationObserver to watch for help button');
+        const observer = new MutationObserver((mutations) => {
+            if (setupHelpButton()) {
+                console.log('✅ Help button found and setup via MutationObserver');
+                observer.disconnect();
+            }
+        });
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
 
     // Tour navigation
     if (tourNext) {
