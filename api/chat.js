@@ -79,12 +79,10 @@ module.exports = async (request, response) => {
         // MODEL FALLBACK CHAIN
         // Priority: Speed/Quality -> High Capacity Fallbacks
         const MODELS = [
-            "gemini-3-flash-preview",    // Frontier intelligence & search (Free)
-            "gemini-2.5-pro",            // State-of-the-art reasoning (Free)
-            "gemini-2.5-flash",          // Balanced hybrid reasoning (Free)
-            "gemini-2.0-flash",          // Balanced multimodal performance (Free)
             "gemini-2.5-flash-lite",     // smallest & most cost-effective (Free)
             "gemini-2.0-flash-lite",     // Optimized for scale (Free)
+            "gemini-2.5-flash",          // Balanced hybrid reasoning (Free)
+            "gemini-2.0-flash",          // Balanced multimodal performance (Free)
             "gemma-3-27b",               // High capacity open model (Free)
             "gemma-3-12b",               // Mid-range open model (Free)
             "gemma-3-4b",                // Lightweight device-class (Free)

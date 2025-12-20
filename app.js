@@ -62,6 +62,28 @@ function openGoogleMaps(lat, lon, mode) {
     }
 }
 
+// --- PREMIUM MODAL ANIMATION HELPERS ---
+function animateOpenModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('hidden', 'modal-closing');
+    modal.classList.add('modal-opening');
+}
+
+function animateCloseModal(modal) {
+    if (!modal || modal.classList.contains('hidden')) return;
+    modal.classList.remove('modal-opening');
+    modal.classList.add('modal-closing');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('modal-closing');
+    }, 400); // Match CSS cinematicFadeOut duration
+}
+
+// --- HISTORY API HELPER ---
+function openModalState(modalId) {
+    window.history.pushState({ modal: modalId }, '', window.location.pathname);
+}
+
 // --- GAME STATE ---
 let map = null;
 let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
@@ -1486,6 +1508,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         switchToMapBtn.onclick = () => {
+            // FIX: Explicitly remove landing and gatekeeper once logged in as admin
+            const landing = document.getElementById('landing-page');
+            const gatekeeper = document.getElementById('gatekeeper');
+            if (landing) landing.remove();
+            if (gatekeeper) gatekeeper.remove();
+
             document.getElementById('staff-screen').classList.add('hidden');
             document.getElementById('progress-container').classList.remove('hidden');
             if (!map) {
@@ -1673,27 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // --- PREMIUM MODAL ANIMATION HELPERS ---
-        function animateOpenModal(modal) {
-            if (!modal) return;
-            modal.classList.remove('hidden', 'modal-closing');
-            modal.classList.add('modal-opening');
-        }
-
-        function animateCloseModal(modal) {
-            if (!modal || modal.classList.contains('hidden')) return;
-            modal.classList.remove('modal-opening');
-            modal.classList.add('modal-closing');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('modal-closing');
-            }, 400); // Match CSS cinematicFadeOut duration
-        }
-
-        // --- HISTORY API HELPER ---
-        function openModalState(modalId) {
-            window.history.pushState({ modal: modalId }, '', window.location.pathname);
-        }
+        // Back button handler is already defined below
 
         // --- BACK BUTTON HANDLER ---
         window.addEventListener('popstate', (event) => {
