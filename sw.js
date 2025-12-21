@@ -11,7 +11,7 @@ const ASSETS_TO_CACHE = [
     '/images/cream-paper.png',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-    'https://cdn.tailwindcss.com',
+    // 'https://cdn.tailwindcss.com', // REMOVED: Causes CORS error and breaks SW install
     'https://cdn.jsdelivr.net/npm/marked/marked.min.js'
 ];
 
