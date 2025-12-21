@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no, viewport-fit=cover">
+    <title>BWM KUL City Walk</title>
+
+    <!-- ANTI-CACHE META TAGS -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- PWA INSTALL PROMPT CAPTURE (Must be early) -->
+    <script>
+        // Capture the PWA install prompt event immediately
+        window.deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt captured in inline script');
+            e.preventDefault();
+            window.deferredPrompt = e;
+        });
+    </script>
+
+    <!-- PWA MANIFEST & META -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+
+    <!-- iOS PWA Enhancements -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BWM Walk">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet"
+        href="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.css" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="styles/style.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script
+        src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --content-font-size: 100%;
+        }
+
+        /* Apply the variable to specific text containers */
+        #siteModalInfo,
+        #siteModalMoreContent {
+            font-size: var(--content-font-size);
+        }
+    </style>
+</head>
+
+<body class="overflow-hidden bg-gray-100">
+
+    <!-- Google Translate Widget (Aligned with Zoom buttons) -->
+    <div id="google_translate_element" class="fixed top-[calc(5rem+env(safe-area-inset-top))] right-4 z-[5000]"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,ms,zh-CN,zh-TW,ta,id,ar,ja,ko,th,vi,fr,de,es,ru',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript"
+        src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <!-- ROBUST JS SUPPRESSION FOR GOOGLE TRANSLATE POPUPS -->
+    <script>
+        (function () {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element
+                            // 1. Remove Banner Frame (Top Bar)
+                            if (node.classList && (node.classList.contains('goog-te-banner-frame') || node.tagName === 'IFRAME' && node.id === ':1.container')) {
+                                node.remove();
+                                document.body.style.top = '0px'; // Force reset
+                            }
+                            // 2. Remove "Satisfied" Popups and Tooltips
+                            if (node.classList && (node.classList.contains('goog-te-balloon-frame') || node.classList.contains('goog-tooltip'))) {
+                                node.remove();
+                            }
+                            // 3. Remove by ID partial match (often used by balloons)
+                            if (node.id && node.id.includes('goog-gt-')) {
+                                node.remove();
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Start observing the document body for added nodes
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Fallback: Check ONCE after 2 seconds to catch stragglers, then stop.
+            setTimeout(() => {
+                const popups = document.querySelectorAll('.goog-te-balloon-frame, .goog-te-banner-frame, .goog-tooltip, iframe[id^=":"]');
+                popups.forEach(el => el.remove());
+                if (document.body.style.top !== '0px') document.body.style.top = '0px';
+            }, 2000);
+        })();
+    </script>
+
+    <!-- MAP FILTER TABS -->
+    <!-- MAP FILTER TABS (BOTTOM CENTER - VERTICAL STACK) -->
+    <div id="filterTabs"
+        class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-1/2 transform -translate-x-1/2 z-[2000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-2xl p-2 flex flex-col md:flex-row gap-2 w-48 md:w-auto transition-all">
+        <button id="tabMustVisit"
+            class="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all">
+            ✨ Must Visit
+        </button>
+        <button id="tabRecommended"
+            class="w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">
+            Recommended
+        </button>
+    </div>
+    <!-- End Map Filter Tabs -->
+
+
+    <!-- GLOBAL UI ZOOM CONTROLS (Moved to align under language button) -->
+    <div class="fixed top-[calc(5rem+env(safe-area-inset-top))] left-4 z-[1000] flex flex-col gap-2 pt-2">
+        <button id="btnUIZoomIn" aria-label="Zoom In"
+            class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">
+            +
+        </button>
+        <button id="btnUIZoomOut" aria-label="Zoom Out"
+            class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">
+            -
+        </button>
+    </div>
+    <!-- END GLOBAL UI ZOOM CONTROLS -->
+
+    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 z-[1000] flex flex-col gap-3">
+        <button id="btnChallenge" aria-label="Daily Challenge"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🏆</button>
+        <button id="btnPassport" aria-label="My Passport"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🛂</button>
+    </div>
+    <!-- End Map Filter Tabs -->
+
+
+
+    <div id="landing-page"
+        class="fixed inset-0 bg-white z-[6000] flex flex-col justify-between items-center p-4 sm:p-6 text-center overflow-y-auto">
+
+        <!-- Top Spacer for vertical centering on larger screens -->
+        <div class="flex-1 hidden sm:block"></div>
+
+        <!-- Title Section -->
+        <div class="w-full max-w-2xl px-4 pt-8 sm:pt-0 animate-fade-in">
+            <h1
+                class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight leading-tight">
+                BWM KUL City Walk
+            </h1>
+            <p class="text-[10px] sm:text-xs md:text-sm text-gray-500 uppercase tracking-wider sm:tracking-widest px-4">
+                Discover Kuala Lumpur's Heritage Buildings
+            </p>
+        </div>
+
+        <!-- Buttons Section - Centered -->
+        <div class="w-full max-w-xs mx-auto space-y-3 sm:space-y-4 my-8 sm:my-10 animate-slide-up">
+            <!-- ADDED: Install App Button -->
+            <button id="btnInstallApp"
+                class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 sm:py-4 px-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2 transform hover:-translate-y-1">
+                <span class="text-xl">📲</span>
+                <span>Install App</span>
+            </button>
+            <button id="btnVisitor"
+                class="w-full group relative flex justify-center items-center py-3 sm:py-4 px-4 border border-transparent text-sm sm:text-base font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95">
+                <span class="mr-2 sm:mr-3 text-lg sm:text-xl">🗝️</span>
+                <span>Enter with Passkey</span>
+            </button>
+            <button id="btnStaff"
+                class="w-full flex justify-center items-center py-3 sm:py-4 px-4 border-2 border-gray-200 text-sm sm:text-base font-bold rounded-xl text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-all active:scale-95">
+                <span class="mr-2">🧑‍💼</span>
+                <span>BWM Staff Login</span>
+            </button>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="w-full max-w-xs mx-auto space-y-3 pb-6 sm:pb-8">
+            <button id="btnPreLoginHelp"
+                class="w-full flex justify-center items-center py-2.5 sm:py-3 px-4 border border-gray-300 text-xs sm:text-sm font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all active:scale-95">
+                <span class="mr-2">ℹ️</span>
+                <span>How to Use This App</span>
+            </button>
+            <p class="text-[10px] sm:text-xs text-gray-400 animate-fade-in px-4 leading-relaxed">
+                A SULAM Project by Universiti Malaya & BWM
+            </p>
+        </div>
+
+        <!-- Bottom Spacer for vertical centering on larger screens -->
+        <div class="flex-1 hidden sm:block"></div>
+    </div>
+
+    <!-- PWA INSTALL PROMPT -->
+    <div id="pwaInstallPrompt"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
+            <button id="closePWAPrompt"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+
+            <div class="text-center mb-4">
+                <div class="text-6xl mb-3">📱</div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Install for Best Experience!</h2>
+                <p class="text-gray-600 text-sm">Add BWM KUL City Walk to your home screen for:</p>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex items-start gap-3 bg-blue-50 p-3 rounded-lg">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Faster Loading</p>
+                        <p class="text-xs text-gray-600">Instant access like a native app</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-green-50 p-3 rounded-lg">
+                    <span class="text-2xl">📍</span>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Better GPS Performance</p>
+                        <p class="text-xs text-gray-600">More accurate location tracking</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-purple-50 p-3 rounded-lg">
+                    <span class="text-2xl">🎯</span>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Full Screen Mode</p>
+                        <p class="text-xs text-gray-600">Immersive heritage experience</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Android/Chrome Install Button -->
+            <button id="pwaInstallBtn"
+                class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition shadow-lg mb-3 flex items-center justify-center gap-2 hidden">
+                <span class="text-xl">📥</span>
+                <span>Add to Home Screen</span>
+            </button>
+
+            <!-- iOS Instructions -->
+            <div id="iosInstructions" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+                <p class="font-semibold text-gray-900 text-sm mb-2">📱 For iPhone/iPad:</p>
+                <ol class="text-xs text-gray-700 space-y-1 list-decimal list-inside">
+                    <li>Tap the <strong>Share</strong> button <span class="inline-block">⎙</span> (bottom Safari bar)
+                    </li>
+                    <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                    <li>Tap <strong>"Add"</strong> to confirm</li>
+                </ol>
+            </div>
+
+            <!-- Generic Instructions -->
+            <!-- Generic Instructions (Fallback) -->
+            <div id="genericInstructions"
+                class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-3 text-left">
+                <p class="font-bold text-gray-900 text-sm mb-2">Can't see the install button?</p>
+                <ul class="text-xs text-gray-700 space-y-2 list-disc pl-4">
+                    <li><strong>Desktop:</strong> Look for the <span class="bg-gray-200 px-1 rounded">⊕</span> icon in
+                        your address bar.</li>
+                    <li><strong>Android:</strong> Tap <span class="bg-gray-200 px-1 rounded">⋮</span> menu -> "Install
+                        App".</li>
+                    <li><strong>Already Installed?</strong> Check your home screen or apps list.</li>
+                    <li>Note: Works best in <strong>Chrome</strong>, <strong>Edge</strong>, or <strong>Safari</strong>.
+                    </li>
+                </ul>
+            </div>
+
+            <button id="continueBrowser"
+                class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition text-sm">
+                Maybe Later, Continue in Browser
+            </button>
+
+            <p class="text-xs text-gray-500 text-center mt-3">You can always install later from your browser menu</p>
+        </div>
+    </div>
+
+    <div id="gatekeeper"
+        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4 transition-opacity duration-500">
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative animate-fade-scale">
+            <button id="backToHome"
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
+                Back</button>
+            <div class="mb-4 mt-2 text-5xl">🔐</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Visitor Access</h2>
+            <p class="text-gray-600 mb-6 text-sm">Please enter the Passkey provided by the counter.</p>
+            <input type="text" id="passcodeInput" placeholder="e.g. AB-12345"
+                class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition-all duration-200 font-mono">
+            <button id="unlockBtn"
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg">Verify
+                & Unlock</button>
+            <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
+        </div>
+    </div>
+
+    <!-- PWA/Browser Login Warning Modal -->
+    <div id="platformWarningModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
+            <div class="text-center mb-4">
+                <div id="warningIcon" class="text-6xl mb-3">⚠️</div>
+                <h2 id="warningTitle" class="text-2xl font-bold text-gray-900 mb-2">Important Notice</h2>
+            </div>
+
+            <div id="warningContent" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-4">
+                <p class="text-sm text-gray-800 leading-relaxed"></p>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
+                <p class="text-xs text-blue-900 font-semibold mb-2">🔒 Device Locking Explained:</p>
+                <p class="text-xs text-gray-700">Your passkey will be locked to <strong>one platform only</strong>
+                    (either PWA or Browser). This security feature prevents sharing passkeys across devices.</p>
+            </div>
+
+            <!-- Copy Passkey Section -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                <p class="text-xs text-gray-600 font-semibold mb-2">📋 Your Passkey:</p>
+                <div class="flex gap-2">
+                    <input id="passkeyDisplay" type="text" readonly
+                        class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-mono text-sm text-gray-800 font-bold uppercase tracking-widest">
+                    <button id="copyPasskeyBtn"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-semibold text-sm flex items-center gap-1 whitespace-nowrap">
+                        <span>📋</span>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <p id="copySuccess" class="text-xs text-green-600 font-semibold mt-2 hidden">✓ Copied to clipboard!</p>
+            </div>
+
+            <div class="space-y-3">
+                <button id="continueLoginBtn"
+                    class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg">
+                    I Understand, Continue Login
+                </button>
+                <button id="cancelLoginBtn"
+                    class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all duration-200">
+                    Cancel
+                </button>
+                <button id="whatIsPWABtn"
+                    class="w-full bg-purple-50 text-purple-700 font-semibold py-2 rounded-xl hover:bg-purple-100 transition-all duration-200 border-2 border-purple-200 flex items-center justify-center gap-2">
+                    <span>❓</span>
+                    <span>What is PWA?</span>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center mt-4">💡 Tip: We recommend using PWA for the best experience</p>
+        </div>
+    </div>
+
+    <!-- PWA Explanation Modal -->
+    <div id="pwaExplanationModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[8500] hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-scale relative max-h-[85vh] overflow-y-auto">
+            <button id="closePWAExplanation"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+
+            <div class="text-center mb-4">
+                <div class="text-6xl mb-3">📱</div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">What is a PWA?</h2>
+                <p class="text-sm text-gray-600">Progressive Web App</p>
+            </div>
+
+            <div class="space-y-4 text-left">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                    <h3 class="font-bold text-blue-900 mb-2">📖 What is it?</h3>
+                    <p class="text-sm text-gray-700">A PWA is a website that works like a native mobile app. You can
+                        install it on your phone's home screen and use it just like any other app - even with better GPS
+                        performance and offline features!</p>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                    <h3 class="font-bold text-green-900 mb-2">✨ Benefits</h3>
+                    <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                        <li>⚡ Faster loading times</li>
+                        <li>📍 Better GPS accuracy for heritage trails</li>
+                        <li>🎯 Full-screen immersive experience</li>
+                        <li>🔔 Works like a real app on your home screen</li>
+                        <li>💾 No app store download required!</li>
+                    </ul>
+                </div>
+
+                <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-lg">
+                    <h3 class="font-bold text-purple-900 mb-2">📲 How to Install</h3>
+
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <p class="font-semibold text-gray-900 mb-1">🍎 iPhone/iPad (Safari):</p>
+                            <ol class="text-gray-700 list-decimal list-inside space-y-1 ml-2">
+                                <li>Tap the <strong>Share button</strong> <span class="inline-block">⎙</span> at the
+                                    bottom</li>
+                                <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                                <li>Tap <strong>"Add"</strong> to confirm</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <p class="font-semibold text-gray-900 mb-1">🤖 Android (Chrome):</p>
+                            <ol class="text-gray-700 list-decimal list-inside space-y-1 ml-2">
+                                <li>Tap the <strong>menu button</strong> <span class="inline-block">⋮</span> (three
+                                    dots)</li>
+                                <li>Select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></li>
+                                <li>Tap <strong>"Install"</strong> to confirm</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <p class="font-semibold text-gray-900 mb-1">💻 Desktop (Chrome/Edge):</p>
+                            <ol class="text-gray-700 list-decimal list-inside space-y-1 ml-2">
+                                <li>Look for the <strong>install icon</strong> 📥 in the address bar</li>
+                                <li>Click it and select <strong>"Install"</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded-lg">
+                    <p class="text-xs text-gray-700">
+                        <strong>💡 Pro Tip:</strong> Once installed, the PWA icon will appear on your home screen.
+                        Tap it to launch the app experience - no browser bars, just pure heritage exploration!
+                    </p>
+                </div>
+            </div>
+
+            <button id="gotItPWABtn"
+                class="w-full mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg">
+                Got It, Let's Continue!
+            </button>
+        </div>
+    </div>
+
+    <div id="staff-screen"
+        class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-6 text-center text-white transition-opacity duration-500">
+        <div
+            class="bg-white p-6 md:p-8 rounded-xl shadow-2xl max-w-sm w-full text-center relative text-gray-900 animate-fade-scale">
+            <button id="closeStaffScreen"
+                class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
+                Back</button>
+            <div class="mb-4 mt-2 text-5xl">🧑‍💼</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Staff Access</h2>
+            <p class="text-gray-600 mb-6 text-sm">Enter the admin password to Login.</p>
+            <div id="adminLoginForm">
+                <input type="password" id="adminPasswordInput" placeholder="Admin Password"
+                    class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition-all duration-200">
+                <button id="adminLoginBtn"
+                    class="w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-lg">Login</button>
+                <p id="adminErrorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Wrong password.</p>
+            </div>
+            <div id="adminResult" class="hidden">
+                <p class="text-gray-600 mb-2" id="passkeyDate"></p>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
+                    <p class="text-2xl font-bold font-mono text-blue-600 mb-1" id="passkeyResult">Click "Generate New
+                        Passkey" to create a code</p>
+                    <p id="adminStatusMsg" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hidden">
+                        New Code Generated!</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="adminGenerateBtn"
+                        class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md flex items-center justify-center">
+                        <span class="mr-2">🪄</span> Generate New Passkey
+                    </button>
+                    <button id="adminShareBtn"
+                        class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition shadow-md hidden flex items-center justify-center">
+                        <span class="mr-2">📧</span> Share via Email
+                    </button>
+                    <button id="adminSwitchToMapBtn"
+                        class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition shadow-md flex items-center justify-center">
+                        <span class="mr-2">🗺️</span> Switch to Map
+                    </button>
+                    <button id="adminLogoutBtn"
+                        class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition flex items-center justify-center">
+                        <span class="mr-2">🚪</span> Log Out
+                    </button>
+                </div>
+
+                <div class="mt-6 border-t pt-4">
+                    <p class="text-xs text-gray-500">To check your AI API usage and quota, log in to your Google Cloud
+                        account and visit the dashboard:</p>
+                    <a href="https://console.cloud.google.com/apis/dashboard" target="_blank"
+                        class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
+                </div>
+            </div>
+        </div>
+        <!-- MOVED: Admin Chat Button (Direct child of staff-screen for correct positioning) -->
+        <button id="btnAdminChat" aria-label="Open AI Assistant"
+            class="absolute bottom-6 right-6 bg-white/10 backdrop-blur-sm p-4 rounded-full shadow-2xl hover:bg-white/20 text-3xl transition transform hover:scale-110 border-2 border-white/30 text-white z-50 flex items-center justify-center">
+            💬
+        </button>
+    </div>
+
+    <div id="progress-container" class="fixed top-[env(safe-area-inset-top)] left-0 w-full z-[1000] hidden px-4 pt-4">
+        <div
+            class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto flex items-center">
+            <div class="bg-gray-200 rounded-full h-3 w-full mx-3 relative overflow-hidden">
+                <div id="progressBar"
+                    class="bg-gradient-to-r from-green-400 to-green-500 h-full w-0 transition-all duration-700 ease-out rounded-full">
+                </div>
+            </div>
+            <span id="progressText" class="text-xs font-bold text-gray-700 whitespace-nowrap mr-2">0/11 Sites</span>
+        </div>
+    </div>
+
+
+    <div id="map" class="w-full h-[100dvh] z-10"></div>
+
+
+
+    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-[2500] flex flex-col gap-3">
+        <button id="btnAdminToggle" aria-label="Toggle Stats / Admin Tools"
+            class="bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-2xl hover:bg-indigo-700 transition transform hover:scale-105 border-2 border-indigo-400 hidden flex items-center gap-2 font-bold text-sm mb-2"
+            title="Switch to Admin Tools">
+            <span>🛠️</span>
+            <span>Staff Tools</span>
+        </button>
+
+        <!-- ADDED: Help/Guide Button -->
+        <button id="btnMapHelp" aria-label="Help & Guide"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+            title="Help & Guide">❓</button>
+
+        <button id="btnChat" aria-label="Open AI Tour Guide"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
+        <button id="btnRecenter" aria-label="Recenter Map"
+            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+            title="Back to Dataran Merdeka">📍</button>
+    </div>
+    <!-- PREVIEW CARD (Bottom Sheet) -->
+    <div id="previewCard"
+        class="fixed bottom-[env(safe-area-inset-bottom)] left-0 w-full bg-white rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[3000] transform transition-transform duration-300 translate-y-[150%] hidden flex flex-col pb-8">
+        <div class="w-full flex justify-center pt-3 pb-1">
+            <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+        </div>
+        <div class="p-4 flex gap-4 items-center">
+            <img id="previewImage" src="" alt="Site" class="w-20 h-20 rounded-lg object-cover bg-gray-200">
+            <div class="flex-1">
+                <h3 id="previewTitle" class="text-lg font-bold text-gray-900 leading-tight mb-1">Site Name</h3>
+                <p id="previewDist" class="text-sm text-gray-500 mb-2">Tap for details</p>
+                <button id="previewOpenBtn"
+                    class="text-blue-600 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition">
+                    Read Full History →
+                </button>
+            </div>
+            <button id="previewCloseBtn"
+                class="self-start text-gray-400 hover:text-gray-800 p-2 bg-gray-100 rounded-full">✕</button>
+        </div>
+    </div>
+
+
+
+    <div id="welcomeModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="welcomeTitle">
+        <div class="classic-modal-content p-6 text-center animate-fade-scale">
+            <h2 id="welcomeTitle" class="text-2xl font-bold text-gray-800 mb-3">Welcome to BWM KUL City Walk!</h2>
+            <p class="text-gray-600 mb-6">Explore the 24 pins to discover the city's history. Collect all 11 stamps from
+                the main sites to complete your passport!</p>
+            <button id="closeWelcomeModal"
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">Start
+                Exploring</button>
+        </div>
+    </div>
+
+    <div id="userGuideModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="userGuideTitle">
+        <div class="classic-modal-content p-6 animate-fade-scale max-h-[85vh] overflow-y-auto">
+            <button id="closeUserGuideModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <div class="text-center mb-4">
+                <div class="text-5xl mb-3">📖</div>
+                <h2 id="userGuideTitle" class="text-2xl font-bold text-gray-800 mb-2">How to Use This App</h2>
+            </div>
+
+            <div class="text-left space-y-4 text-gray-700">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <h3 class="font-bold text-blue-900 mb-2">📍 What is BWM KUL City Walk?</h3>
+                    <p class="text-sm">An interactive heritage trail that guides you through 11 historic sites in Kuala
+                        Lumpur. Collect stamps, learn history, and explore KL's architectural gems!</p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">🔑 How to Get Started</h3>
+                    <ol class="list-decimal list-inside text-sm space-y-2 ml-2">
+                        <li><strong>Get Your Passkey:</strong> Visit the BWM counter or ticket booth to receive a unique
+                            daily passkey</li>
+                        <li><strong>Enter Passkey:</strong> Click "Enter with Passkey" and type the code provided</li>
+                        <li><strong>Start Exploring:</strong> The interactive map will open, showing all heritage sites
+                        </li>
+                    </ol>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">🎮 Key Features</h3>
+                    <ul class="text-sm space-y-2">
+                        <li><strong>🗺️ Interactive Map:</strong> Tap any site marker to learn its history</li>
+                        <li><strong>📖 Digital Passport:</strong> Answer quiz questions to collect stamps</li>
+                        <li><strong>💬 AI Tour Guide:</strong> Ask questions about the sites</li>
+                        <li><strong>📍 GPS Navigation:</strong> Get walking directions to each site</li>
+                        <li><strong>🏆 Daily Challenge:</strong> Solve riddles to discover mystery locations</li>
+                        <li><strong>🎓 Explorer Badge:</strong> Download your personalized completion certificate</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">❓ Need Help While Exploring?</h3>
+                    <p class="text-sm">Look for the purple <strong>?</strong> button in the bottom-right corner after
+                        login. It provides a quick interactive tour of all features!</p>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                    <h3 class="font-bold text-green-900 mb-2">💡 Pro Tip</h3>
+                    <p class="text-sm">The app works best outdoors with GPS enabled. Make sure location services are
+                        turned on for the best experience!</p>
+                </div>
+            </div>
+
+            <button id="closeUserGuideModalBtn"
+                class="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">
+                Got it, Let's Start!
+            </button>
+        </div>
+    </div>
+
+    <div id="siteModal" class="classic-modal-backdrop fixed inset-0 hidden" role="dialog" aria-modal="true"
+        aria-labelledby="siteModalTitle">
+        <div class="classic-modal-content animate-fade-scale">
+            <div class="relative">
+                <img id="siteModalImage" src="https://placehold.co/600x400/eee/ccc?text=Site+Image" alt="Heritage Site"
+                    class="w-full h-48 object-cover">
+                <button id="closeSiteModal"
+                    class="absolute top-3 right-3 bg-white text-gray-800 rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition shadow-lg text-3xl font-bold border-2 border-gray-200 z-50">×</button>
+            </div>
+            <div class="p-6 max-h-[60vh] overflow-y-auto">
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                    <span id="siteModalLabel" class="text-gray-500 font-medium mr-2"></span>
+                    <span id="siteModalTitle">Site Title</span>
+                </h2>
+
+                <!-- Zoom Controls -->
+                <div class="flex gap-2 mb-2">
+                    <button id="btnTextSizeSmall"
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200">A-</button>
+                    <button id="btnTextSizeReset"
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200">Reset</button>
+                    <button id="btnTextSizeLarge"
+                        class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200">A+</button>
+                </div>
+
+                <p id="siteModalInfo" class="text-gray-700 mb-4">Site info loading...</p>
+                <!-- More Info: Collapsible detailed description -->
+                <div id="siteModalMore" class="mb-4">
+                    <button id="siteModalMoreBtn"
+                        class="w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-700 transition-all duration-200 mb-2 text-sm">More
+                        info</button>
+                    <div id="siteModalMoreContent"
+                        class="mt-2 text-gray-700 hidden whitespace-pre-line bg-gray-100 border border-gray-200 rounded-lg p-3">
+                    </div>
+                </div>
+
+                <button id="siteModalCheckInBtn"
+                    class="w-full bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-800 transition-all duration-200 mb-4 text-sm">
+                    Check In to this Site
+                </button>
+
+                <button id="siteModalSolveChallengeBtn"
+                    class="w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-600 transition-all duration-200 mb-4 text-sm hidden">
+                    🏆 Solve Daily Challenge
+                </button>
+
+                <div class="flex gap-2">
+                    <button id="siteModalDirections"
+                        class="flex-1 bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 transition-all duration-200 text-sm">
+                        Get Directions
+                    </button>
+                    <button id="siteModalAskAI"
+                        class="flex-1 bg-gray-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-gray-700 transition-all duration-200 text-sm">
+                        Ask AI
+                    </button>
+                </div>
+
+                <div class="flex gap-2 mt-2">
+                    <a id="siteModalFoodBtn" href="#" target="_blank"
+                        class="flex-1 text-center bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm">
+                        🍔 Find Food
+                    </a>
+                    <a id="siteModalHotelBtn" href="#" target="_blank"
+                        class="flex-1 text-center bg-blue-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm">
+                        🛏️ Find Hotel
+                    </a>
+                </div>
+
+                <div id="siteModalQuizArea" class="bg-gray-100 p-4 rounded-lg mt-4">
+                    <p id="siteModalQuizQ" class="font-bold text-gray-800 mb-2">Quiz: Question loading...</p>
+                    <div id="siteModalQuizOptions" class="grid grid-cols-1 gap-2"></div>
+                    <p id="siteModalHintText"
+                        class="text-sm mt-2 text-gray-500 italic hidden bg-yellow-50 p-2 rounded border border-yellow-200 text-center">
+                    </p>
+                    <p id="siteModalQuizResult" class="text-sm mt-2 text-center font-bold"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatModal" class="modern-modal-backdrop fixed inset-0 hidden" role="dialog" aria-modal="true"
+        aria-labelledby="chatModalTitle">
+        <div class="modern-modal-content animate-fade-scale">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 id="chatModalTitle" class="text-xl font-bold text-gray-900">AI Tour Guide</h2>
+                <button id="closeChatModal" class="text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            </div>
+            <div id="chatHistory" class="flex-1 p-4 space-y-4 overflow-y-auto bg-gray-50 flex flex-col">
+                <div class="p-3 rounded-lg bg-blue-100 text-blue-900 max-w-xs shadow-sm self-start">
+                    <p class="font-bold text-sm">AI Guide</p>
+                    <p>Hello! Ask me anything about the heritage sites.</p>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-white">
+                <p id="chatLimitText" class="text-xs text-gray-500 text-center mb-2">You have 10 messages remaining.</p>
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Ask a question..."
+                        class="flex-1 border-2 border-gray-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 transition">
+                    <button id="chatSendBtn"
+                        class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIRECTIONS VIEWER (Embedded Map) -->
+    <div id="directionsModal" class="modern-modal-backdrop fixed inset-0 z-[8500] hidden" role="dialog"
+        aria-modal="true" aria-labelledby="directionsTitle">
+        <div class="modern-modal-content animate-fade-scale flex flex-col h-[85vh] max-w-4xl">
+            <div class="flex justify-between items-center p-4 border-b bg-white rounded-t-3xl">
+                <h2 id="directionsTitle" class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span>🗺️</span> Directions
+                </h2>
+                <button id="closeDirectionsModal"
+                    class="text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            </div>
+
+            <!-- Info Banner -->
+            <div class="bg-blue-50 border-b border-blue-100 px-4 py-2.5">
+                <div class="flex items-center gap-2 text-xs text-blue-800">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <span><strong>Quick Preview:</strong> Routes shown below • Tap "Open in Google Maps" for full
+                        details & step-by-step directions</span>
+                </div>
+            </div>
+
+            <div class="flex-1 bg-gray-100 flex flex-col overflow-hidden relative">
+                <!-- Loading Shimmer -->
+                <div id="directionsLoading" class="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin">
+                        </div>
+                        <p class="text-sm font-bold text-gray-600 animate-pulse">Loading Route...</p>
+                    </div>
+                </div>
+
+                <iframe id="directionsIframe" class="w-full h-full border-none" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+
+
+            <!-- Enhanced Footer with Prominent Google Maps Button -->
+            <div class="p-5 border-t bg-gradient-to-br from-white to-gray-50 rounded-b-3xl">
+                <!-- Helpful Context Text -->
+                <div class="mb-3 text-center">
+                    <p class="text-xs text-gray-600 mb-1">
+                        💡 <strong>Want full route details & options?</strong>
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        Click below to see step-by-step directions in Google Maps
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col gap-3">
+                    <!-- Primary: Open in Google Maps -->
+                    <a id="externalMapsLink" href="#" target="_blank"
+                        class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] text-center flex items-center justify-center gap-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7">
+                            </path>
+                        </svg>
+                        <span class="text-lg">Open in Google Maps</span>
+                        <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">View All Routes</span>
+                    </a>
+
+                    <!-- Secondary: Back Button -->
+                    <button id="closeDirectionsModalBtn"
+                        class="bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-200 transition-all duration-200 text-center">
+                        ← Back to Heritage Walk
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="passportModal" class="classic-modal-backdrop fixed inset-0 z-[9000] hidden" role="dialog" aria-modal="true"
+        aria-labelledby="passportTitle">
+        <div class="classic-modal-content p-6 text-center animate-fade-scale">
+            <button id="closePassportModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <h2 id="passportTitle" class="text-2xl font-bold text-gray-800 mb-2">My Passport</h2>
+            <p id="passportInfo" class="text-gray-600 mb-6 text-sm italic">Visited <span id="visitedCount">0</span>
+                of
+                11 heritage buildings in Kuala Lumpur</p>
+
+            <div id="passportGrid"
+                class="max-h-[60vh] overflow-y-auto grid grid-cols-3 gap-4 p-2 bg-gray-100 rounded-lg">
+            </div>
+
+            <div class="mt-4 flex flex-col gap-2">
+                <button onclick="document.getElementById('badgeInputModal').classList.remove('hidden');"
+                    class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold py-3 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition shadow-md flex items-center justify-center gap-2">
+                    🎓 Create / Download Explorer ID
+                </button>
+                <button id="sharePassportBtn"
+                    class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition shadow-md flex items-center justify-center gap-2">
+                    Share Progress on WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="congratsModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="congratsTitle">
+        <div class="classic-modal-content p-6 text-center animate-fade-scale">
+            <button id="closeCongratsModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 id="congratsTitle" class="text-2xl font-bold text-gray-800 mb-3">Congratulations!</h2>
+            <p class="text-gray-600 mb-6">You have visited all 11 heritage buildings in Kuala Lumpur and completed
+                the
+                BWM KUL City Walk Passport!</p>
+            <button id="shareWhatsAppBtn"
+                class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition shadow-lg">
+                Share on WhatsApp
+            </button>
+            <button onclick="document.getElementById('badgeInputModal').classList.remove('hidden')"
+                class="bg-blue-600 text-white px-4 py-2 rounded mt-2">
+                Claim Explorer Badge
+            </button>
+        </div>
+    </div>
+
+    <div id="challengeModal" class="classic-modal-backdrop fixed inset-0 z-[9000] flex hidden" role="dialog"
+        aria-modal="true" aria-labelledby="challengeTitle">
+        <div class="classic-modal-content p-6 text-center animate-fade-scale">
+            <button id="closeChallengeModal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-2xl transition">×</button>
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 id="challengeTitle" class="text-2xl font-bold text-gray-800 mb-3">Daily Challenge</h2>
+            <p id="challengeRiddle" class="text-gray-600 mb-4">Riddle loading...</p>
+            <p id="challengeResult" class="font-bold text-green-600"></p>
+        </div>
+    </div>
+
+
+    <div id="badgeInputModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[10000]" role="dialog"
+        aria-modal="true" aria-labelledby="badgeTitle">
+        <div
+            class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl relative border-4 border-yellow-500 animate-fade-scale">
+            <button id="closeBadgeModal" class="absolute top-2 right-2 text-gray-500 hover:text-red-500">✕</button>
+
+            <h2 id="badgeTitle" class="text-xl font-bold text-center mb-1 text-yellow-700">🏆 LEGENDARY STATUS</h2>
+            <p class="text-sm text-center text-gray-500 mb-4">Personalize your Explorer ID</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Your Name</label>
+                    <input type="text" id="explorerNameInput" placeholder="e.g. Charlie Chaplin" maxlength="20"
+                        class="w-full border-2 border-gray-300 rounded p-2 focus:border-yellow-500 outline-none font-bold text-gray-800">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Profile Photo
+                        (Optional)</label>
+                    <input type="file" id="explorerPhotoInput" accept="image/*"
+                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+                </div>
+
+                <button id="btnGenerateBadge"
+                    class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold py-3 rounded shadow-lg transform active:scale-95 transition">
+                    ✨ Generate & Download ID
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hiddenBadgeTemplate"
+        class="fixed top-0 left-0 z-[-50] opacity-0 pointer-events-none w-[800px] h-[450px] bg-[#fdfaf5] border-[12px] border-[#1a3c5e] rounded-lg shadow-2xl flex flex-col overflow-hidden font-serif relative">
+
+        <div class="absolute inset-0 opacity-[0.05] bg-[url('images/cream-paper.png')] pointer-events-none"></div>
+
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#1a3c5e] opacity-[0.03] text-9xl font-bold pointer-events-none uppercase tracking-widest">
+            Warisan
+        </div>
+
+        <div class="flex flex-1 p-8 relative z-10">
+
+            <div class="w-[240px] flex flex-col items-center pr-8 border-r border-[#1a3c5e]/20 relative shrink-0">
+                <div class="text-center mb-6">
+                    <h4 class="text-[#1a3c5e] text-sm font-bold uppercase tracking-widest">Passport</h4>
+                    <h4 class="text-[#b4975a] text-xs font-bold uppercase tracking-widest">Pasport</h4>
+                </div>
+
+                <div class="w-44 h-52 bg-white border-2 border-[#1a3c5e] p-1 relative shadow-sm">
+                    <img id="badgeProfileImage" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                        class="w-full h-full object-cover" alt="Explorer">
+
+                    <div id="badgeStatusStamp"
+                        class="absolute -bottom-5 -right-5 w-24 h-24 border-4 border-red-900/70 rounded-full flex items-center justify-center transform rotate-[-15deg] opacity-90 mix-blend-multiply pointer-events-none bg-red-900/5">
+                        <div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">
+                            BWM<br>Kuala Lumpur<br>COMPLETED
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 pl-10 flex flex-col">
+                <div class="mb-8 border-b border-[#1a3c5e]/10 pb-3">
+                    <h1 class="text-4xl font-bold text-[#1a3c5e] uppercase leading-none">Malaysia</h1>
+                    <h2 class="text-sm text-[#b4975a] font-bold uppercase tracking-wider mt-1">Warisan Kuala Lumpur
+                    </h2>
+                </div>
+
+                <div class="space-y-6 flex-1">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase font-semibold">Name / Nama</p>
+                        <h2 id="badgeNameDisplay"
+                            class="text-3xl font-bold text-[#1a3c5e] font-sans uppercase leading-tight break-words">
+                            Unknown Explorer</h2>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-4">
+                        <div class="col-span-3">
+                            <p class="text-xs text-gray-500 uppercase font-semibold min-h-[32px] flex items-end pb-1">
+                                Status / Taraf</p>
+                            <p id="badgeStatusDisplay"
+                                class="text-xl font-bold text-[#1a3c5e] uppercase whitespace-nowrap leading-none tracking-wide">
+                                Master Explorer</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p
+                                class="text-xs text-gray-500 uppercase font-semibold min-h-[32px] flex items-end pb-1 leading-tight">
+                                Date of Issue /<br>Tarikh Dikeluarkan</p>
+                            <p id="badgeDateDisplay" class="text-xl font-bold text-[#1a3c5e] font-sans leading-none">
+                                --/--/----</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="mt-4 mb-2 p-4 bg-[#1a3c5e]/5 border-l-4 border-[#b4975a] rounded-r-md flex items-center min-h-[80px]">
+                    <p id="badgeCaptionDisplay" class="text-sm text-[#1a3c5e] leading-relaxed italic text-justify">
+                        "The bearer of this document has successfully navigated and documented all 11 designated
+                        heritage sites within the historic core of Kuala Lumpur."
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="h-4 w-full bg-[#1a3c5e]/10 border-t border-[#1a3c5e]/20"></div>
+    </div>
+
+    <audio id="chaChingSound"
+        src="https://raw.githubusercontent.com/chaziyu/jejak-warisan/main/images/ca%20ching%20sounds%20effect.mp3"
+        preload="auto"></audio>
+    <audio id="soundEffect2" src="images/Sound%20effect%202.m4a" preload="auto"></audio>
+
+    <!-- INTERACTIVE TOUR OVERLAY -->
+
+
+
+    <script src="app.js" type="module"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered!', reg))
+                    .catch(err => console.log('SW registration failed: ', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
