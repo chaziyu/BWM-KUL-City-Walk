@@ -1711,6 +1711,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatSendBtn = document.getElementById('chatSendBtn');
                     chatLimitText = document.getElementById('chatLimitText');
                     chatHistoryEl = document.getElementById('chatHistory');
+                    closeChatModal = document.getElementById('closeChatModal');
+
+                    // Attach Close Listener immediately
+                    if (closeChatModal) {
+                        closeChatModal.addEventListener('click', () => {
+                            // Using generic Close Modal animation
+                            if (typeof animateCloseModal === 'function') {
+                                animateCloseModal(chatModal);
+                            } else {
+                                chatModal.classList.add('hidden');
+                            }
+                        });
+                    }
                 }
 
                 // Re-use existing chat modal logic
