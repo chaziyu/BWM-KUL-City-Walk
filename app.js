@@ -1322,7 +1322,17 @@ function updateGameProgress() {
 
 
 function updateChatUIWithCount() {
-    if (!chatLimitText) return;
+    // Check for Admin Override
+    const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
+    const isAdmin = sessionData && sessionData.valid && sessionData.role === 'admin';
+
+    if (isAdmin) {
+        chatLimitText.textContent = "⚡ UNLIMITED ADMIN ACCESS";
+        chatLimitText.classList.add('text-yellow-600', 'font-black');
+        disableChatUI(false);
+        return; // Skip limit check
+    }
+
     const remaining = MAX_MESSAGES_PER_SESSION - userMessageCount;
     chatLimitText.textContent = `You have ${remaining} messages remaining.`;
 
@@ -1610,6 +1620,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- THIS FUNCTION ATTACHES LISTENERS TO THE LANDING PAGE ---
     function setupLandingPage() {
+        const btnInstallApp = document.getElementById('btnInstallApp');
+        if (btnInstallApp) {
+            btnInstallApp.addEventListener('click', () => {
+                showPWAPrompt();
+            });
+        }
+
         document.getElementById('btnVisitor').addEventListener('click', () => {
             animateScreenSwitch(
                 document.getElementById('landing-page'),
@@ -2036,6 +2053,16 @@ document.addEventListener('DOMContentLoaded', () => {
             animateOpenModal(chatModal);
             openModalState('chatModal');
         });
+
+        // NEW: Admin Chat Button
+        const btnAdminChat = document.getElementById('btnAdminChat');
+        if (btnAdminChat) {
+            btnAdminChat.addEventListener('click', () => {
+                animateOpenModal(chatModal);
+                openModalState('chatModal');
+            });
+        }
+
         closeChatModal.addEventListener('click', () => {
             animateCloseModal(chatModal);
         });

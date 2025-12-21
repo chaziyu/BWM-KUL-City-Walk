@@ -81,6 +81,43 @@ const GENERAL_KNOWLEDGE = `
 - **Architects:** A.B. Hubback (The Moghul Master), A.O. Coltman (The Art Deco King).
 - **Key Figure:** Yap Ah Loy (The man who rebuilt KL).
 - **Zero Mile Stone:** Located near Dataran Merdeka, marking the center of the city for measuring distances.
+
+---
+## ADMIN & VOLUNTEER GUIDE
+
+### 🔑 Access & Login
+- **Staff/Volunteer Access:** On the main landing page, click the "Staff / Volunteer Access" button.
+- **Admin Login:** Use the special passkey provided by the coordinator to access the staff panel. 
+- **Troubleshooting Login:**
+    * **"Invalid Passkey":** Check for typos, spaces, or Caps Lock.
+    * **"Session Expired":** Re-enter the passkey.
+
+### 🛠️ Key Tools (Staff Screen)
+- **Generate Passkey:** Click "Generate New Passkey" to create a fresh access code for a visitor.
+- **Share:** Use the "Share via WhatsApp" or "Copy" button to send the code to the visitor.
+- **Admin Map Toggle:** Once logged in as admin, a toggle button appears on the map (top-left) to easily switch back to the Staff Screen.
+
+### 🆘 Troubleshooting Visitors
+- **GPS Issues:** 
+    * **"My blue dot isn't moving":** Ensure Location Services are ON for the browser (Chrome/Safari).
+    * **"Accuracy is low":** Move outdoors under clear sky. Wi-Fi helps even without data.
+- **Map Not Loading:** Refresh the page. Check internet connection.
+- **Chat Limit Reached:** The AI chat limit resets automatically every day.
+- **PWA Installation:** If the "Install App" button doesn't appear, user can manually "Add to Home Screen" via browser menu.
+
+### ⚙️ BACKEND & SECURITY LOGIC (For Technical Q&A)
+- **Engine:** Google Apps Script linked to a Google Sheet.
+- **Admin Authentication:**
+    *   The system checks the input against a stored \`ADMIN_PASSWORD\` property.
+    *   If matched, returns \`isAdmin: true\` and allows generating new keys.
+- **Passkey Generation:**
+    *   Creates a unique token starting with \`BWM-\` followed by a random alphanumeric string.
+    *   Logs the creation date in Column C.
+- **Device Locking (The 30-Day Rule):**
+    *   **First Login:** The system captures the user's \`deviceId\` and "locks" the passkey to them.
+    *   **Returning User:** Checks if the \`deviceId\` matches. If yes, access granted.
+    *   **Lock Expiry:** If a passkey is locked but hasn't been used for >30 days (based on the timestamp in Col C), the system **overwrites** the lock with the NEW device ID. This allows recycling of old keys.
+    *   **"Locked" Error:** Occurs if a different device tries to use the key *within* the 30-day active window.
 `;
 
 module.exports = { GENERAL_KNOWLEDGE };

@@ -160,6 +160,12 @@
 
         <!-- Buttons Section - Centered -->
         <div class="w-full max-w-xs mx-auto space-y-3 sm:space-y-4 my-8 sm:my-10 animate-slide-up">
+            <!-- ADDED: Install App Button -->
+            <button id="btnInstallApp"
+                class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 sm:py-4 px-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2 transform hover:-translate-y-1">
+                <span class="text-xl">📲</span>
+                <span>Install App</span>
+            </button>
             <button id="btnVisitor"
                 class="w-full group relative flex justify-center items-center py-3 sm:py-4 px-4 border border-transparent text-sm sm:text-base font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95">
                 <span class="mr-2 sm:mr-3 text-lg sm:text-xl">🗝️</span>
@@ -465,6 +471,11 @@
                         class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
                 </div>
             </div>
+            <!-- ADDED: Admin Chat Button -->
+            <button id="btnAdminChat" aria-label="Open AI Assistant"
+                class="absolute bottom-4 right-4 bg-white/10 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-white/20 text-2xl transition transform hover:scale-110 border border-white/20 text-white z-50">
+                💬
+            </button>
         </div>
     </div>
 
