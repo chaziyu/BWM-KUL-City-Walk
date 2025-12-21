@@ -1329,13 +1329,14 @@ function updatePassport() {
         const stamp = document.createElement('div');
         stamp.className = 'passport-stamp';
 
-        const isVisited = visitedSites.includes(site.id);
+        const isVisited = visitedSites.includes(site.id) || discoveredSites.includes(site.id);
         if (!isVisited) {
             stamp.classList.add('grayscale');
         } else {
             // ADDED: Stamp animation for visited sites
             stamp.querySelector('img')?.classList.add('stamp-animate'); // Optional: animate the image or the whole stamp
         }
+
 
         const img = document.createElement('img');
         img.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=?';
@@ -1562,6 +1563,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (landingPage) landingPage.remove();
             if (gatekeeper) gatekeeper.remove();
             document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('map').classList.remove('hidden'); // Show map for user session
 
             initializeGameAndMap();
             setupGameUIListeners();
@@ -1596,19 +1598,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('backToHome').addEventListener('click', () => {
-            animateScreenSwitch(
-                document.getElementById('gatekeeper'),
-                document.getElementById('landing-page')
-            );
+            const gatekeeper = document.getElementById('gatekeeper');
+            const landingPage = document.getElementById('landing-page');
+            gatekeeper.classList.add('hidden');
+            landingPage.classList.remove('hidden');
         });
 
         const closeStaffBtn = document.getElementById('closeStaffScreen');
         if (closeStaffBtn) {
             closeStaffBtn.addEventListener('click', () => {
-                animateScreenSwitch(
-                    document.getElementById('staff-screen'),
-                    document.getElementById('landing-page')
-                );
+                const staffScreen = document.getElementById('staff-screen');
+                const landingPage = document.getElementById('landing-page');
+                staffScreen.classList.add('hidden');
+                landingPage.classList.remove('hidden');
             });
         }
 
@@ -1787,6 +1789,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('staff-screen').classList.add('hidden');
             document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('map').classList.remove('hidden'); // Show map when switching
             if (!map) {
                 initializeGameAndMap();
                 setupGameUIListeners();
@@ -1871,6 +1874,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('gatekeeper').remove();
                     document.getElementById('landing-page').remove();
                     document.getElementById('progress-container').classList.remove('hidden');
+                    document.getElementById('map').classList.remove('hidden'); // Show map after passkey entry
 
                     // Start the app
                     initializeGameAndMap();
