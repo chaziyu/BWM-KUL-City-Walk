@@ -121,6 +121,16 @@ function animateOpenModal(modal) {
 
 function animateCloseModal(modal) {
     if (!modal || modal.classList.contains('hidden')) return;
+
+    // NEW: Stop audio when site modal closes
+    if (modal.id === 'siteModal') {
+        const soundEffect2 = document.getElementById('soundEffect2');
+        if (soundEffect2) {
+            soundEffect2.pause();
+            soundEffect2.currentTime = 0;
+        }
+    }
+
     modal.classList.remove('modal-opening');
     modal.classList.add('modal-closing');
     setTimeout(() => {
@@ -1042,6 +1052,7 @@ function handleMarkerClick(site, marker) {
 
     // 4. QUIZ & CHECK-IN LOGIC
     const isMainSite = site.quiz && !isNaN(parseInt(site.id));
+
     if (isMainSite) {
         siteModalQuizArea.style.display = 'block';
         siteModalCheckInBtn.style.display = 'none';
@@ -1175,6 +1186,15 @@ function handleCheckIn() {
         // NEW: Update polygon color
         safelyUpdatePolygonVisitedState(currentModalSite.id, true); // <--- ADD THIS LINE
         // END NEW
+
+        // NEW: Play Sound Effect 2 for Sites A-K
+        if (/^[A-K]$/.test(currentModalSite.id)) {
+            const soundEffect2 = document.getElementById('soundEffect2');
+            if (soundEffect2) {
+                soundEffect2.currentTime = 0;
+                soundEffect2.play().catch(e => console.log("Audio play failed:", e));
+            }
+        }
 
         // Update the button state
         siteModalCheckInBtn.disabled = true;
