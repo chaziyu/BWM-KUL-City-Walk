@@ -10,6 +10,10 @@ import { STRINGS } from './localization.js';
 import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics/+esm';
 inject();
 
+// --- VERCEL SPEED INSIGHTS ---
+import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights/+esm';
+injectSpeedInsights();
+
 // --- UTILITIES ---
 const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const log = DEBUG ? console.log.bind(console) : () => { };
