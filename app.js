@@ -2441,8 +2441,12 @@ function isAppInstalled() {
 function getDeviceType() {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
 
-    // iOS detection
+    // iOS detection (including iPadOS 13+ which reports as MacIntel)
     if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return 'ios';
+    }
+    // Check for iPadOS 13+ (MacIntel with Touch)
+    if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) {
         return 'ios';
     }
 
