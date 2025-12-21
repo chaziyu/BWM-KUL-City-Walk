@@ -6,6 +6,10 @@ import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZO
 import { migrateData } from './storage-migration.js';
 import { STRINGS } from './localization.js';
 
+// --- VERCEL ANALYTICS ---
+import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics/+esm';
+inject();
+
 // --- UTILITIES ---
 const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const log = DEBUG ? console.log.bind(console) : () => { };
