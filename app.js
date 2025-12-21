@@ -2472,13 +2472,13 @@ function showPWAPrompt() {
         iosInstructions.classList.remove('hidden');
         installBtn.classList.add('hidden');
         genericInstructions.classList.add('hidden');
-    } else if (deferredPrompt && deviceType === 'android') {
-        // Android/Chrome: Show install button
+    } else if (deferredPrompt) {
+        // Android/Desktop (Chrome/Edge): Show install button if prompt is captured
         installBtn.classList.remove('hidden');
         iosInstructions.classList.add('hidden');
         genericInstructions.classList.add('hidden');
     } else {
-        // Desktop/other: Show generic instructions
+        // Fallback for when prompt isn't captured (e.g. Firefox desktop or already installed but not detected)
         genericInstructions.classList.remove('hidden');
         installBtn.classList.add('hidden');
         iosInstructions.classList.add('hidden');
