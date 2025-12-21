@@ -1212,6 +1212,45 @@ function handleCheckIn() {
     }
 }
 
+// --- CHAT SYSTEM INITIALIZATION ---
+let chatSystemInitialized = false;
+
+function initializeChatSystem() {
+    if (chatSystemInitialized) return;
+
+    // 1. Initialize Elements if needed
+    if (!chatModal) {
+        chatModal = document.getElementById('chatModal');
+        chatInput = document.getElementById('chatInput');
+        chatSendBtn = document.getElementById('chatSendBtn');
+        chatLimitText = document.getElementById('chatLimitText');
+        chatHistoryEl = document.getElementById('chatHistory');
+        closeChatModal = document.getElementById('closeChatModal');
+    }
+
+    // 2. Attach Listeners
+    if (closeChatModal) {
+        closeChatModal.addEventListener('click', () => {
+            if (typeof animateCloseModal === 'function') {
+                animateCloseModal(chatModal);
+            } else {
+                chatModal.classList.add('hidden');
+            }
+        });
+    }
+
+    if (chatSendBtn) chatSendBtn.addEventListener('click', handleSendMessage);
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+    }
+
+    chatSystemInitialized = true;
+}
+
 async function handleSendMessage() {
     const userQuery = chatInput.value.trim();
     const limit = Number(MAX_MESSAGES_PER_SESSION); // Explicit cast
@@ -1704,27 +1743,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnAdminChat = document.getElementById('btnAdminChat');
         if (btnAdminChat) {
             btnAdminChat.addEventListener('click', () => {
-                // Ensure chat elements are initialized (in case game hasn't started)
-                if (!chatModal) {
-                    chatModal = document.getElementById('chatModal');
-                    chatInput = document.getElementById('chatInput');
-                    chatSendBtn = document.getElementById('chatSendBtn');
-                    chatLimitText = document.getElementById('chatLimitText');
-                    chatHistoryEl = document.getElementById('chatHistory');
-                    closeChatModal = document.getElementById('closeChatModal');
-
-                    // Attach Close Listener immediately
-                    if (closeChatModal) {
-                        closeChatModal.addEventListener('click', () => {
-                            // Using generic Close Modal animation
-                            if (typeof animateCloseModal === 'function') {
-                                animateCloseModal(chatModal);
-                            } else {
-                                chatModal.classList.add('hidden');
-                            }
-                        });
-                    }
-                }
+                // Ensure chat system is fully initialized
+                initializeChatSystem();
 
                 // Re-use existing chat modal logic
                 if (chatModal) {
@@ -2111,9 +2131,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        closeChatModal.addEventListener('click', () => {
-            animateCloseModal(chatModal);
-        });
+
+        initializeChatSystem();
 
         document.getElementById('btnPassport').addEventListener('click', () => {
             updatePassport();
@@ -2128,12 +2147,6 @@ document.addEventListener('DOMContentLoaded', () => {
             animateCloseModal(siteModal);
         });
 
-        chatSendBtn.addEventListener('click', handleSendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSendMessage();
-            }
-        });
 
         siteModalAskAI.addEventListener('click', () => {
             const siteName = siteModalTitle.textContent;
