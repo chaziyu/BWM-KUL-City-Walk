@@ -12,6 +12,17 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
+    <!-- PWA INSTALL PROMPT CAPTURE (Must be early) -->
+    <script>
+        // Capture the PWA install prompt event immediately
+        window.deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt captured in inline script');
+            e.preventDefault();
+            window.deferredPrompt = e;
+        });
+    </script>
+
     <!-- PWA MANIFEST & META -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">

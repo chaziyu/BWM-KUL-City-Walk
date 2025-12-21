@@ -2426,7 +2426,8 @@ if (closeUserGuideModalBtn && userGuideModal) {
 }
 
 // --- PWA INSTALL PROMPT LOGIC ---
-let deferredPrompt = null;
+// --- PWA INSTALL PROMPT LOGIC ---
+// deferredPrompt is now captured in index.html to ensure we don't miss the event
 
 // Detect if app is already installed
 function isAppInstalled() {
@@ -2480,7 +2481,7 @@ function showPWAPrompt() {
         iosInstructions.classList.remove('hidden');
         installBtn.classList.add('hidden');
         genericInstructions.classList.add('hidden');
-    } else if (deferredPrompt) {
+    } else if (window.deferredPrompt) {
         // Android/Desktop (Chrome/Edge): Show install button if prompt is captured
         installBtn.classList.remove('hidden');
         iosInstructions.classList.add('hidden');
@@ -2524,11 +2525,7 @@ function setupPWAInstallPrompt() {
 }
 
 // Capture the beforeinstallprompt event (Android/Chrome)
-window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('beforeinstallprompt event captured');
-    e.preventDefault(); // Prevent Chrome's default mini-infobar
-    deferredPrompt = e;
-});
+// Removed redundant beforeinstallprompt listener (moved to index.html)
 
 // Setup event listeners
 const pwaInstallBtn = document.getElementById('pwaInstallBtn');
@@ -2538,17 +2535,17 @@ const pwaPrompt = document.getElementById('pwaInstallPrompt');
 
 if (pwaInstallBtn) {
     pwaInstallBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
+        if (!window.deferredPrompt) return;
 
         // Show the install prompt
-        deferredPrompt.prompt();
+        window.deferredPrompt.prompt();
 
         // Wait for the user's response
-        const { outcome } = await deferredPrompt.userChoice;
+        const { outcome } = await window.deferredPrompt.userChoice;
         console.log(`User response: ${outcome}`);
 
         // Clear the deferredPrompt
-        deferredPrompt = null;
+        window.deferredPrompt = null;
 
         // Hide the prompt
         if (pwaPrompt) pwaPrompt.classList.add('hidden');
