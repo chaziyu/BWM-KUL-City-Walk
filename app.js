@@ -1700,6 +1700,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // NEW: Admin Chat Button Listener
+        const btnAdminChat = document.getElementById('btnAdminChat');
+        if (btnAdminChat) {
+            btnAdminChat.addEventListener('click', () => {
+                // Re-use existing chat modal logic
+                if (chatModal) {
+                    animateOpenModal(chatModal);
+                    openModalState('chatModal');
+                    loadChatHistory();
+                    updateChatUIWithCount(); // Will correctly show "UNLIMITED" if logged in
+                    // Focus input
+                    setTimeout(() => {
+                        if (chatInput) chatInput.focus();
+                    }, 300);
+                }
+            });
+        }
+
         adminLoginBtn.addEventListener('click', async () => {
             const password = passwordInput ? passwordInput.value : ''; // Use existing ref or get value
             const errorMsg = document.getElementById('adminErrorMsg');

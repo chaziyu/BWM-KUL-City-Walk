@@ -491,12 +491,13 @@
                         class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
                 </div>
             </div>
-            <!-- ADDED: Admin Chat Button -->
-            <button id="btnAdminChat" aria-label="Open AI Assistant"
-                class="absolute bottom-4 right-4 bg-white/10 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-white/20 text-2xl transition transform hover:scale-110 border border-white/20 text-white z-50">
-                💬
-            </button>
         </div>
+    </div>
+    <!-- MOVED: Admin Chat Button (Direct child of staff-screen for correct positioning) -->
+    <button id="btnAdminChat" aria-label="Open AI Assistant"
+        class="absolute bottom-6 right-6 bg-white/10 backdrop-blur-sm p-4 rounded-full shadow-2xl hover:bg-white/20 text-3xl transition transform hover:scale-110 border-2 border-white/30 text-white z-50 flex items-center justify-center">
+        💬
+    </button>
     </div>
 
     <div id="progress-container" class="fixed top-[env(safe-area-inset-top)] left-0 w-full z-[1000] hidden px-4 pt-4">
