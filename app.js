@@ -1866,20 +1866,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     role: result.isAdmin ? 'admin' : 'user'
                 }));
 
-                // UI Transitions
-                document.getElementById('gatekeeper').style.opacity = 0;
-                document.getElementById('landing-page').style.opacity = 0;
+                // UI Transitions - Remove immediately to prevent flash
+                document.getElementById('gatekeeper').remove();
+                document.getElementById('landing-page').remove();
+                document.getElementById('progress-container').classList.remove('hidden');
+                document.getElementById('map').classList.remove('hidden'); // Show map after passkey entry
 
-                setTimeout(() => {
-                    document.getElementById('gatekeeper').remove();
-                    document.getElementById('landing-page').remove();
-                    document.getElementById('progress-container').classList.remove('hidden');
-                    document.getElementById('map').classList.remove('hidden'); // Show map after passkey entry
-
-                    // Start the app
-                    initializeGameAndMap();
-                    setupGameUIListeners();
-                }, 500);
+                // Start the app
+                initializeGameAndMap();
+                setupGameUIListeners();
 
             } else {
                 errorMsg.textContent = result.error || STRINGS.auth.invalidPasskey;
