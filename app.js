@@ -2405,14 +2405,22 @@ function closePreviewCard() {
 // Since that is deep in 'initializeGameAndMap', we might need to patch it.
 
 // --- USER GUIDE MODAL LOGIC ---
-// Setup listeners for pre-login help button
+// Setup listeners for pre-login help button AND map help button
 const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
+const btnMapHelp = document.getElementById('btnMapHelp'); // NEW
 const userGuideModal = document.getElementById('userGuideModal');
 const closeUserGuideModal = document.getElementById('closeUserGuideModal');
 const closeUserGuideModalBtn = document.getElementById('closeUserGuideModalBtn');
 
 if (btnPreLoginHelp && userGuideModal) {
     btnPreLoginHelp.addEventListener('click', () => {
+        userGuideModal.classList.remove('hidden');
+    });
+}
+
+// NEW: Listener for Map Help Button
+if (btnMapHelp && userGuideModal) {
+    btnMapHelp.addEventListener('click', () => {
         userGuideModal.classList.remove('hidden');
     });
 }
