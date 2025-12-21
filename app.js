@@ -1704,6 +1704,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnAdminChat = document.getElementById('btnAdminChat');
         if (btnAdminChat) {
             btnAdminChat.addEventListener('click', () => {
+                // Ensure chat elements are initialized (in case game hasn't started)
+                if (!chatModal) {
+                    chatModal = document.getElementById('chatModal');
+                    chatInput = document.getElementById('chatInput');
+                    chatSendBtn = document.getElementById('chatSendBtn');
+                    chatLimitText = document.getElementById('chatLimitText');
+                    chatHistoryEl = document.getElementById('chatHistory');
+                }
+
                 // Re-use existing chat modal logic
                 if (chatModal) {
                     animateOpenModal(chatModal);
