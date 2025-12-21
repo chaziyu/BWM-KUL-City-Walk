@@ -2539,6 +2539,9 @@ const pwaPrompt = document.getElementById('pwaInstallPrompt');
 
 if (pwaInstallBtn) {
     pwaInstallBtn.addEventListener('click', async () => {
+        // User manually clicked install, so we should forget they ever dismissed it
+        localStorage.removeItem('pwa_prompt_dismissed');
+
         if (!window.deferredPrompt) return;
 
         // Show the install prompt
