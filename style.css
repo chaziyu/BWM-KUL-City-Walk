@@ -953,3 +953,8 @@ font {
     transform: none !important;
     opacity: 1 !important;
 }
+
+/* Hide the floating Daily Challenge button */
+#btnChallenge {
+    display: none !important;
+}
