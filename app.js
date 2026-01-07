@@ -134,20 +134,26 @@ function animateCloseModal(modal) {
 function animateScreenSwitch(fromScreen, toScreen) {
     if (!fromScreen || !toScreen) return;
 
-    // 1. Fade out current screen
-    fromScreen.classList.add('modal-closing'); // Clean fade out
+    // Use a slide-out instead of fade-out so the outgoing screen keeps opacity
+    // This prevents underlying content (map) from briefly showing through.
+    // Show target immediately so there's no perceptible delay
+    // Ensure it appears above the current screen during the transition
+    const fromZ = parseInt(window.getComputedStyle(fromScreen).zIndex) || 0;
+    toScreen.style.zIndex = (fromZ + 1).toString();
+    toScreen.classList.remove('hidden');
+    toScreen.classList.remove('animate-fade-scale');
+    void toScreen.offsetWidth; // Trigger reflow
+    toScreen.classList.add('animate-fade-scale');
+
+    // Then slide the outgoing screen slightly while keeping its opacity
+    fromScreen.classList.add('screen-slide-out');
 
     setTimeout(() => {
         fromScreen.classList.add('hidden');
-        fromScreen.classList.remove('modal-closing');
-
-        // 2. Show next screen with entry animation
-        toScreen.classList.remove('hidden');
-        // Re-trigger animation if class exists, or add it
-        toScreen.classList.remove('animate-fade-scale');
-        void toScreen.offsetWidth; // Trigger reflow
-        toScreen.classList.add('animate-fade-scale');
-    }, 400);
+        fromScreen.classList.remove('screen-slide-out');
+        // cleanup temporary zIndex
+        toScreen.style.removeProperty('z-index');
+    }, 360); // match the new animation duration
 }
 
 // ACCESSIBILITY: Global Key Listener for Escape and Tab Trapping
@@ -218,6 +224,13 @@ let allMarkers = {}; // NEW: Global object to store all Leaflet marker objects b
 let allPolygons = {}; // NEW: Global object to store all Leaflet polygon objects by site ID.
 const VISITED_POLYGON_COLOR = '#007bff'; // Blue color for visited polygons
 // --- END NEW FIXES ---
+
+// Cancels any in-progress pin-drop animation on a marker icon
+function cancelPinDrop(marker) {
+    const el = marker?._icon;
+    if (!el) return;
+    el.classList.remove('animate-pin-drop');
+}
 let deviceId = localStorage.getItem('bwm_device_id');
 if (!deviceId) {
     deviceId = 'device-' + Math.random().toString(36).substr(2, 9);
@@ -675,7 +688,9 @@ function initializeGameAndMap() {
                     const el = e.target._icon;
                     if (el) {
                         el.classList.add('animate-pin-drop');
-                        setTimeout(() => el.classList.remove('animate-pin-drop'), 500);
+                        setTimeout(() => {
+                            el.classList.remove('animate-pin-drop');
+                        }, 500);
                     }
                 }, 0);
 

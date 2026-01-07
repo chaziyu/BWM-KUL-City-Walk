@@ -361,7 +361,7 @@
     "built": "1904-1907",
     "architects": "A.B. Hubback",
     "info": "Built for $100,000 Straits Dollars, this Moghul-style building served as KL's General Post Office until 1984. It was designed by A.B. Hubback to perfectly match its famous neighbor, the Sultan Abdul Samad Building, and features wide verandahs and elegant horse-shoe arches.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "Who was the architect?",
       "a": "A.B. Hubback",
@@ -423,7 +423,7 @@
     "built": "Early 1900s - 1930s",
     "architects": "B.M. Iversen (Loke Yew), A.K. Moosden (Chow Kit)",
     "info": "This cluster of buildings tells the story of KL's commercial boom. The Loke Yew Building (1930s) is a famous Art Deco structure. Next door, the Chow Kit & Co. building (1905) shows off a Neo-Renaissance style with Flemish pediments. These represent the empires of tin tycoons like Loke Yew.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "The Loke Yew Building is a 6-storey ___ style structure.",
       "a": "Art Deco",
@@ -676,7 +676,7 @@
     "built": "1905",
     "architects": "N/A",
     "info": "This building is highly unusual because it spans an entire triangular block and has no 'five-foot way' (the covered walkway found on most shophouses). It was once occupied by the founders of Cycle & Carriage, who imported the first cars into Malaya.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "The unique Old Federal Stores building has no '___-foot way'.",
       "a": "five",
@@ -744,7 +744,7 @@
     "built": "1932",
     "architects": "A.O. Coltman",
     "info": "An Art Deco masterpiece. When it was completed in 1932, this 5-storey, 85-foot structure was the tallest building in Kuala Lumpur! Designed by A.O. Coltman on a triangular plot, it has a beautiful curved facade and originally housed Radio Malaya.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "In 1932, this was the tallest building in KL, at ___ feet high.",
       "a": "85",
@@ -823,7 +823,7 @@
     "built": "1966 (Rebuilt)",
     "architects": "N/A",
     "info": "This area's first mosque was a simple timber hut from 1893. The current Southern Indian-style structure opened in 1966. A unique feature is that prayer services here are conducted in both Arabic and Tamil. The surrounding arcade is famous for its textiles and spices.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "Prayer service is conducted in Arabic and ___.",
       "a": "Tamil",
@@ -877,7 +877,7 @@
     "built": "1902 (Established)",
     "architects": "N/A",
     "info": "This is Malaysia's oldest existing jewellers. It was founded by P.H. Hendry from Sri Lanka, who was shipwrecked en route to Australia! The family's craftsmanship was so renowned they were appointed Royal Jewellers to 3 different Sultans in the 1920s.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "P.H. Hendry was appointed royal jewellers to how many Sultans?",
       "a": "3",
@@ -955,7 +955,7 @@
     "built": "1904",
     "architects": "A.B. Hubback",
     "info": "Built for $107,000 Straits Dollars, this Moghul-style beauty by A.B. Hubback housed the Municipal Offices and KL's only theatre. After being heavily damaged by a major fire in the mid-1980s, it was beautifully restored. It is now the venue for the musical *MUD: Our Story of Kuala Lumpur*.",
-    "category": "recommended",
+    "category": "must_visit",
     "quiz": {
       "q": "The building was razed by ___ in the mid-1980s.",
       "a": "fire",
@@ -1029,7 +1029,7 @@
     "built": "1897 (Fountain)",
     "architects": "N/A",
     "info": "The historic cricket 'Padang' (field) where Malaysian independence was declared in 1957. It features a 100m tall flagpole (once the world's tallest) and a Victorian fountain imported from England in 1897.",
-    "category": "must_visit",
+    "category": "recommended",
     "flyer_text": "Dataran Merdeka was originally known as the Padang. It was the focal point of colonial Kuala Lumpur and was used as the Parade Ground by the British Colonial administration. Until the early 1990s it was a prime location for sports like cricket, as well as football and rugby. In the centre of the Square, opposite Bangunan Sultan Abdul Samad, three flagpoles commemorate the historic event of Merdeka where at the stroke of midnight on 31 August 1957, the Union Jack was lowered for the last time, and Malaya became an independent nation. Today, beneath the Square is a complex of shops and a carpark. While it is no longer used for sports activities, it remains a prime venue for many large public events. On the south side of the Square is a 100m tall flagpole, reputedly the tallest in the world at the time it was built. At the corner of the Square, below the flagpole is the old ornamental fountain and horse drinking trough. Designed by Messrs Rosher & Company, this was imported from England, assembled locally and installed in 1897 at a cost of $4,000 (Straits Dollars).",
     "ai_context": "This green field (the 'Padang') is sacred ground for Malaysians. \n\n**The Moment:** Imagine the scene—midnight, August 30th, 1957. The lights go out. When they come back on, the British Union Jack is lowered, and for the first time, the flag of Malaya is raised. 'Merdeka! Merdeka! Merdeka!' \n\n**Don't Miss:** The Victorian Fountain at the corner (1897). It was imported all the way from England! Look closely—it has distinct Art Nouveau tiles.",
     "faq": {
@@ -1294,7 +1294,7 @@
     "built": "1936",
     "architects": "T.Y. Lee",
     "info": "Built in 1936 as the city's wholesale wet market. It used special 'Calorex' glass to keep the interior cool, which was a high-tech solution before refrigeration was common! In 1986, it was saved from demolition and converted into the award-winning arts and crafts market we see today.",
-    "category": "must_visit",
+    "category": "recommended",
     "flyer_text": "Built in 1936 at a cost of $330,000 (Straits Dollars), and replacing the older market on the same location, this Art Deco building served as KL's wholesale wet market until the mid 1980s when the wholesale market was relocated to an area outside the main city centre. The market itself was restored and adapted into an art and culture market in 1986. When originally built it was the largest room in the city at 120m long x 60m wide and 7.8m high. The building is splayed to align with the street, wider at one end with no two façades being the same. The original building had a dark grey granolithic exterior finish with a light green polished tiling interior to a height of 6 ft. The windows were metal framed with glazed 'Calorex' rolled plate glass which transmits only 20% of the sun's heat with 60% of daylight; this feature has been retained today and gives the building a distinctive look.",
     "ai_context": "Locals call this 'Pasar Seni'. Built in 1936, this used to be a smelly, noisy wet market full of fish and vegetables! \n\n**Tech Secret:** Before air-conditioning, how did they keep the fish fresh? The architect, T.Y. Lee, used high ceilings and special 'Calorex' glass from England. This glass let light in but blocked 80% of the heat. Brilliant!\n\n**Tok's Tip:** Head to the second floor food court for some 'Ais Kacang' (shaved ice dessert) and look down at the bustling market below.",
     "faq": {

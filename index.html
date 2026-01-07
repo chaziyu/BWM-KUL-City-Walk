@@ -422,7 +422,7 @@
                 Back</button>
             <div class="mb-4 mt-2 text-5xl">🧑‍💼</div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Staff Access</h2>
-            <p class="text-gray-600 mb-6 text-sm">Enter the admin password to Login.</p>
+            <p class="text-gray-600 mb-6 text-sm"></p>
             <div id="adminLoginForm">
                 <input type="password" id="adminPasswordInput" placeholder="Admin Password"
                     class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition-all duration-200">
@@ -485,18 +485,15 @@
 
 
 
-    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-[2500] flex flex-col gap-3">
+    <div class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-[2500] flex flex-col gap-2">
         <button id="btnAdminToggle" aria-label="Toggle Stats / Admin Tools"
-            class="bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-2xl hover:bg-indigo-700 transition transform hover:scale-105 border-2 border-indigo-400 hidden flex items-center gap-2 font-bold text-sm mb-2"
-            title="Switch to Admin Tools">
-            <span>🛠️</span>
-            <span>Staff Tools</span>
-        </button>
+            class="bg-indigo-600 text-white w-12 h-12 rounded-full shadow-2xl hover:bg-indigo-700 transition transform hover:scale-105 border-2 border-indigo-400 hidden flex items-center justify-center text-xl"
+            title="Switch to Admin Tools">🛠️</button>
 
         <button id="btnChat" aria-label="Open AI Tour Guide"
-            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>
+            class="bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full shadow-xl hover:bg-gray-100 text-xl transition transform hover:scale-110 border border-gray-200">💬</button>
         <button id="btnRecenter" aria-label="Recenter Map"
-            class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200"
+            class="bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full shadow-xl hover:bg-gray-100 text-xl transition transform hover:scale-110 border border-gray-200"
             title="Back to Dataran Merdeka">📍</button>
     </div>
     <!-- PREVIEW CARD (Bottom Sheet) -->
