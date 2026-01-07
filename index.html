@@ -46,10 +46,27 @@
         #siteModalMoreContent {
             font-size: var(--content-font-size);
         }
+        /* Hide staff controls early when session is a regular user to avoid flash */
+        .jejak-hide-staff #btnStaff,
+        .jejak-hide-staff #btnAdminToggle {
+            display: none !important;
+        }
     </style>
 </head>
 
 <body class="overflow-hidden bg-gray-100">
+
+    <script>
+        // Early hide to prevent flash of staff controls for logged-in users
+        try {
+            const s = JSON.parse(localStorage.getItem('jejak_session'));
+            if (s && s.valid && s.role && s.role !== 'admin') {
+                document.documentElement.classList.add('jejak-hide-staff');
+            }
+        } catch (e) {
+            /* ignore malformed session */
+        }
+    </script>
 
     <!-- Google Translate Widget (Aligned with Zoom buttons) -->
     <div id="google_translate_element" class="fixed top-[calc(5rem+env(safe-area-inset-top))] right-4 z-[5000]"></div>
@@ -686,7 +703,7 @@
                 </div>
             </div>
             <div class="p-4 border-t bg-white">
-                <p id="chatLimitText" class="text-xs text-gray-500 text-center mb-2">You have 10 messages remaining.</p>
+                <p id="chatLimitText" class="text-xs text-gray-500 text-center mb-2">You have 15 messages remaining.</p>
                 <div class="flex gap-2">
                     <input type="text" id="chatInput" placeholder="Ask a question..."
                         class="flex-1 border-2 border-gray-200 p-2 rounded-lg focus:outline-none focus:border-blue-500 transition">

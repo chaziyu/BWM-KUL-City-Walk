@@ -939,3 +939,17 @@ font {
     touch-action: none;
     max-height: 100dvh;
 }
+
+/* Disable entrance animations/transitions for specific site modal controls */
+#btnTextSizeLarge,
+#btnTextSizeSmall,
+#btnTextSizeReset,
+#siteModalMoreBtn,
+#siteModalDirections,
+#siteModalAskAI,
+#siteModalCheckInBtn {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+}

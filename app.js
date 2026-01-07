@@ -973,6 +973,10 @@ function handleMarkerClick(site, marker) {
         // If it's a NodeList (from querySelectorAll), handle each
         if (el instanceof NodeList) {
             el.forEach(subEl => {
+                // Skip animating buttons/links so action controls appear instantly
+                const tag = (subEl.tagName || '').toUpperCase();
+                if (tag === 'BUTTON' || tag === 'A') return;
+
                 subEl.classList.remove('animate-staggered');
                 subEl.style.opacity = '0';
                 void subEl.offsetWidth; // trigger reflow
@@ -980,6 +984,13 @@ function handleMarkerClick(site, marker) {
                 subEl.style.animationDelay = `${0.1 + (index * 0.1)}s`;
             });
         } else {
+            // If this element contains action controls, skip animating it
+            try {
+                if (el.querySelector && el.querySelector('button, a')) {
+                    return; // parent contains buttons/links -> don't animate parent
+                }
+            } catch (e) { }
+
             el.classList.remove('animate-staggered');
             el.style.opacity = '0';
             void el.offsetWidth; // trigger reflow
@@ -993,6 +1004,43 @@ function handleMarkerClick(site, marker) {
     siteModalTitle.textContent = site.name;
     siteModalInfo.textContent = site.info;
     siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
+
+    // Make sure action buttons/links inside the modal are visible immediately
+    try {
+        const modalRoot = document.getElementById('siteModal');
+        if (modalRoot) {
+            const actionIds = ['btnTextSizeLarge','btnTextSizeSmall','btnTextSizeReset','siteModalMoreBtn','siteModalDirections','siteModalAskAI','siteModalCheckInBtn'];
+            actionIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove('animate-staggered');
+                    el.style.opacity = '1';
+                    el.style.animation = 'none';
+                    el.style.transition = 'none';
+                    el.style.transform = 'none';
+                }
+            });
+            // Also clear any buttons inside those flex rows
+            const flexButtons = modalRoot.querySelectorAll('.flex button, .flex a');
+            flexButtons.forEach(b => {
+                b.classList.remove('animate-staggered');
+                b.style.opacity = '1';
+                b.style.animation = 'none';
+                b.style.transition = 'none';
+                b.style.transform = 'none';
+            });
+
+            // Also ensure parent flex rows are visible immediately (they may have been animated)
+            const flexRows = modalRoot.querySelectorAll('.flex.gap-2');
+            flexRows.forEach(r => {
+                r.classList.remove('animate-staggered');
+                r.style.opacity = '1';
+                r.style.animation = 'none';
+                r.style.transition = 'none';
+                r.style.transform = 'none';
+            });
+        }
+    } catch (e) { /* ignore */ }
 
     // 2. MORE INFO SECTION (Replaced AI-Context with Flyer-Text, kept original font)
     if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
@@ -1536,6 +1584,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
 
+        // Hide staff-related UI for regular users immediately
+        try {
+            if (sessionData && sessionData.valid && sessionData.role === 'user') {
+                console.log("Hiding staff UI for regular user session.");
+                const btnStaff = document.getElementById('btnStaff');
+                if (btnStaff) btnStaff.classList.add('hidden');
+
+                const btnAdminToggle = document.getElementById('btnAdminToggle');
+                if (btnAdminToggle) btnAdminToggle.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Error during staff UI hide:", e);
+        }
+
         if (sessionData && sessionData.valid) {
             const gatekeeper = document.getElementById('gatekeeper');
             const landingPage = document.getElementById('landing-page');
@@ -1601,6 +1663,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- THIS FUNCTION ATTACHES LISTENERS TO THE LANDING PAGE ---
     function setupLandingPage() {
+        // If someone is already logged in as a regular user, hide the Staff button
+        try {
+            const sessionCheck = JSON.parse(localStorage.getItem('jejak_session'));
+            if (sessionCheck && sessionCheck.valid && sessionCheck.role === 'user') {
+                const btnStaffExisting = document.getElementById('btnStaff');
+                if (btnStaffExisting) btnStaffExisting.classList.add('hidden');
+            }
+        } catch (e) {
+            // ignore malformed session
+        }
         document.getElementById('btnVisitor').addEventListener('click', () => {
             animateScreenSwitch(
                 document.getElementById('landing-page'),
@@ -1716,6 +1788,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- REUSABLE ADMIN TOOL HANDLER ---
     function showAdminTools() {
+        // Ensure any page-level hide class is removed when admin tools are shown
+        try {
+            document.documentElement.classList.remove('jejak-hide-staff');
+        } catch (e) { /* ignore */ }
         document.getElementById('adminLoginForm').classList.add('hidden');
         document.getElementById('adminResult').classList.remove('hidden');
         document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
@@ -1880,6 +1956,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     // start: Date.now(), // REMOVED for permanent session
                     role: result.isAdmin ? 'admin' : 'user'
                 }));
+
+                    // Immediately update UI to hide staff controls for regular users
+                    try {
+                        if (result.isAdmin) {
+                            document.documentElement.classList.remove('jejak-hide-staff');
+                        } else {
+                            document.documentElement.classList.add('jejak-hide-staff');
+                        }
+                    } catch (e) { /* ignore DOM errors */ }
 
                 // UI Transitions - Remove immediately to prevent flash
                 document.getElementById('gatekeeper').remove();
