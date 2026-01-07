@@ -1290,12 +1290,12 @@ async function handleSendMessage() {
         updateChatUIWithCount();
 
         // Render Markdown for AI reply
-        thinkingEl.querySelector('p:last-child').innerHTML = (typeof marked !== 'undefined') ? marked.parse(data.reply) : data.reply;
+        thinkingEl.querySelector('div').innerHTML = (typeof marked !== 'undefined') ? marked.parse(data.reply) : data.reply;
         thinkingEl.classList.add('chat-bubble'); // Ensure styling applies
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('p:last-child').textContent = STRINGS.chat.error;
+        thinkingEl.querySelector('div').textContent = STRINGS.chat.error;
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
