@@ -238,21 +238,6 @@ Update UI strings for internationalization support.
 - **512x512:** High-res icon
 - Maskable icons for adaptive display
 
----
-
-## 🤝 Contributing
-
-This project is maintained for Badan Warisan Malaysia. For contributions or suggestions:
-
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request with detailed description
-
----
-
-## 📄 License
-
-**© 2025 Badan Warisan Malaysia (BWM) & Universiti Malaya SULAM Project**
 
 ---
 
@@ -265,13 +250,3 @@ This project is maintained for Badan Warisan Malaysia. For contributions or sugg
 - **Leaflet.js** community for excellent documentation
 
 ---
-
-## 📞 Support
-
-For technical issues or questions:
-- **GitHub Issues:** [Create an issue](https://github.com/chaziyu/BWM-KUL-City-Walk/issues)
-- **Email:** Contact BWM directly
-
----
-
-**Built with ❤️ for Malaysian Heritage**
