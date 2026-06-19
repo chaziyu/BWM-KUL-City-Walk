@@ -47,7 +47,8 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 
 ### 🔐 **4. Security & Access Control**
 *   **Dual Landing Page:** Separate flows for **Visitors** (Passkey entry) and **Staff** (Admin panel)
-*   **Persistent Sessions:** Admin login stays active across browser sessions
+*   **Persistent Sessions:** Admin role stays active across browser sessions without storing the admin password
+*   **Interviewer Access:** Optional normal-user demo codes via `INTERVIEW_ACCESS_CODES`
 *   **Staff Tools:** Generate passkeys on-demand with Google Apps Script integration
 *   **Modern UI:** Clean, gradient-based design with smooth transitions
 
@@ -60,7 +61,9 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 ### 🤖 **6. AI Tour Guide**
 *   **Context-Aware:** Knows detailed history of all 11 heritage sites
 *   **Friendly Persona:** Helpful local guide character
-*   **Smart Limits:** Message quota system to control API costs
+*   **Smart Limits:** Client-side quota plus server-side request limits to control API costs
+*   **Safe Rendering:** AI Markdown is sanitized before display to reduce XSS risk
+*   **Model Fallbacks:** Uses Gemini and Gemma fallback models for resilience and capacity
 *   **Rich Responses:** Detailed, informative answers about sites
 
 ### 🎨 **7. Premium UI/UX**
@@ -84,7 +87,7 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 *   **Hosting:** Vercel (Static + Serverless Functions)
 *   **Database:** Google Sheets (CSV export) for passkeys
 *   **Admin Tools:** Google Apps Script for passkey generation
-*   **AI Engine:** Google Gemini API (`gemini-2.0-flash-exp`)
+*   **AI Engine:** Google GenAI SDK with Gemini/Gemma fallback models
 
 ### Performance
 *   **PWA:** Service worker ready, installable on all platforms
@@ -142,7 +145,33 @@ Configure these in Vercel Dashboard or `.env.local`:
 | `GOOGLE_SHEET_URL` | Published CSV URL for passkeys | `https://docs.google.com/...` |
 | `ADMIN_PASSWORD` | Secure admin password | `SecurePass123!` |
 | `HISTORY_WINDOW_SIZE` | Chat history length (default: 30) | `30` |
-| `MAX_MESSAGES_PER_SESSION` | Chat quota (default: 10) | `10` |
+| `MAX_MESSAGES_PER_SESSION` | Client-side daily chat quota (default: 15) | `15` |
+| `INTERVIEW_ACCESS_CODES` | Comma-separated normal-user demo/interviewer codes | `BWM-INTERVIEW-2026` |
+| `CHAT_MAX_QUERY_CHARS` | Server-side max characters per chat question | `1000` |
+| `CHAT_HISTORY_MESSAGES` | Server-side max history messages sent to AI | `10` |
+| `CHAT_HISTORY_TEXT_CHARS` | Server-side max characters per history message | `1500` |
+| `CHAT_RATE_LIMIT_MAX` | Server-side chat requests per device/IP window | `30` |
+| `CHAT_RATE_LIMIT_WINDOW_MS` | Server-side chat rate-limit window in milliseconds | `3600000` |
+
+### Interviewer Access
+
+Use `BWM-INTERVIEW-2026` as a normal visitor/demo code for interviews. It unlocks the map and AI guide as `role: 'user'`, so staff/admin tools and passkey generation remain hidden. To add or rotate codes, set `INTERVIEW_ACCESS_CODES` to a comma-separated list.
+
+### Current AI Model Fallback
+
+The serverless chat endpoint tries models in this order:
+
+```js
+[
+  "gemini-3.1-flash-lite",
+  "gemma-4-31b-it",
+  "gemma-4-26b-a4b-it",
+  "gemini-2.5-flash-lite",
+  "gemini-3-flash",
+  "gemini-3.5-flash",
+  "gemini-2.5-flash"
+]
+```
 
 ---
 
@@ -187,7 +216,19 @@ BWM-KUL-City-Walk/
 
 ---
 
-## 🛠️ Content Management
+## Recent Maintenance Updates
+
+- Hardened AI chat rendering by sanitizing Markdown before inserting it into the DOM.
+- Added server-side chat input limits, history normalization, same-origin checks, role/device headers, and rate limiting.
+- Stopped storing the admin password in `localStorage`; it is kept only in memory for the current page load.
+- Added `INTERVIEW_ACCESS_CODES` for safe interviewer/demo access without admin permissions.
+- Fixed recommended map sites K, L, and M so they appear in map filters.
+- Removed empty site records from `data.json` and stopped migration from deleting live site IDs `8` and `10`.
+- Improved GPS timeout messaging so users see visible feedback when location fails or falls back.
+
+---
+
+## Content Management
 
 ### Heritage Sites (`data.json`)
 Edit this file to add/modify heritage sites:
