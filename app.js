@@ -2,7 +2,7 @@
 //The garden flower stall is also not there anymore. Only the teochew association
 
 // --- CONFIGURATION ---
-import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './config.js';
+import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE, INTERVIEW_ACCESS_CODES } from './config.js';
 import { migrateData } from './storage-migration.js';
 import { STRINGS } from './localization.js';
 
@@ -261,6 +261,7 @@ let welcomeModal, closeWelcomeModal;
 let congratsModal, closeCongratsModal, shareWhatsAppBtn;
 let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challengeResult;
 let chaChingSound;
+let currentAdminPassword = '';
 let siteModalHintBtn, siteModalHintText;
 
 // --- BADGE GENERATION LOGIC ---
@@ -774,41 +775,55 @@ function initializeGameAndMap() {
     let gpsRetryCount = 0;
     let gpsFailed = false;
 
+    function showGpsWarning(message) {
+        let toast = document.getElementById('gpsStatusToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'gpsStatusToast';
+            toast.className = 'fixed bottom-24 left-4 right-4 z-[5000] bg-amber-50 border border-amber-300 text-amber-900 text-sm font-semibold rounded-lg px-4 py-3 shadow-lg';
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+        clearTimeout(showGpsWarning.hideTimer);
+        showGpsWarning.hideTimer = setTimeout(() => toast.classList.add('hidden'), 7000);
+    }
+
     map.on('locationerror', (e) => {
         if (DEBUG) console.error("GPS Error:", e);
 
-        // Logic check for max retries on timeout
-        if (e.code === 3) { // TIMEOUT
+        if (e.code === 3) {
             gpsRetryCount++;
             if (gpsRetryCount >= 2) {
-                console.warn("GPS Timed Out twice. Stopping location services.");
+                console.warn("GPS timed out twice. Location updates stopped.");
+                showGpsWarning("GPS is having trouble finding you. Move outdoors or check location permissions, then refresh to try again.");
                 gpsFailed = true;
-                map.stopLocate(); // Stop trying
-                return; // Silent exit
+                map.stopLocate();
+                return;
             }
         }
 
         let errorMessage = "GPS Error: ";
         switch (e.code) {
-            case 1: // PERMISSION_DENIED
-                errorMessage += "Permission Denied.\n\nPLEASE FIX: Go to your Device Settings > Privacy / Location Services > Allow Location for your browser.\n\nRefresh the page after changing this setting.";
+            case 1:
+                errorMessage += "Permission Denied. Please allow location access in your browser or device settings, then refresh.";
                 break;
-            case 2: // POSITION_UNAVAILABLE
-                errorMessage += "Position Unavailable.\n\nPlease move directly under the open sky. GPS signals are weak indoors.";
+            case 2:
+                errorMessage += "Position Unavailable. Please move directly under the open sky. GPS signals are weak indoors.";
                 break;
-            case 3: // TIMEOUT
-                errorMessage += "Request Timed Out.\n\nStandard GPS failed. We will try a lower accuracy method now...";
-                // Fallback attempt with lower accuracy
-                errorMessage += "Request Timed Out.\n\nStandard GPS failed. We will try a lower accuracy method now...";
-                // Fallback attempt with lower accuracy
-                console.warn(errorMessage); // Suppressed alert as per user request
+            case 3:
+                errorMessage += "Request Timed Out. Trying a lower accuracy location method now.";
+                console.warn(errorMessage);
+                showGpsWarning("GPS timed out. Trying a lower accuracy location method now.");
                 map.locate({ watch: true, enableHighAccuracy: false, maximumAge: 10000 });
-                return; // Exit here to avoid double alert
+                return;
             default:
-                errorMessage += e.message + "\n\nEnsure Location Services are ON and you are using HTTPS.";
+                errorMessage += (e.message || "Unknown location error.") + " Ensure Location Services are ON and you are using HTTPS.";
         }
 
-        console.warn(errorMessage); // Suppressed alert as per user request
+        console.warn(errorMessage);
+        showGpsWarning(errorMessage);
     });
 
     // Modified to include timeout and maximumAge to prevent infinite hanging
@@ -1263,12 +1278,16 @@ async function handleSendMessage() {
 
     addChatMessage('user', userQuery);
     // Modified: Use skeleton loader instead of "..."
-    const thinkingEl = addChatMessage('ai', '<span class="skeleton-loading text-xs px-8 rounded">Loading...</span>');
+    const thinkingEl = addChatMessage('model', 'Loading...', { loading: true });
 
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Jejak-Role': getCurrentSessionRole(),
+                'X-Jejak-Device': deviceId
+            },
             body: JSON.stringify({
                 userQuery: userQuery,
                 history: chatHistory.slice(-HISTORY_WINDOW_SIZE)
@@ -1289,13 +1308,14 @@ async function handleSendMessage() {
         localStorage.setItem('jejak_message_count', userMessageCount.toString());
         updateChatUIWithCount();
 
-        // Render Markdown for AI reply
-        thinkingEl.querySelector('div').innerHTML = (typeof marked !== 'undefined') ? marked.parse(data.reply) : data.reply;
+        // Render sanitized Markdown for AI reply
+        const thinkingContent = thinkingEl.querySelector('.chat-content');
+        renderSafeMarkdown(thinkingContent, data.reply);
         thinkingEl.classList.add('chat-bubble'); // Ensure styling applies
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('div').textContent = STRINGS.chat.error;
+        thinkingEl.querySelector('.chat-content').textContent = STRINGS.chat.error;
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
@@ -1309,24 +1329,110 @@ async function handleSendMessage() {
     }
 }
 
-function addChatMessage(role, text) {
-    const messageEl = document.createElement('div');
-    const name = (role === 'user' || role === 'user') ? STRINGS.chat.userName : STRINGS.chat.aiName;
-    const align = (role === 'user' || role === 'user') ? 'self-end' : 'self-start';
-    const bg = (role === 'user' || role === 'user') ? 'bg-white' : 'bg-blue-100';
-    const textCol = (role === 'user' || role === 'user') ? 'text-gray-900' : 'text-blue-900';
+function getCurrentSessionRole() {
+    try {
+        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
+        return sessionData?.valid && sessionData.role ? sessionData.role : 'guest';
+    } catch (e) {
+        return 'guest';
+    }
+}
 
-    // Parse markdown for AI messages (model role)
-    const content = (role === 'model' && typeof marked !== 'undefined') ? marked.parse(text) : text;
+function sanitizeRenderedHtml(html) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+
+    const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI', 'A', 'CODE', 'PRE', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+    const allowedProtocols = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+    function cleanNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return document.createTextNode(node.textContent || '');
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            return document.createDocumentFragment();
+        }
+
+        const tagName = node.tagName.toUpperCase();
+        const fragment = document.createDocumentFragment();
+
+        if (!allowedTags.has(tagName)) {
+            node.childNodes.forEach(child => fragment.appendChild(cleanNode(child)));
+            return fragment;
+        }
+
+        const cleanElement = document.createElement(tagName.toLowerCase());
+        if (tagName === 'A') {
+            const rawHref = node.getAttribute('href') || '';
+            try {
+                const url = new URL(rawHref, window.location.origin);
+                if (allowedProtocols.has(url.protocol)) {
+                    cleanElement.setAttribute('href', url.href);
+                    cleanElement.setAttribute('target', '_blank');
+                    cleanElement.setAttribute('rel', 'noopener noreferrer');
+                }
+            } catch (e) {
+                // Drop invalid links but keep the link text.
+            }
+        }
+
+        node.childNodes.forEach(child => cleanElement.appendChild(cleanNode(child)));
+        return cleanElement;
+    }
+
+    const cleanFragment = document.createDocumentFragment();
+    template.content.childNodes.forEach(node => cleanFragment.appendChild(cleanNode(node)));
+    return cleanFragment;
+}
+
+function renderSafeMarkdown(container, text) {
+    if (!container) return;
+    container.replaceChildren();
+
+    if (typeof marked === 'undefined') {
+        container.textContent = text || '';
+        return;
+    }
+
+    const rawHtml = marked.parse(text || '');
+    container.appendChild(sanitizeRenderedHtml(rawHtml));
+}
+
+function addChatMessage(role, text, options = {}) {
+    const messageEl = document.createElement('div');
+    const isUser = role === 'user';
+    const name = isUser ? STRINGS.chat.userName : STRINGS.chat.aiName;
+    const align = isUser ? 'self-end' : 'self-start';
+    const bg = isUser ? 'bg-white' : 'bg-blue-100';
+    const textCol = isUser ? 'text-gray-900' : 'text-blue-900';
 
     messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align} chat-bubble`;
-    messageEl.innerHTML = `<p class="font-bold text-sm mb-1">${name}</p><div>${content}</div>`;
 
+    const nameEl = document.createElement('p');
+    nameEl.className = 'font-bold text-sm mb-1';
+    nameEl.textContent = name;
+
+    const contentEl = document.createElement('div');
+    contentEl.className = 'chat-content';
+
+    if (options.loading) {
+        const loadingEl = document.createElement('span');
+        loadingEl.className = 'skeleton-loading text-xs px-8 rounded';
+        loadingEl.textContent = text;
+        contentEl.appendChild(loadingEl);
+    } else if (role === 'model') {
+        renderSafeMarkdown(contentEl, text);
+    } else {
+        contentEl.textContent = text;
+    }
+
+    messageEl.appendChild(nameEl);
+    messageEl.appendChild(contentEl);
     chatHistoryEl.appendChild(messageEl);
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
     return messageEl;
 }
-
 /**
  * NEW: Loads chat history from localStorage and populates the UI
  */
@@ -1764,11 +1870,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success && result.isAdmin) {
-                    // Store admin session with password for persistent access
+                    // Persist only the role; keep the password in memory for this page load.
+                    currentAdminPassword = password;
                     localStorage.setItem('jejak_session', JSON.stringify({
                         valid: true,
-                        role: 'admin',
-                        adminPassword: password  // Store password for API calls after reload
+                        role: 'admin'
                     }));
                     showAdminTools();
                 } else {
@@ -1815,14 +1921,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
         generateBtn.onclick = async () => {
-            // Retrieve admin password from session (works after reload)
-            const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-            const password = sessionData?.adminPassword || document.getElementById('adminPasswordInput').value || "";
+            let password = currentAdminPassword || document.getElementById('adminPasswordInput')?.value || '';
+            if (!password) {
+                password = window.prompt('Enter admin password to generate a passkey:')?.trim() || '';
+            }
 
             if (!password) {
-                alert('Session expired. Please log in again.');
+                alert('Admin password is required to generate a passkey.');
                 return;
             }
+            currentAdminPassword = password;
 
             generateBtn.disabled = true;
             generateBtn.textContent = "Generating...";
@@ -1867,6 +1975,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         logoutBtn.onclick = () => {
+            currentAdminPassword = '';
             localStorage.removeItem('jejak_session');
             window.location.reload();
         };
@@ -1928,9 +2037,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function isInterviewAccessCode(enteredCode) {
+        const normalizedCode = enteredCode.trim().toUpperCase();
+        return INTERVIEW_ACCESS_CODES.includes(normalizedCode);
+    }
+
+    function unlockInterviewAccess() {
+        localStorage.setItem('jejak_session', JSON.stringify({
+            valid: true,
+            role: 'user',
+            accessType: 'interview'
+        }));
+
+        try {
+            document.documentElement.classList.add('jejak-hide-staff');
+        } catch (e) { /* ignore DOM errors */ }
+
+        const gatekeeper = document.getElementById('gatekeeper');
+        const landingPage = document.getElementById('landing-page');
+        if (gatekeeper) gatekeeper.remove();
+        if (landingPage) landingPage.remove();
+
+        document.getElementById('progress-container').classList.remove('hidden');
+        document.getElementById('map').classList.remove('hidden');
+
+        initializeGameAndMap();
+        setupGameUIListeners();
+    }
     async function verifyCode(enteredCode) {
         const errorMsg = document.getElementById('errorMsg');
         errorMsg.classList.add('hidden');
+
+        if (isInterviewAccessCode(enteredCode)) {
+            unlockInterviewAccess();
+            return;
+        }
 
         // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";

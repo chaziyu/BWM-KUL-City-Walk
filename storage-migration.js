@@ -1,8 +1,8 @@
 // storage-migration.js
 // Handles localStorage data validation, versioning, and migration.
 
-const LATEST_VERSION = 1;
-const REMOVED_SITE_IDS = ['8', '10'];
+const LATEST_VERSION = 2;
+const REMOVED_SITE_IDS = [];
 
 /**
  * Validates and upgrades localStorage data to the latest schema version.
