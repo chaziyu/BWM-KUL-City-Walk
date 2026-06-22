@@ -292,14 +292,7 @@ function setupTextSizeControls() {
 }
 
 function setupPlatformWarning() {
-  const modal = document.getElementById('platformWarningModal');
-  const warningContent = document.querySelector('#warningContent p');
-  const continueBtn = document.getElementById('continueLoginBtn');
-  const cancelBtn = document.getElementById('cancelLoginBtn');
-  const passkeyDisplay = document.getElementById('passkeyDisplay');
-  const copyBtn = document.getElementById('copyPasskeyBtn');
-  const copySuccess = document.getElementById('copySuccess');
-  const whatIsPWABtn = document.getElementById('whatIsPWABtn');
+  let pendingPasskey = '';
 
   function isPwaMode() {
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
@@ -311,10 +304,69 @@ function setupPlatformWarning() {
     document.getElementById('gotItPWABtn')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
   }
 
+  function getElements() {
+    return {
+      modal: document.getElementById('platformWarningModal'),
+      warningContent: document.querySelector('#warningContent p'),
+      continueBtn: document.getElementById('continueLoginBtn'),
+      cancelBtn: document.getElementById('cancelLoginBtn'),
+      passkeyDisplay: document.getElementById('passkeyDisplay'),
+      copyBtn: document.getElementById('copyPasskeyBtn'),
+      copySuccess: document.getElementById('copySuccess'),
+      whatIsPWABtn: document.getElementById('whatIsPWABtn'),
+    };
+  }
+
+  function bindWarningActions(elements) {
+    const { modal, continueBtn, cancelBtn, passkeyDisplay, copyBtn, copySuccess, whatIsPWABtn } = elements;
+
+    if (copyBtn && copyBtn.dataset.bound !== 'true') {
+      copyBtn.dataset.bound = 'true';
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pendingPasskey);
+          copySuccess?.classList.remove('hidden');
+          setTimeout(() => copySuccess?.classList.add('hidden'), 2000);
+        } catch {
+          passkeyDisplay?.select();
+          document.execCommand('copy');
+        }
+      });
+    }
+
+    if (continueBtn && continueBtn.dataset.bound !== 'true') {
+      continueBtn.dataset.bound = 'true';
+      continueBtn.addEventListener('click', async () => {
+        modalManager.close(modal);
+        const session = await visitorAccess.submit(pendingPasskey, {
+          button: document.getElementById('unlockBtn'),
+          errorElement: document.getElementById('errorMsg'),
+        });
+        if (session?.authenticated) showMapExperience();
+      });
+    }
+
+    if (cancelBtn && cancelBtn.dataset.bound !== 'true') {
+      cancelBtn.dataset.bound = 'true';
+      cancelBtn.addEventListener('click', () => {
+        modalManager.close(modal);
+        const passcodeInput = document.getElementById('passcodeInput');
+        if (passcodeInput) passcodeInput.value = '';
+      });
+    }
+
+    if (whatIsPWABtn && whatIsPWABtn.dataset.bound !== 'true') {
+      whatIsPWABtn.dataset.bound = 'true';
+      whatIsPWABtn.addEventListener('click', showPwaExplanation);
+    }
+  }
+
   return async function showPlatformWarning() {
+    const elements = getElements();
+    const { modal, warningContent, passkeyDisplay } = elements;
     const passcodeInput = document.getElementById('passcodeInput');
-    const passkey = passcodeInput?.value || '';
-    if (passkeyDisplay) passkeyDisplay.value = passkey;
+    pendingPasskey = passcodeInput?.value || '';
+    if (passkeyDisplay) passkeyDisplay.value = pendingPasskey;
 
     if (warningContent) {
       warningContent.innerHTML = isPwaMode()
@@ -323,39 +375,7 @@ function setupPlatformWarning() {
     }
 
     modalManager.open(modal);
-
-    if (copyBtn) {
-      copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(passkey);
-          copySuccess?.classList.remove('hidden');
-          setTimeout(() => copySuccess?.classList.add('hidden'), 2000);
-        } catch {
-          passkeyDisplay?.select();
-          document.execCommand('copy');
-        }
-      };
-    }
-
-    if (continueBtn) {
-      continueBtn.onclick = async () => {
-        modalManager.close(modal);
-        const session = await visitorAccess.submit(passkey, {
-          button: document.getElementById('unlockBtn'),
-          errorElement: document.getElementById('errorMsg'),
-        });
-        if (session?.authenticated) showMapExperience();
-      };
-    }
-
-    if (cancelBtn) {
-      cancelBtn.onclick = () => {
-        modalManager.close(modal);
-        if (passcodeInput) passcodeInput.value = '';
-      };
-    }
-
-    if (whatIsPWABtn) whatIsPWABtn.onclick = showPwaExplanation;
+    bindWarningActions(elements);
   };
 }
 
@@ -549,6 +569,17 @@ function showLandingPage() {
 }
 
 function setupAccessFlow() {
+  [
+    ['btnVisitor', 'join-event-button'],
+    ['passcodeInput', 'visitor-passkey-input'],
+    ['unlockBtn', 'visitor-passkey-submit'],
+    ['platformWarningModal', 'platform-warning'],
+    ['continueLoginBtn', 'platform-warning-continue'],
+    ['map', 'map-experience'],
+  ].forEach(([id, testId]) => {
+    document.getElementById(id)?.setAttribute('data-testid', testId);
+  });
+
   const landingScreen = createLandingScreen({
     notifyLifecycle,
     async onExploreDemo() {
