@@ -1,11 +1,22 @@
-import { describe, expect, it } from 'vitest';
+/* @vitest-environment jsdom */
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createProgressService } from '../../src/features/passport/progress-service.js';
 
 describe('Passport Logic', () => {
-  it('handles check-in logic correctly', () => {
-    expect(true).toBe(true);
+  beforeEach(() => {
+    localStorage.clear();
   });
-  
-  it('records quiz success and progress update', () => {
-    expect(true).toBe(true);
+
+  it('keeps demo and visitor progress separated', () => {
+    const visitor = createProgressService({ getNamespace: () => 'visitor' });
+    const demo = createProgressService({ getNamespace: () => 'demo' });
+
+    visitor.setMainSites([{ id: '1' }]);
+    demo.setMainSites([{ id: '1' }]);
+    visitor.recordCheckIn('1');
+    demo.load();
+
+    expect(visitor.getCompletionState().count).toBe(1);
+    expect(demo.getCompletionState().count).toBe(0);
   });
 });

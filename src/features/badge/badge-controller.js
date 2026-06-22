@@ -1,5 +1,5 @@
 import { captureAndDownloadBadge } from './badge-exporter.js';
-import { DEFAULT_BADGE_AVATAR, readFileAsDataUrl, waitForImage } from './badge-renderer.js';
+import { BadgeUploadError, DEFAULT_BADGE_AVATAR, readFileAsDataUrl, waitForImage } from './badge-renderer.js';
 
 export function createBadgeController({ modalManager, progressService, strings }) {
   function bind() {
@@ -55,8 +55,8 @@ export function createBadgeController({ modalManager, progressService, strings }
       await waitForImage(badgePhoto);
       await captureAndDownloadBadge({ progressService, strings });
       document.getElementById('chaChingSound')?.play?.();
-    } catch {
-      window.alert(strings.game.badgeError);
+    } catch (error) {
+      window.alert(error instanceof BadgeUploadError ? error.message : strings.game.badgeError);
     } finally {
       button.textContent = originalText;
       button.disabled = false;

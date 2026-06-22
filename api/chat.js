@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js');
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
-const { isRateLimited, isQuotaExceeded } = require('./_shared/rate-limit');
+const { isRateLimited, isQuotaExceeded, refundQuota } = require('./_shared/rate-limit');
 
 const MAX_QUERY_CHARS = Number(process.env.CHAT_MAX_QUERY_CHARS) || 1000;
 const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
@@ -82,14 +82,6 @@ function getQuotaWindow(session) {
     return session.sessionId;
 }
 
-async function checkQuotaExceeded(session) {
-    const limit = ROLE_LIMITS[session.role] || 0;
-    if (limit <= 0) return true;
-
-    const key = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
-    return await isQuotaExceeded(key, limit);
-}
-
 // --- OPTIMIZATION: GLOBAL CONTEXT CACHING ---
 let FINAL_SYSTEM_PROMPT = "";
 try {
@@ -148,8 +140,10 @@ module.exports = async (request, response) => {
         return response.status(401).json({ reply: 'Please unlock the app before using the AI guide.' });
     }
 
-    if (await checkQuotaExceeded(session)) {
-        return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.' });
+    const { userQuery, history } = request.body || {};
+    const cleanQuery = sanitizeText(userQuery, MAX_QUERY_CHARS);
+    if (!cleanQuery) {
+        return response.status(400).json({ reply: 'Please enter a question.' });
     }
 
     const clientKey = getClientKey(request);
@@ -157,19 +151,24 @@ module.exports = async (request, response) => {
         return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
     }
 
+    const cleanHistory = normalizeHistory(history);
+    let quotaKey = null;
+    let quotaReserved = false;
+
     try {
         const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
         if (!GOOGLE_API_KEY) {
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
 
-        const { userQuery, history } = request.body || {};
-        const cleanQuery = sanitizeText(userQuery, MAX_QUERY_CHARS);
-        if (!cleanQuery) {
-            return response.status(400).json({ reply: 'Please enter a question.' });
+        const limit = ROLE_LIMITS[session.role] || 0;
+        quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+        if (await isQuotaExceeded(quotaKey, limit)) {
+            quotaReserved = false;
+            return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.' });
         }
+        quotaReserved = true;
 
-        const cleanHistory = normalizeHistory(history);
         const client = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
 
         const MODELS = [
@@ -217,6 +216,7 @@ module.exports = async (request, response) => {
         return response.status(200).json({ reply: sanitizeText(text, 5000) });
 
     } catch (error) {
+        if (quotaReserved && quotaKey) await refundQuota(quotaKey);
         console.error('Google GenAI SDK Error:', error);
         return response.status(500).json({ reply: "I'm having trouble connecting to the history books right now." });
     }

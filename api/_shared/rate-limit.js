@@ -95,7 +95,30 @@ async function isQuotaExceeded(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
     return false;
 }
 
+async function refundQuota(key) {
+    if (redis) {
+        try {
+            const redisKey = `quota:${key}`;
+            const count = Number(await redis.decr(redisKey));
+            if (count < 0) await redis.set(redisKey, 0);
+            return;
+        } catch (error) {
+            console.error('Redis quota refund error, falling back to memory:', error);
+        }
+    }
+
+    const count = quotaBuckets.get(key) || 0;
+    quotaBuckets.set(key, Math.max(0, count - 1));
+}
+
+function resetMemoryBucketsForTests() {
+    rateBuckets.clear();
+    quotaBuckets.clear();
+}
+
 module.exports = {
     isRateLimited,
-    isQuotaExceeded
+    isQuotaExceeded,
+    refundQuota,
+    resetMemoryBucketsForTests
 };
