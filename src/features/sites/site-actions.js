@@ -2,8 +2,10 @@ export function createSiteActions({
   strings,
   progressController,
   onMapRefresh,
-  openGoogleMaps,
   openChat,
+  openDirections,
+  openFood,
+  openHotels,
   playChaChing,
 }) {
   function afterProgressChange(siteId, method) {
@@ -16,19 +18,19 @@ export function createSiteActions({
 
   return {
     askAI(site) {
-      openChat?.(`Tell me more about ${site.name}.`);
+      openChat?.(site);
     },
     checkIn(site) {
       return afterProgressChange(site.id, 'recordCheckIn');
     },
     openDirections(site) {
-      openGoogleMaps(site.coordinates.marker[0], site.coordinates.marker[1], 'directions', site.name);
+      openDirections?.(site);
     },
     openFood(site) {
-      openGoogleMaps(site.coordinates.marker[0], site.coordinates.marker[1], 'restaurants', site.name);
+      openFood?.(site);
     },
     openHotels(site) {
-      openGoogleMaps(site.coordinates.marker[0], site.coordinates.marker[1], 'hotels', site.name);
+      openHotels?.(site);
     },
     submitQuizAnswer(site, answer) {
       if (answer !== site.quiz.a) {

@@ -1,3 +1,16 @@
 html {
   scroll-behavior: smooth;
 }
+:root {
+  --content-font-size: 100%;
+}
+
+#siteModalInfo,
+#siteModalMoreContent {
+  font-size: var(--content-font-size);
+}
+
+.jejak-hide-staff #btnStaff,
+.jejak-hide-staff #btnAdminToggle {
+  display: none !important;
+}

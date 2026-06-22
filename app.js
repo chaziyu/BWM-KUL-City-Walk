@@ -12,12 +12,17 @@ import { showOnly } from './src/features/access/access-ui.js';
 import { createVisitorAccess } from './src/features/access/visitor-access.js';
 import { createMapController } from './src/features/map/map-controller.js';
 import { bindMapUI } from './src/features/map/map-ui.js';
+import { createBadgeController } from './src/features/badge/badge-controller.js';
+import { createChallengeController } from './src/features/challenges/challenge-controller.js';
+import { createChatController } from './src/features/chat/chat-controller.js';
+import { createDirectionsController } from './src/features/directions/directions-controller.js';
+import { createOnboardingController } from './src/features/onboarding/onboarding-controller.js';
 import { createPassportController } from './src/features/passport/passport-controller.js';
 import { createProgressService } from './src/features/passport/progress-service.js';
-import { applyBadgeStatus } from './src/features/passport/progress-ui.js';
 import { createSiteActions } from './src/features/sites/site-actions.js';
 import { loadSiteData } from './src/features/sites/site-data.js';
 import { createSiteModalController } from './src/features/sites/site-modal.js';
+import { createTranslationController } from './src/features/translation/translation-controller.js';
 import { STRINGS } from './localization.js';
 import { migrateData } from './src/services/storage-migration.js';
 import {
@@ -37,29 +42,7 @@ import {
   writeScopedNumber,
   writeScopedString,
 } from './src/services/storage.js';
-import { buildGoogleMapsUrls } from './src/utils/google-maps.js';
-import {
-  animateCloseModal,
-  animateOpenModal,
-  installModalKeyboardHandlers,
-  openModalState,
-} from './src/utils/modal.js';
-
-const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const DEFAULT_BADGE_AVATAR = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280"><rect width="240" height="280" fill="#f8f1dd"/><circle cx="120" cy="90" r="52" fill="#1a3c5e"/><path d="M40 248c12-52 50-84 80-84s68 32 80 84" fill="#1a3c5e"/></svg>')}`;
-const allRiddles = [
-  { q: "My 41-meter clock tower houses a one-ton bell that first chimed for Queen Victoria's birthday. What am I?", a: '1' },
-  { q: 'I was designed by A.B. Hubback to perfectly match my famous neighbor, the Sultan Abdul Samad Building.', a: '2' },
-  { q: 'I am a 6-storey Art Deco building named after a famous tin tycoon, Loke Yew.', a: '3' },
-  { q: "I sit at the 'muddy confluence' of two rivers, the very birthplace of Kuala Lumpur.", a: '4' },
-  { q: 'My Art Deco clock tower was built in 1937 to commemorate the coronation of King George VI.', a: '5' },
-  { q: "I am KL's oldest Chinese temple, and I am uniquely angled to follow Feng Shui principles.", a: '6' },
-  { q: "I am an unusual triangular building with no 'five-foot way' and whimsical garlic-shaped finials on my roof.", a: '7' },
-  { q: 'In 1932, I was the tallest building in KL, standing at 85 feet. I also housed Radio Malaya.', a: '9' },
-  { q: 'My prayer services are held in both Arabic and Tamil, a unique feature for a mosque in this area.', a: '11' },
-  { q: "I am Malaysia's oldest existing jewellers, founded by a man who was shipwrecked!", a: '12' },
-  { q: "I was KL's only theatre, but I was heavily damaged by a major fire in the 1980s.", a: '13' },
-];
+import { createModalManager } from './src/ui/modal-manager.js';
 
 let legacyStartPromise = null;
 let activeSession = getCurrentSession();
@@ -77,6 +60,10 @@ if (!deviceId) {
 }
 
 migrateData();
+
+const modalManager = createModalManager({
+  appRoot: document.getElementById('app') || document,
+});
 
 const progressService = createProgressService({
   getNamespace: () => activeSession.progressNamespace || 'visitor',
@@ -99,6 +86,7 @@ const passportController = createPassportController({
   strings: STRINGS,
   progressService,
   getMainSites: () => mainSites,
+  modalManager,
   getCongratsModal: () => document.getElementById('congratsModal'),
   playCelebration() {
     if (typeof confetti !== 'function') return;
@@ -111,22 +99,55 @@ const passportController = createPassportController({
   },
 });
 
+const chatController = createChatController({
+  deviceId,
+  getChatLimit,
+  getHistory: () => chatHistory,
+  getMessageCount: () => userMessageCount,
+  historyWindowSize: HISTORY_WINDOW_SIZE,
+  modalManager,
+  saveHistory: saveChatHistory,
+  saveMessageCount,
+  setHistory: (nextHistory) => {
+    chatHistory = nextHistory;
+  },
+  setMessageCount: (nextCount) => {
+    userMessageCount = nextCount;
+  },
+  strings: STRINGS,
+});
+
+const directionsController = createDirectionsController({ modalManager });
+const badgeController = createBadgeController({ modalManager, progressService, strings: STRINGS });
+const onboardingController = createOnboardingController({ getCurrentSession, modalManager });
+const translationController = createTranslationController();
+
+const challengeController = createChallengeController({
+  getSolvedRiddle: () => solvedRiddle,
+  modalManager,
+  onSolved(next) {
+    writeScopedJSON('solved_riddle', next, getProgressNamespace());
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    }
+  },
+  setSolvedRiddle(next) {
+    solvedRiddle = next;
+  },
+  strings: STRINGS,
+});
+
 const siteActions = createSiteActions({
   strings: STRINGS,
   progressController: passportController,
   onMapRefresh: (siteId) => mapController.refreshVisitedState(siteId),
-  openGoogleMaps,
-  openChat(question) {
-    const siteModal = document.getElementById('siteModal');
-    const chatModal = document.getElementById('chatModal');
-    const chatInput = document.getElementById('chatInput');
-    siteModal?.classList.add('hidden');
-    animateOpenModal(chatModal);
-    if (chatInput) {
-      chatInput.value = question;
-      void handleSendMessage();
-    }
+  openChat(site) {
+    modalManager.close('siteModal');
+    chatController.open({ site });
   },
+  openDirections: (site) => directionsController.openDirections(site),
+  openFood: (site) => directionsController.openNearbySearch(site, 'food'),
+  openHotels: (site) => directionsController.openNearbySearch(site, 'hotel'),
   playChaChing() {
     document.getElementById('chaChingSound')?.play?.();
   },
@@ -136,25 +157,13 @@ const siteModalController = createSiteModalController({
   strings: STRINGS,
   actions: siteActions,
   progressService,
+  modalManager,
   getChallengeState() {
-    const day = getDayOfYear();
-    const today = allRiddles[day % allRiddles.length];
-    return {
-      siteId: today.a,
-      solved: solvedRiddle.day === day && solvedRiddle.id === today.a,
-    };
+    return challengeController.getState();
   },
-  onChallengeSelected(site) {
-    const day = getDayOfYear();
-    const today = allRiddles[day % allRiddles.length];
-    solvedRiddle = { day, id: today.a };
-    writeScopedJSON('solved_riddle', solvedRiddle, getProgressNamespace());
-    document.getElementById('siteModal')?.classList.add('hidden');
-    updateChallengeModal();
-    animateOpenModal(document.getElementById('challengeModal'));
-    if (typeof confetti === 'function') {
-      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    }
+  onChallengeSelected() {
+    modalManager.close('siteModal');
+    challengeController.solveCurrent();
   },
 });
 
@@ -243,367 +252,6 @@ function resetDailyChatIfNeeded() {
   }
 }
 
-function openGoogleMaps(lat, lon, mode, siteName = '') {
-  const { externalUrl, embedUrl } = buildGoogleMapsUrls(lat, lon, mode);
-  const directionsModal = document.getElementById('directionsModal');
-  const directionsIframe = document.getElementById('directionsIframe');
-  const directionsLoading = document.getElementById('directionsLoading');
-  const directionsTitle = document.getElementById('directionsTitle');
-  const externalMapsLink = document.getElementById('externalMapsLink');
-
-  if (directionsTitle) {
-    let titleText = 'Directions';
-    let icon = 'Map';
-    if (mode === 'restaurants') {
-      titleText = `Food Near ${siteName || 'Site'}`;
-      icon = 'Food';
-    } else if (mode === 'hotels') {
-      titleText = `Hotels Near ${siteName || 'Site'}`;
-      icon = 'Hotel';
-    } else if (mode === 'transit' || mode === 'directions') {
-      titleText = `Transit to ${siteName || 'Site'}`;
-      icon = 'Transit';
-    } else if (mode === 'walk') {
-      titleText = `Walk to ${siteName || 'Site'}`;
-      icon = 'Walk';
-    }
-    directionsTitle.innerHTML = `<span>${icon}</span> ${titleText}`;
-  }
-
-  if (directionsModal && directionsIframe) {
-    directionsLoading?.classList.remove('hidden');
-    directionsIframe.onload = () => directionsLoading?.classList.add('hidden');
-    directionsIframe.src = embedUrl;
-    if (externalMapsLink) externalMapsLink.href = externalUrl;
-    if (directionsModal.classList.contains('hidden')) animateOpenModal(directionsModal);
-    return;
-  }
-
-  if (externalUrl) window.open(externalUrl, '_blank');
-}
-
-function getDayOfYear() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-}
-
-function updateChallengeModal() {
-  const challengeRiddle = document.getElementById('challengeRiddle');
-  const challengeResult = document.getElementById('challengeResult');
-  if (!challengeRiddle || !challengeResult) return;
-
-  const day = getDayOfYear();
-  const today = allRiddles[day % allRiddles.length];
-  challengeRiddle.textContent = `"${today.q}"`;
-  challengeResult.textContent =
-    solvedRiddle.day === day && solvedRiddle.id === today.a
-      ? STRINGS.game.challengeSolved
-      : STRINGS.game.challengeHint;
-}
-
-function updateChatUIWithCount() {
-  const chatLimitText = document.getElementById('chatLimitText');
-  const remaining = getChatLimit() - userMessageCount;
-  if (!chatLimitText) return;
-  chatLimitText.textContent = `You have ${remaining} messages remaining.`;
-  if (remaining <= 0) disableChatUI(true);
-}
-
-function disableChatUI(flag) {
-  const chatInput = document.getElementById('chatInput');
-  const chatSendBtn = document.getElementById('chatSendBtn');
-  const chatLimitText = document.getElementById('chatLimitText');
-  if (!chatInput || !chatSendBtn || !chatLimitText) return;
-
-  chatInput.disabled = flag;
-  chatSendBtn.disabled = flag;
-  chatInput.placeholder = flag ? STRINGS.chat.limitReached : STRINGS.chat.placeholder;
-  if (flag) chatLimitText.textContent = STRINGS.chat.limitReached;
-}
-
-function sanitizeRenderedHtml(html) {
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI', 'A', 'CODE', 'PRE', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
-  const allowedProtocols = new Set(['http:', 'https:', 'mailto:', 'tel:']);
-
-  function cleanNode(node) {
-    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || '');
-    if (node.nodeType !== Node.ELEMENT_NODE) return document.createDocumentFragment();
-
-    const tagName = node.tagName.toUpperCase();
-    const fragment = document.createDocumentFragment();
-    if (!allowedTags.has(tagName)) {
-      node.childNodes.forEach((child) => fragment.appendChild(cleanNode(child)));
-      return fragment;
-    }
-
-    const cleanElement = document.createElement(tagName.toLowerCase());
-    if (tagName === 'A') {
-      const rawHref = node.getAttribute('href') || '';
-      try {
-        const url = new URL(rawHref, window.location.origin);
-        if (allowedProtocols.has(url.protocol)) {
-          cleanElement.href = url.href;
-          cleanElement.target = '_blank';
-          cleanElement.rel = 'noopener noreferrer';
-        }
-      } catch {}
-    }
-
-    node.childNodes.forEach((child) => cleanElement.appendChild(cleanNode(child)));
-    return cleanElement;
-  }
-
-  const cleanFragment = document.createDocumentFragment();
-  template.content.childNodes.forEach((node) => cleanFragment.appendChild(cleanNode(node)));
-  return cleanFragment;
-}
-
-async function renderSafeMarkdown(container, text) {
-  if (!container) return;
-  container.replaceChildren();
-  if (typeof marked === 'undefined') {
-    container.textContent = text || '';
-    return;
-  }
-
-  const rawHtml = await marked.parse(text || '');
-  container.appendChild(sanitizeRenderedHtml(rawHtml));
-}
-
-function addChatMessage(role, text, options = {}) {
-  const chatHistoryEl = document.getElementById('chatHistory');
-  if (!chatHistoryEl) return null;
-
-  const messageEl = document.createElement('div');
-  const isUser = role === 'user';
-  messageEl.className = `p-3 rounded-lg ${isUser ? 'bg-white text-gray-900 self-end' : 'bg-blue-100 text-blue-900 self-start'} max-w-xs shadow-sm chat-bubble`;
-
-  const nameEl = document.createElement('p');
-  nameEl.className = 'font-bold text-sm mb-1';
-  nameEl.textContent = isUser ? STRINGS.chat.userName : STRINGS.chat.aiName;
-
-  const contentEl = document.createElement('div');
-  contentEl.className = 'chat-content';
-  if (options.loading) {
-    const loadingEl = document.createElement('span');
-    loadingEl.className = 'skeleton-loading text-xs px-8 rounded';
-    loadingEl.textContent = text;
-    contentEl.appendChild(loadingEl);
-  } else if (role === 'model') {
-    void renderSafeMarkdown(contentEl, text);
-  } else {
-    contentEl.textContent = text;
-  }
-
-  messageEl.append(nameEl, contentEl);
-  chatHistoryEl.appendChild(messageEl);
-  chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
-  return messageEl;
-}
-
-function loadChatHistory() {
-  const chatHistoryEl = document.getElementById('chatHistory');
-  if (!chatHistoryEl) return;
-  chatHistoryEl.innerHTML = '';
-  chatHistory.forEach((msg) => {
-    const text = msg.parts ? msg.parts[0].text : msg.text;
-    addChatMessage(msg.role, text);
-  });
-}
-
-async function handleSendMessage() {
-  const chatInput = document.getElementById('chatInput');
-  const chatSendBtn = document.getElementById('chatSendBtn');
-  if (!chatInput || !chatSendBtn) return;
-
-  const userQuery = chatInput.value.trim();
-  const limit = getChatLimit();
-  if (!userQuery || userMessageCount >= limit) {
-    if (userMessageCount >= limit) disableChatUI(true);
-    return;
-  }
-
-  chatInput.value = '';
-  chatInput.disabled = true;
-  chatSendBtn.disabled = true;
-
-  addChatMessage('user', userQuery);
-  const thinkingEl = addChatMessage('model', 'Loading...', { loading: true });
-
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Jejak-Device': deviceId,
-      },
-      body: JSON.stringify({
-        userQuery,
-        history: chatHistory.slice(-HISTORY_WINDOW_SIZE),
-      }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.reply || data.error || 'AI server error');
-
-    chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
-    chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-    saveChatHistory();
-
-    userMessageCount += 1;
-    saveMessageCount();
-    updateChatUIWithCount();
-
-    const thinkingContent = thinkingEl?.querySelector('.chat-content');
-    await renderSafeMarkdown(thinkingContent, data.reply);
-    thinkingEl?.classList.add('chat-bubble');
-  } catch (error) {
-    if (thinkingEl?.querySelector('.chat-content')) {
-      thinkingEl.querySelector('.chat-content').textContent = error.message || STRINGS.chat.error;
-      thinkingEl.classList.add('bg-red-100', 'text-red-900');
-    }
-  }
-
-  if (userMessageCount < limit) {
-    chatInput.disabled = false;
-    chatSendBtn.disabled = false;
-    chatInput.focus();
-  } else {
-    disableChatUI(true);
-  }
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => resolve(event.target?.result || '');
-    reader.onerror = () => reject(new Error('Could not read image file.'));
-    reader.readAsDataURL(file);
-  });
-}
-
-function waitForImage(image) {
-  if (!image) return Promise.reject(new Error('Badge image element is missing.'));
-  if (image.complete && image.naturalWidth > 0) return Promise.resolve(image);
-
-  return new Promise((resolve, reject) => {
-    const handleLoad = () => {
-      cleanup();
-      resolve(image);
-    };
-    const handleError = () => {
-      cleanup();
-      reject(new Error('Badge image failed to load.'));
-    };
-    const cleanup = () => {
-      image.removeEventListener('load', handleLoad);
-      image.removeEventListener('error', handleError);
-    };
-
-    image.addEventListener('load', handleLoad, { once: true });
-    image.addEventListener('error', handleError, { once: true });
-  });
-}
-
-function setupBadgeGeneration() {
-  const badgeModal = document.getElementById('badgeInputModal');
-  const closeBadgeBtn = document.getElementById('closeBadgeModal');
-  const btnGenerate = document.getElementById('btnGenerateBadge');
-  const nameInput = document.getElementById('explorerNameInput');
-  const photoInput = document.getElementById('explorerPhotoInput');
-  const badgeName = document.getElementById('badgeNameDisplay');
-  const badgeDate = document.getElementById('badgeDateDisplay');
-  const badgePhoto = document.getElementById('badgeProfileImage');
-
-  if (!badgeModal || !btnGenerate || !badgeName || !badgeDate || !badgePhoto) return;
-  if (btnGenerate.dataset.badgeBound === 'true') return;
-
-  btnGenerate.dataset.badgeBound = 'true';
-  badgePhoto.src = DEFAULT_BADGE_AVATAR;
-  if (closeBadgeBtn) closeBadgeBtn.type = 'button';
-
-  btnGenerate.addEventListener('click', async () => {
-    const userName = nameInput.value.trim() || 'Master Explorer';
-    const today = new Date();
-    let nextPhotoSrc = DEFAULT_BADGE_AVATAR;
-
-    btnGenerate.textContent = STRINGS.game.generatingBadge;
-    btnGenerate.disabled = true;
-
-    try {
-      badgeName.textContent = userName;
-      badgeDate.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-      if (photoInput.files?.[0]) nextPhotoSrc = await readFileAsDataUrl(photoInput.files[0]);
-      badgePhoto.src = nextPhotoSrc;
-      await waitForImage(badgePhoto);
-      await captureAndDownloadBadge();
-      document.getElementById('chaChingSound')?.play?.();
-      btnGenerate.textContent = STRINGS.game.generateBadge;
-    } catch (error) {
-      btnGenerate.textContent = STRINGS.game.tryAgain;
-      window.alert(STRINGS.game.badgeError);
-    } finally {
-      btnGenerate.disabled = false;
-    }
-  });
-}
-
-async function captureAndDownloadBadge() {
-  const badgeElement = document.getElementById('hiddenBadgeTemplate');
-  if (!badgeElement) throw new Error('Badge template not found.');
-
-  badgeElement.style.opacity = '1';
-  badgeElement.style.zIndex = '-50';
-
-  try {
-    const statusDisplay = document.getElementById('badgeStatusDisplay');
-    const captionDisplay = document.getElementById('badgeCaptionDisplay');
-    const statusStamp = document.getElementById('badgeStatusStamp');
-    const state = progressService.getCompletionState();
-
-    applyBadgeStatus({
-      statusDisplay,
-      captionDisplay,
-      statusStamp,
-      count: state.count,
-      total: state.total,
-      isComplete: state.isComplete,
-      strings: STRINGS,
-    });
-
-    const canvas = await html2canvas(badgeElement, {
-      scale: 2,
-      backgroundColor: null,
-    });
-
-    const filename = `Heritage-Explorer-${Date.now()}.png`;
-    const triggerDownload = (href) => {
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = href;
-      link.click();
-    };
-
-    if (typeof canvas.toBlob === 'function') {
-      const blob = await new Promise((resolve, reject) => {
-        canvas.toBlob((value) => (value ? resolve(value) : reject(new Error('Canvas export failed.'))), 'image/png');
-      });
-      const objectUrl = URL.createObjectURL(blob);
-      triggerDownload(objectUrl);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-      return;
-    }
-
-    triggerDownload(canvas.toDataURL('image/png'));
-  } finally {
-    badgeElement.style.opacity = '0';
-  }
-}
-
 function setupTextSizeControls() {
   const btnTextSizeReset = document.getElementById('btnTextSizeReset');
   const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
@@ -650,10 +298,9 @@ function setupPlatformWarning() {
   }
 
   function showPwaExplanation() {
-    const explanationModal = document.getElementById('pwaExplanationModal');
-    explanationModal?.classList.remove('hidden');
-    document.getElementById('closePWAExplanation')?.addEventListener('click', () => explanationModal?.classList.add('hidden'), { once: true });
-    document.getElementById('gotItPWABtn')?.addEventListener('click', () => explanationModal?.classList.add('hidden'), { once: true });
+    modalManager.open('pwaExplanationModal');
+    document.getElementById('closePWAExplanation')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
+    document.getElementById('gotItPWABtn')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
   }
 
   return async function showPlatformWarning() {
@@ -667,7 +314,7 @@ function setupPlatformWarning() {
         : "<strong>You're using a Browser</strong><br><br>Once you log in here, this passkey will be locked to <strong>browser mode only</strong>.";
     }
 
-    modal?.classList.remove('hidden');
+    modalManager.open(modal);
 
     if (copyBtn) {
       copyBtn.onclick = async () => {
@@ -684,7 +331,7 @@ function setupPlatformWarning() {
 
     if (continueBtn) {
       continueBtn.onclick = async () => {
-        modal?.classList.add('hidden');
+        modalManager.close(modal);
         const session = await visitorAccess.submit(passkey, {
           button: document.getElementById('unlockBtn'),
           errorElement: document.getElementById('errorMsg'),
@@ -695,7 +342,7 @@ function setupPlatformWarning() {
 
     if (cancelBtn) {
       cancelBtn.onclick = () => {
-        modal?.classList.add('hidden');
+        modalManager.close(modal);
         if (passcodeInput) passcodeInput.value = '';
       };
     }
@@ -716,10 +363,6 @@ function setupGameUIListeners() {
 
   const siteModal = document.getElementById('siteModal');
   const passportModal = document.getElementById('passportModal');
-  const chatModal = document.getElementById('chatModal');
-  const welcomeModal = document.getElementById('welcomeModal');
-  const challengeModal = document.getElementById('challengeModal');
-  const badgeInputModal = document.getElementById('badgeInputModal');
   const congratsModal = document.getElementById('congratsModal');
 
   siteModalController.bind({
@@ -755,69 +398,61 @@ function setupGameUIListeners() {
     progressText: document.getElementById('progressText'),
   });
 
-  document.getElementById('btnChat')?.addEventListener('click', () => {
-    animateOpenModal(chatModal);
-    openModalState('chatModal');
-  });
-  document.getElementById('closeChatModal')?.addEventListener('click', () => animateCloseModal(chatModal));
-  document.getElementById('chatSendBtn')?.addEventListener('click', handleSendMessage);
-  document.getElementById('chatInput')?.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') void handleSendMessage();
-  });
+  chatController.bind();
+  challengeController.bind();
+  badgeController.bind();
+  directionsController.bind();
 
-  document.getElementById('closeWelcomeModal')?.addEventListener('click', () => animateCloseModal(welcomeModal));
-  document.getElementById('closeCongratsModal')?.addEventListener('click', () => animateCloseModal(congratsModal));
-  document.getElementById('btnChallenge')?.addEventListener('click', () => {
-    updateChallengeModal();
-    animateOpenModal(challengeModal);
-  });
-  document.getElementById('closeChallengeModal')?.addEventListener('click', () => animateCloseModal(challengeModal));
-  document.getElementById('closeBadgeModal')?.addEventListener('click', () => animateCloseModal(badgeInputModal));
+  const closeCongrats = document.getElementById('closeCongratsModal');
+  if (closeCongrats && closeCongrats.dataset.bound !== 'true') {
+    closeCongrats.dataset.bound = 'true';
+    closeCongrats.addEventListener('click', () => modalManager.close(congratsModal));
+  }
 
-  document.getElementById('sharePassportBtn')?.addEventListener('click', () => {
-    const payload = passportController.buildSharePayload();
-    if (navigator.share) {
-      navigator.share({ title: 'BWM KUL City Walk', text: payload.text, url: payload.url }).catch(console.error);
-      return;
-    }
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nJoin the adventure: ${payload.url}`)}`, '_blank');
-  });
+  const sharePassportBtn = document.getElementById('sharePassportBtn');
+  if (sharePassportBtn && sharePassportBtn.dataset.bound !== 'true') {
+    sharePassportBtn.dataset.bound = 'true';
+    sharePassportBtn.addEventListener('click', () => {
+      const payload = passportController.buildSharePayload();
+      if (navigator.share) {
+        navigator.share({ title: 'BWM KUL City Walk', text: payload.text, url: payload.url }).catch(console.error);
+        return;
+      }
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nJoin the adventure: ${payload.url}`)}`, '_blank');
+    });
+  }
 
-  document.getElementById('shareWhatsAppBtn')?.addEventListener('click', () => {
+  const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+  if (shareWhatsAppBtn && shareWhatsAppBtn.dataset.bound !== 'true') {
+    shareWhatsAppBtn.dataset.bound = 'true';
+    shareWhatsAppBtn.addEventListener('click', () => {
     const payload = passportController.buildSharePayload();
     if (navigator.share) {
       navigator.share({ title: 'Mission Accomplished!', text: payload.text, url: payload.url }).catch(console.error);
       return;
     }
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nDiscover KL's history and start your own adventure here: ${payload.url}`)}`, '_blank');
-  });
+    });
+  }
 
-  document.getElementById('resetDemoProgressBtn')?.addEventListener('click', () => {
-    if (activeSession?.role !== 'demo') return;
-    const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
-    if (!confirmed) return;
-    clearScopedProgress('demo');
-    window.location.reload();
-  });
-
-  const directionsModal = document.getElementById('directionsModal');
-  const directionsIframe = document.getElementById('directionsIframe');
-  const closeDirections = () => {
-    animateCloseModal(directionsModal);
-    if (directionsIframe) directionsIframe.src = '';
-  };
-  document.getElementById('closeDirectionsModal')?.addEventListener('click', closeDirections);
-  document.getElementById('closeDirectionsModalBtn')?.addEventListener('click', closeDirections);
+  const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
+  if (resetDemoProgressBtn && resetDemoProgressBtn.dataset.bound !== 'true') {
+    resetDemoProgressBtn.dataset.bound = 'true';
+    resetDemoProgressBtn.addEventListener('click', () => {
+      if (activeSession?.role !== 'demo') return;
+      const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
+      if (!confirmed) return;
+      clearScopedProgress('demo');
+      window.location.reload();
+    });
+  }
 
   window.addEventListener('popstate', () => {
-    [siteModal, chatModal, passportModal, welcomeModal, congratsModal, challengeModal, badgeInputModal].forEach((modal) => {
-      if (modal && !modal.classList.contains('hidden')) animateCloseModal(modal);
-    });
+    modalManager.closeTopmost();
   });
 
   setupTextSizeControls();
-  setupBadgeGeneration();
-  loadChatHistory();
+  chatController.loadHistory();
 }
 
 function bindAdminUI() {
@@ -880,18 +515,15 @@ async function showMapExperience() {
   await mapController.initMap();
   bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
   passportController.refreshProgress();
-  updateChatUIWithCount();
-  disableChatUI(userMessageCount >= getChatLimit());
+  chatController.updateCount();
+  chatController.setDisabled(userMessageCount >= getChatLimit());
 
   const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
   if (resetDemoProgressBtn) {
     resetDemoProgressBtn.classList.toggle('hidden', activeSession?.role !== 'demo');
   }
 
-  if (!sessionStorage.getItem('jejak_welcome_shown')) {
-    document.getElementById('welcomeModal')?.classList.remove('hidden');
-    sessionStorage.setItem('jejak_welcome_shown', 'true');
-  }
+  onboardingController.openWelcomeOnce();
 }
 
 function showAdminExperience() {
@@ -939,57 +571,6 @@ function setupAccessFlow() {
   }
 }
 
-function setupUserGuideAndPwa() {
-  const userGuideModal = document.getElementById('userGuideModal');
-  document.getElementById('btnPreLoginHelp')?.addEventListener('click', () => userGuideModal?.classList.remove('hidden'));
-  document.getElementById('closeUserGuideModal')?.addEventListener('click', () => userGuideModal?.classList.add('hidden'));
-  document.getElementById('closeUserGuideModalBtn')?.addEventListener('click', () => userGuideModal?.classList.add('hidden'));
-
-  let deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-  });
-
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      if (getCurrentSession()?.authenticated) return;
-      const dismissedUntil = localStorage.getItem('pwa_prompt_dismissed');
-      if (dismissedUntil && Date.now() < Number.parseInt(dismissedUntil, 10)) return;
-
-      const pwaPrompt = document.getElementById('pwaInstallPrompt');
-      const installBtn = document.getElementById('pwaInstallBtn');
-      const iosInstructions = document.getElementById('iosInstructions');
-      const genericInstructions = document.getElementById('genericInstructions');
-      if (!pwaPrompt || !installBtn || !iosInstructions || !genericInstructions) return;
-
-      const ua = navigator.userAgent || navigator.vendor || window.opera;
-      const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-      const isAndroid = /android/i.test(ua);
-
-      iosInstructions.classList.toggle('hidden', !isIos);
-      installBtn.classList.toggle('hidden', !(deferredPrompt && isAndroid));
-      genericInstructions.classList.toggle('hidden', isIos || (deferredPrompt && isAndroid));
-      pwaPrompt.classList.remove('hidden');
-
-      installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-        pwaPrompt.classList.add('hidden');
-      }, { once: true });
-    }, 1000);
-  });
-
-  const dismissPrompt = () => {
-    document.getElementById('pwaInstallPrompt')?.classList.add('hidden');
-    localStorage.setItem('pwa_prompt_dismissed', String(Date.now() + (7 * 24 * 60 * 60 * 1000)));
-  };
-  document.getElementById('closePWAPrompt')?.addEventListener('click', dismissPrompt);
-  document.getElementById('continueBrowser')?.addEventListener('click', dismissPrompt);
-}
-
 async function initApp() {
   try {
     activeSession = await refreshSession();
@@ -1017,8 +598,8 @@ export function startLegacyApp(options = {}) {
   legacyStartPromise = new Promise((resolve, reject) => {
     onDomReady(() => {
       try {
-        installModalKeyboardHandlers();
-        setupUserGuideAndPwa();
+        onboardingController.bind();
+        translationController.bind();
         resolve(initApp());
       } catch (error) {
         reject(error);

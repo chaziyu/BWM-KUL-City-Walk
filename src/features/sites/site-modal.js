@@ -1,4 +1,3 @@
-import { animateCloseModal, animateOpenModal, openModalState } from '../../utils/modal.js';
 import { buildMoreInfoHtml, renderQuizOptions, renderSiteBasics } from './site-renderer.js';
 
 function shuffle(items) {
@@ -10,6 +9,7 @@ export function createSiteModalController({
   actions,
   progressService,
   getChallengeState,
+  modalManager,
   onChallengeSelected,
 }) {
   let currentSite = null;
@@ -20,7 +20,7 @@ export function createSiteModalController({
 
     if (elements.closeButton && elements.closeButton.dataset.bound !== 'true') {
       elements.closeButton.dataset.bound = 'true';
-      elements.closeButton.addEventListener('click', () => animateCloseModal(elements.modal));
+      elements.closeButton.addEventListener('click', () => modalManager.close(elements.modal));
     }
 
     if (elements.askAI && elements.askAI.dataset.bound !== 'true') {
@@ -155,8 +155,7 @@ export function createSiteModalController({
   function open(site) {
     if (!site) return;
     render(site);
-    animateOpenModal(elements.modal);
-    openModalState('siteModal');
+    modalManager.open(elements.modal);
   }
 
   return {

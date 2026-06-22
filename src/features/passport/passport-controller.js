@@ -1,4 +1,3 @@
-import { animateCloseModal, animateOpenModal, openModalState } from '../../utils/modal.js';
 import { buildShareText, updatePassportInfo, updateProgressBar } from './progress-ui.js';
 import { renderPassportStamps } from './stamp-renderer.js';
 
@@ -7,6 +6,7 @@ export function createPassportController({
   progressService,
   getMainSites,
   getCongratsModal,
+  modalManager,
   playCelebration,
 }) {
   let elements = {};
@@ -22,7 +22,7 @@ export function createPassportController({
     if (elements.closePassportModal && elements.closePassportModal.dataset.bound !== 'true') {
       elements.closePassportModal.dataset.bound = 'true';
       elements.closePassportModal.addEventListener('click', () => {
-        animateCloseModal(elements.passportModal);
+        modalManager.close(elements.passportModal);
       });
     }
   }
@@ -62,14 +62,13 @@ export function createPassportController({
       return;
     }
 
-    congratsModal.classList.remove('hidden');
+    modalManager.open(congratsModal);
     if (typeof playCelebration === 'function') playCelebration();
   }
 
   function openPassport() {
     refreshProgress();
-    animateOpenModal(elements.passportModal);
-    openModalState('passportModal');
+    modalManager.open(elements.passportModal);
   }
 
   function buildSharePayload() {
