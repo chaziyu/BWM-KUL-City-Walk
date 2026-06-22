@@ -51,7 +51,7 @@ export default [
     },
   },
   {
-    files: ['api/**/*.js', 'scripts/**/*.js', 'general_knowledge.js', 'tailwind.config.js'],
+    files: ['api/**/*.js', 'scripts/**/*.js', 'general_knowledge.js'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: {
