@@ -617,7 +617,7 @@ function initializeGameAndMap() {
             // END FIX
             // 4. Attach Click Event
             marker.on('click', () => {
-                showPreviewCard(site);
+                openSiteDetails(site, marker);
             });
             markersLayer.addLayer(marker);
 
@@ -638,7 +638,7 @@ function initializeGameAndMap() {
                     safelyUpdatePolygonVisitedState(site.id, true);
                 }
 
-                poly.on('click', () => showPreviewCard(site));
+                poly.on('click', () => openSiteDetails(site, marker));
                 polygonsLayer.addLayer(poly);
             }
 
@@ -1146,6 +1146,15 @@ function handleMarkerClick(site, marker) {
     }
 
     siteModal.classList.remove('hidden');
+}
+
+function openSiteDetails(site, marker = null) {
+    if (!site) return;
+
+    closePreviewCard();
+    handleMarkerClick(site, marker);
+    animateOpenModal(siteModal);
+    openModalState('siteModal');
 }
 
 /**
@@ -2336,13 +2345,7 @@ onDomReady(() => {
                 const site = allSiteData.find(s => s.id === currentPreviewSiteId);
                 const marker = allMarkers[currentPreviewSiteId];
                 if (site && marker) {
-                    // Explicitly close preview first for smoother transition
-                    closePreviewCard();
-
-                    handleMarkerClick(site, marker);
-                    // Explicitly show modal and push state
-                    animateOpenModal(siteModal);
-                    openModalState('siteModal');
+                    openSiteDetails(site, marker);
                 }
             }
         });
