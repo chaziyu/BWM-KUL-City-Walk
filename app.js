@@ -14,7 +14,7 @@ import { animateCloseModal, animateOpenModal, animateScreenSwitch, installModalK
 // --- UTILITIES ---
 const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const log = DEBUG ? console.log.bind(console) : () => { };
-installModalKeyboardHandlers();
+let legacyStartPromise = null;
 
 function onDomReady(callback) {
     if (document.readyState === 'loading') {
@@ -182,7 +182,7 @@ function saveSolvedRiddle() {
 // --- BADGE GENERATION LOGIC ---
 
 // 1. Setup Listeners
-onDomReady(() => {
+function setupBadgeGeneration() {
 
     // Elements
     const badgeModal = document.getElementById('badgeInputModal');
@@ -314,7 +314,7 @@ onDomReady(() => {
             btnGenerate.disabled = false;
         });
     }
-});
+}
 
 //BUG FIX
 // --- UTILITY FUNCTION FOR SAFELY MANAGING MARKER STATE ---
@@ -1442,7 +1442,10 @@ function updatePassport() {
 
 
 // --- APP STARTUP & LANDING PAGE LOGIC ---
-onDomReady(() => {
+function setupAppStartup({ onLifecycleChange } = {}) {
+    const notifyLifecycle = (patch) => {
+        if (typeof onLifecycleChange === 'function') onLifecycleChange(patch);
+    };
 
     function isAuthorized() {
         return Boolean(activeSession?.authenticated);
@@ -1473,6 +1476,7 @@ onDomReady(() => {
     }
 
     function showMapExperience() {
+        notifyLifecycle({ activeView: 'map' });
         applySessionChrome();
         loadScopedState();
         resetDailyChatIfNeeded();
@@ -1505,6 +1509,7 @@ onDomReady(() => {
     }
 
     function showAdminExperience() {
+        notifyLifecycle({ activeView: 'admin' });
         applySessionChrome();
         const landingPage = document.getElementById('landing-page');
         const gatekeeper = document.getElementById('gatekeeper');
@@ -1536,6 +1541,7 @@ onDomReady(() => {
             if (gatekeeper && landingPage) {
                 landingPage.classList.add('hidden');
                 gatekeeper.classList.remove('hidden');
+                notifyLifecycle({ activeView: 'gatekeeper' });
                 // Auto-fill the passkey input, but let user click unlock manually
                 passcodeInput.value = urlCode;
 
@@ -1677,6 +1683,7 @@ onDomReady(() => {
             console.warn('Unable to read current session:', error);
             activeSession = getCurrentSession();
         }
+        notifyLifecycle({ session: activeSession });
 
         await checkForURLPasskey();
 
@@ -1694,6 +1701,7 @@ onDomReady(() => {
 
     // --- THIS FUNCTION ATTACHES LISTENERS TO THE LANDING PAGE ---
     function setupLandingPage() {
+        notifyLifecycle({ activeView: 'landing' });
         document.documentElement.classList.remove('jejak-hide-staff');
 
         const exploreDemoBtn = document.getElementById('btnExploreDemo');
@@ -1703,6 +1711,7 @@ onDomReady(() => {
                 exploreDemoBtn.textContent = 'Starting demo...';
                 try {
                     activeSession = await startDemoSession();
+                    notifyLifecycle({ session: activeSession });
                     showMapExperience();
                 } catch (error) {
                     console.error('Demo session error:', error);
@@ -1718,6 +1727,7 @@ onDomReady(() => {
                 document.getElementById('landing-page'),
                 document.getElementById('gatekeeper')
             );
+            notifyLifecycle({ activeView: 'gatekeeper' });
         });
 
         document.getElementById('btnStaff').addEventListener('click', () => {
@@ -1729,6 +1739,7 @@ onDomReady(() => {
             const landingPage = document.getElementById('landing-page');
             gatekeeper.classList.add('hidden');
             landingPage.classList.remove('hidden');
+            notifyLifecycle({ activeView: 'landing' });
         });
 
         const closeStaffBtn = document.getElementById('closeStaffScreen');
@@ -1738,6 +1749,7 @@ onDomReady(() => {
                 const landingPage = document.getElementById('landing-page');
                 staffScreen.classList.add('hidden');
                 landingPage.classList.remove('hidden');
+                notifyLifecycle({ activeView: 'landing' });
             });
         }
 
@@ -1753,6 +1765,7 @@ onDomReady(() => {
             document.getElementById('landing-page'),
             document.getElementById('staff-screen')
         );
+        notifyLifecycle({ activeView: 'admin' });
     }
 
 
@@ -1788,6 +1801,7 @@ onDomReady(() => {
 
             try {
                 activeSession = await startAdminSession(password);
+                notifyLifecycle({ session: activeSession });
                 showAdminTools();
             } catch (error) {
                 console.error('Error in admin login:', error);
@@ -1921,6 +1935,7 @@ onDomReady(() => {
 
         try {
             activeSession = await startVisitorSession(enteredCode, deviceId);
+            notifyLifecycle({ session: activeSession });
             showMapExperience();
         } catch (error) {
             console.error('Verification Error:', error);
@@ -2279,15 +2294,15 @@ onDomReady(() => {
 
 
     // --- Run the app ---
-    initApp();
-});
+    return initApp();
+}
 
 // --- ZOOM FUNCTIONALITY ---
 // Globals for Preview Card (referenced by helpers)
 let previewCard, previewImage, previewTitle, previewDist, previewOpenBtn, previewCloseBtn;
 let currentPreviewSiteId = null;
 
-onDomReady(() => {
+function setupPreviewControls() {
     const btnTextSizeReset = document.getElementById('btnTextSizeReset');
     const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
     const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
@@ -2357,7 +2372,7 @@ onDomReady(() => {
             if (currentPreviewSiteId) previewOpenBtn.click();
         });
     }
-}); // END DOMContentLoaded
+} // END DOMContentLoaded
 
 // --- PREVIEW CARD HELPER FUNCTIONS ---
 function showPreviewCard(site) {
@@ -2397,29 +2412,30 @@ function closePreviewCard() {
 // Since that is deep in 'initializeGameAndMap', we might need to patch it.
 
 // --- USER GUIDE MODAL LOGIC ---
-// Setup listeners for pre-login help button
-const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
-const userGuideModal = document.getElementById('userGuideModal');
-const closeUserGuideModal = document.getElementById('closeUserGuideModal');
-const closeUserGuideModalBtn = document.getElementById('closeUserGuideModalBtn');
+function setupUserGuideAndPWA() {
+    // Setup listeners for pre-login help button
+    const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
+    const userGuideModal = document.getElementById('userGuideModal');
+    const closeUserGuideModal = document.getElementById('closeUserGuideModal');
+    const closeUserGuideModalBtn = document.getElementById('closeUserGuideModalBtn');
 
-if (btnPreLoginHelp && userGuideModal) {
-    btnPreLoginHelp.addEventListener('click', () => {
-        userGuideModal.classList.remove('hidden');
-    });
-}
+    if (btnPreLoginHelp && userGuideModal) {
+        btnPreLoginHelp.addEventListener('click', () => {
+            userGuideModal.classList.remove('hidden');
+        });
+    }
 
-if (closeUserGuideModal && userGuideModal) {
-    closeUserGuideModal.addEventListener('click', () => {
-        userGuideModal.classList.add('hidden');
-    });
-}
+    if (closeUserGuideModal && userGuideModal) {
+        closeUserGuideModal.addEventListener('click', () => {
+            userGuideModal.classList.add('hidden');
+        });
+    }
 
-if (closeUserGuideModalBtn && userGuideModal) {
-    closeUserGuideModalBtn.addEventListener('click', () => {
-        userGuideModal.classList.add('hidden');
-    });
-}
+    if (closeUserGuideModalBtn && userGuideModal) {
+        closeUserGuideModalBtn.addEventListener('click', () => {
+            userGuideModal.classList.add('hidden');
+        });
+    }
 
 // --- PWA INSTALL PROMPT LOGIC ---
 let deferredPrompt = null;
@@ -2515,21 +2531,21 @@ function setupPWAInstallPrompt() {
 }
 
 // Capture the beforeinstallprompt event (Android/Chrome)
-window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('beforeinstallprompt event captured');
-    e.preventDefault(); // Prevent Chrome's default mini-infobar
-    deferredPrompt = e;
-});
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt event captured');
+        e.preventDefault(); // Prevent Chrome's default mini-infobar
+        deferredPrompt = e;
+    });
 
 // Setup event listeners
-const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-const closePWAPrompt = document.getElementById('closePWAPrompt');
-const continueBrowser = document.getElementById('continueBrowser');
-const pwaPrompt = document.getElementById('pwaInstallPrompt');
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+    const closePWAPrompt = document.getElementById('closePWAPrompt');
+    const continueBrowser = document.getElementById('continueBrowser');
+    const pwaPrompt = document.getElementById('pwaInstallPrompt');
 
-if (pwaInstallBtn) {
-    pwaInstallBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
+    if (pwaInstallBtn) {
+        pwaInstallBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
 
         // Show the install prompt
         deferredPrompt.prompt();
@@ -2543,31 +2559,52 @@ if (pwaInstallBtn) {
 
         // Hide the prompt
         if (pwaPrompt) pwaPrompt.classList.add('hidden');
-    });
-}
+        });
+    }
 
-if (closePWAPrompt) {
-    closePWAPrompt.addEventListener('click', () => {
-        if (pwaPrompt) pwaPrompt.classList.add('hidden');
-        // Remember dismissal for 7 days
-        const sevenDays = 7 * 24 * 60 * 60 * 1000;
-        localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
-    });
-}
+    if (closePWAPrompt) {
+        closePWAPrompt.addEventListener('click', () => {
+            if (pwaPrompt) pwaPrompt.classList.add('hidden');
+            // Remember dismissal for 7 days
+            const sevenDays = 7 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
+        });
+    }
 
-if (continueBrowser) {
-    continueBrowser.addEventListener('click', () => {
-        if (pwaPrompt) pwaPrompt.classList.add('hidden');
-        // Remember dismissal for 7 days
-        const sevenDays = 7 * 24 * 60 * 60 * 1000;
-        localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
-    });
-}
+    if (continueBrowser) {
+        continueBrowser.addEventListener('click', () => {
+            if (pwaPrompt) pwaPrompt.classList.add('hidden');
+            // Remember dismissal for 7 days
+            const sevenDays = 7 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
+        });
+    }
 
 // Initialize PWA prompt after session startup has had time to resolve.
-window.addEventListener('load', () => {
-    setTimeout(setupPWAInstallPrompt, 1000);
-});
+    window.addEventListener('load', () => {
+        setTimeout(setupPWAInstallPrompt, 1000);
+    });
+}
+
+export function startLegacyApp(options = {}) {
+    if (legacyStartPromise) return legacyStartPromise;
+
+    legacyStartPromise = new Promise((resolve, reject) => {
+        onDomReady(() => {
+            try {
+                installModalKeyboardHandlers();
+                setupBadgeGeneration();
+                setupPreviewControls();
+                setupUserGuideAndPWA();
+                resolve(setupAppStartup(options));
+            } catch (error) {
+                reject(error);
+            }
+        });
+    });
+
+    return legacyStartPromise;
+}
 
 // --- OPTIMIZATION: DYNAMIC IMPORT FOR TOUR SYSTEM ---
 // Load Tour System on idle (2s delay) or user interaction

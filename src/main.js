@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import './styles/main.css';
-import { bootstrapApp } from './app/bootstrap.js';
+import './app/bootstrap.js';
 import { installGoogleTranslateLoader } from './features/access/google-translate.js';
 
 window.L = L;
@@ -17,5 +17,3 @@ window.marked = {
 };
 
 installGoogleTranslateLoader();
-
-await bootstrapApp();

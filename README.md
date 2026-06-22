@@ -335,7 +335,7 @@ Update UI strings for internationalization support.
 
 ### Installation
 - Prompts users to install as home screen app
-- Works offline with cached content
+- Full offline mode planned for a later phase (requires service worker and cache strategy)
 - Full-screen immersive mode on mobile
 
 ### Icons
