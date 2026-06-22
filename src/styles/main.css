@@ -1,7 +1,10 @@
 @import "tailwindcss";
 @source "../../index.html";
-@source "../../app.js";
 @source "../**/*.js";
+@source "../../app.js";
 @import "leaflet/dist/leaflet.css";
 @import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
-@import "../../style.css";
+@import "./base.css";
+@import "./map.css";
+@import "./modals.css";
+@import "./components.css";

@@ -56,14 +56,14 @@ function validateUniqueField(sites, field, errors) {
 function validateImage(site, errors) {
   if (!hasText(site.image)) return;
 
-  const imagePath = path.resolve(ROOT, site.image);
+  const imagePath = path.resolve(ROOT, 'public', site.image);
   if (!imagePath.startsWith(ROOT) || !fs.existsSync(imagePath)) {
     errors.push(`${site.id}: image does not exist at ${site.image}`);
   }
 }
 
 function validateSites(options = {}) {
-  const dataPath = options.dataPath || path.join(ROOT, 'data.json');
+  const dataPath = options.dataPath || path.join(ROOT, 'data', 'sites.json');
   const schemaPath = options.schemaPath || path.join(ROOT, 'data', 'sites.schema.json');
   const expectedMainSiteCount = options.expectedMainSiteCount || DEFAULT_MAIN_SITE_COUNT;
   const sites = loadJson(dataPath);

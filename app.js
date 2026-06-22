@@ -2,11 +2,11 @@
 //The garden flower stall is also not there anymore. Only the teochew association
 
 // --- CONFIGURATION ---
-import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './config.js';
-import { migrateData } from './storage-migration.js';
+import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './src/config/app-config.js';
+import { migrateData } from './src/services/storage-migration.js';
 import { STRINGS } from './localization.js';
-import { endSession, getCurrentSession, refreshSession, startAdminSession, startDemoSession, startVisitorSession } from './session.js';
-import { clearScopedProgress, readScopedJSON, readScopedNumber, readScopedString, writeScopedJSON, writeScopedNumber, writeScopedString } from './storage.js';
+import { endSession, getCurrentSession, refreshSession, startAdminSession, startDemoSession, startVisitorSession } from './src/services/session-client.js';
+import { clearScopedProgress, readScopedJSON, readScopedNumber, readScopedString, writeScopedJSON, writeScopedNumber, writeScopedString } from './src/services/storage.js';
 import { debounce } from './src/utils/debounce.js';
 import { buildGoogleMapsUrls } from './src/utils/google-maps.js';
 import { animateCloseModal, animateOpenModal, animateScreenSwitch, installModalKeyboardHandlers, openModalState } from './src/utils/modal.js';
@@ -97,7 +97,7 @@ let solvedRiddle = {};
 // Get or Create a unique Device ID for this browser
 let markersLayer = null;  // New: Layer group for markers
 let polygonsLayer = null; // New: Layer group for polygons
-// ZOOM_THRESHOLD imported from config.js
+// ZOOM_THRESHOLD imported from app config
 let allMarkers = {}; // NEW: Global object to store all Leaflet marker objects by site ID.
 let allPolygons = {}; // NEW: Global object to store all Leaflet polygon objects by site ID.
 const VISITED_POLYGON_COLOR = '#007bff'; // Blue color for visited polygons
@@ -552,7 +552,7 @@ function initializeGameAndMap() {
         });
     });
 
-    fetch(new URL('./data.json', import.meta.url)).then(res => res.json()).then(sites => {
+    fetch(new URL('./data/sites.json', import.meta.url)).then(res => res.json()).then(sites => {
         allSiteData = sites;
         // CACHE MAIN SITES (Performance Optimization)
         mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
@@ -2019,7 +2019,7 @@ onDomReady(() => {
         document.getElementById('btnRecenter').addEventListener('click', () => {
             if (!map) return;
             // Revert back to focusing on map center (Dataran Merdeka)
-            import('./config.js').then(config => {
+            import('./src/config/app-config.js').then(config => {
                 map.setView(config.DEFAULT_CENTER, config.ZOOM);
             });
         });

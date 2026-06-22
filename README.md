@@ -81,7 +81,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **Core:** HTML5, Vanilla JavaScript (ES6+), Tailwind CSS
 *   **Mapping:** Leaflet.js with OpenStreetMap
 *   **Animations:** Native CSS transitions with hardware acceleration
-*   **Configuration:** Modular `config.js` for runtime settings
+*   **Configuration:** Modular `src/config/app-config.js` for runtime settings
 
 ### Backend (Serverless)
 *   **Hosting:** Vercel (Static + Serverless Functions)
@@ -118,7 +118,7 @@ Open the Vite URL printed by the terminal, usually `http://localhost:5173`.
 
 ### Local Development
 
-Use `npm run dev` for frontend development. The app uses ES modules and cannot be run directly from `file://`.
+Use `npm run dev` for frontend-only development. The app uses ES modules and cannot be run directly from `file://`.
 
 For full API behavior, run through Vercel’s local runtime after installing the Vercel CLI:
 
@@ -126,7 +126,7 @@ For full API behavior, run through Vercel’s local runtime after installing the
 vercel dev
 ```
 
-Static file servers can show the frontend shell, but they cannot execute the serverless routes in `api/`.
+Use `vercel dev` for passkey, admin, and chat testing because those flows depend on the `/api/*` serverless endpoints. Static file servers such as `npx serve .` can show the frontend shell, but they cannot execute those routes.
 
 ### Build and Test Commands
 
@@ -140,16 +140,14 @@ npm run preview
 
 ### Environment Variables
 
-Configure these in Vercel Dashboard or `.env.local`:
+Configure these in Vercel Dashboard for deployment. For local API testing, create a root `.env.local` file; do not use a duplicate root `.env` file for secrets.
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `GOOGLE_API_KEY` | Google Gemini API Key | `AIzaSy...` |
-| `SESSION_SECRET` | Long random secret for signing `bwm_session` cookies | `openssl-random-value` |
+| `SESSION_SECRET` | 64-character random hex secret for signing `bwm_session` cookies | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `GOOGLE_SCRIPT_URL` | Google Apps Script endpoint for visitor validation/passkey generation | `https://script.google.com/.../exec` |
-| `GOOGLE_SHEET_URL` | Optional legacy published CSV fallback for passkeys | `https://docs.google.com/...` |
 | `ADMIN_PASSWORD` | Secure admin password | `SecurePass123!` |
-| `HISTORY_WINDOW_SIZE` | Chat history length (default: 30) | `30` |
 | `DEMO_CHAT_LIMIT` | Demo AI messages per signed demo session | `5` |
 | `VISITOR_CHAT_LIMIT` | Visitor AI messages per day | `15` |
 | `ADMIN_CHAT_LIMIT` | Admin AI messages per hour | `30` |
@@ -197,24 +195,31 @@ The serverless chat endpoint tries models in this order:
 ```
 BWM-KUL-City-Walk/
 ├── index.html              # Vite HTML entry
+├── data/
+│   ├── sites.json          # Canonical heritage site data source
+│   └── sites.schema.json   # Data validation schema
+├── public/
+│   ├── audio/              # Static sound assets
+│   └── images/
+│       ├── branding/       # Logos and UI textures
+│       ├── pwa/            # Manifest/app icons
+│       └── sites/          # Heritage site photos
 ├── src/
 │   ├── main.js             # Browser dependency bootstrap
-│   ├── styles/main.css     # Tailwind, Leaflet, and app CSS imports
+│   ├── app/                # App bootstrap and shared app helpers
+│   ├── config/             # Runtime configuration
+│   ├── features/           # Feature modules split by domain
+│   ├── services/           # Browser service clients and storage helpers
+│   ├── styles/             # Tailwind, Leaflet, and app CSS imports
 │   └── utils/              # Extracted low-risk utility modules
 ├── app.js                  # Legacy app controller, being modularized gradually
-├── config.js               # Runtime configuration
-├── session.js              # Browser-safe session helper
-├── storage.js              # Demo/visitor scoped localStorage helper
-├── data.json               # Heritage site data source
-├── data/sites.schema.json  # Data validation schema
 ├── scripts/validate-data.js
 ├── tests/                  # Vitest unit/data tests
 ├── api/
-│   ├── _session.js         # Signed cookie session utilities
+│   ├── _shared/            # Shared serverless helpers
 │   ├── chat.js             # Serverless AI chat endpoint
 │   ├── session/            # Demo, visitor, admin, current, logout session APIs
 │   └── admin/              # Protected admin prototype APIs
-├── images/                 # Site photos + PWA icons
 ├── manifest.json           # PWA install metadata
 └── vite.config.mjs         # Vite build configuration
 ```
@@ -223,7 +228,7 @@ BWM-KUL-City-Walk/
 
 ## Architecture
 
-The frontend remains Vanilla JavaScript. Vite builds the browser entry, bundles local dependencies, and emits hashed production assets in `dist/`. The large legacy controller is still present, but Phase 2 extraction has started with shared utility modules for debounce, modal behavior, and Google Maps URL construction.
+The frontend remains Vanilla JavaScript. Vite builds the browser entry, bundles local dependencies, and emits hashed production assets in `dist/`. The large legacy controller is still present, but Phase 2 extraction has started with shared utility modules, browser services, app bootstrap helpers, and feature folders.
 
 `api/` remains outside `src/` because those files are Vercel serverless functions.
 
@@ -282,14 +287,14 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 - Moved admin and visitor authorization to signed HttpOnly session cookies.
 - Split demo and visitor progress into separate localStorage namespaces with Reset Demo Progress.
 - Fixed recommended map sites K, L, and M so they appear in map filters.
-- Removed empty site records from `data.json` and stopped migration from deleting live site IDs `8` and `10`.
+- Removed empty site records from `data/sites.json` and stopped migration from deleting live site IDs `8` and `10`.
 - Improved GPS timeout messaging so users see visible feedback when location fails or falls back.
 
 ---
 
 ## Content Management
 
-### Heritage Sites (`data.json`)
+### Heritage Sites (`data/sites.json`)
 Edit this file to add/modify heritage sites:
 
 ```json
@@ -300,7 +305,7 @@ Edit this file to add/modify heritage sites:
   "coordinates": {"marker": [3.1481, 101.6961]},
   "info": "Brief description...",
   "info_more": "Detailed history...",
-  "image": "images/sultan-abdul-samad.jpg",
+  "image": "images/sites/sultan-abdul-samad.jpg",
   "architect": "A.C. Norman",
   "year": "1897"
 }

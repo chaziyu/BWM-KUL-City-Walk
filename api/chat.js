@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js');
-const { ROLE_LIMITS, getSessionFromRequest } = require('./_session');
+const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
 
 const MAX_QUERY_CHARS = Number(process.env.CHAT_MAX_QUERY_CHARS) || 1000;
 const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
@@ -109,7 +109,7 @@ function isQuotaExceeded(session) {
 // --- OPTIMIZATION: GLOBAL CONTEXT CACHING ---
 let FINAL_SYSTEM_PROMPT = "";
 try {
-    const jsonPath = path.join(process.cwd(), 'data.json');
+    const jsonPath = path.join(process.cwd(), 'data', 'sites.json');
     const sites = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
     let siteContext = "\n<knowledge_base_sites>";
@@ -146,7 +146,7 @@ Formatting:
 `;
 
 } catch (error) {
-    console.error('Error preloading data.json (Cold Start):', error);
+    console.error('Error preloading data/sites.json (Cold Start):', error);
     FINAL_SYSTEM_PROMPT = "Error: Could not load site data. Please contact admin.";
 }
 

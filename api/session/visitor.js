@@ -2,7 +2,7 @@ const {
     createSessionPayload,
     getSafeSessionDetails,
     setSessionCookie
-} = require('../_session');
+} = require('../_shared/session');
 
 function getTodayString() {
     return new Date().toLocaleDateString('en-GB', {

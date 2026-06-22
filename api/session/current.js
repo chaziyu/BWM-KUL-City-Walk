@@ -2,7 +2,7 @@ const {
     clearSessionCookie,
     getSafeSessionDetails,
     getSessionFromRequest
-} = require('../_session');
+} = require('../_shared/session');
 
 module.exports = async (request, response) => {
     if (request.method !== 'GET') {

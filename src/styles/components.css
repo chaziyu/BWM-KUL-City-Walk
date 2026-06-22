@@ -147,6 +147,7 @@ html {
         transform: translateY(0);
         opacity: 1;
     }
+
     100% {
         transform: translateY(10px);
         opacity: 1;
@@ -418,6 +419,7 @@ body {
         translate: 0 -16px;
         opacity: 0.35;
     }
+
     100% {
         translate: 0 0;
         opacity: 1;
@@ -427,7 +429,7 @@ body {
 .animate-pin-drop {
     /* 2. Add 'forwards' so it doesn't disappear/reset after finishing */
     animation: pinDrop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    
+
     /* 3. Prepares the browser for smooth painting */
     will-change: transform, opacity;
 }

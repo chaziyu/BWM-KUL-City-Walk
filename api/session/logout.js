@@ -1,4 +1,4 @@
-const { clearSessionCookie } = require('../_session');
+const { clearSessionCookie } = require('../_shared/session');
 
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {

@@ -1,4 +1,4 @@
-const { requireRole } = require('../_session');
+const { requireRole } = require('../_shared/session');
 
 function getTodayString() {
     return new Date().toLocaleDateString('en-GB', {

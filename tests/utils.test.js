@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildGoogleMapsUrls } from '../src/utils/google-maps.js';
 import { debounce } from '../src/utils/debounce.js';
-import { getScopedKey } from '../storage.js';
+import { getScopedKey } from '../src/services/storage.js';
 
 describe('scoped storage keys', () => {
   it('separates demo progress from visitor progress', () => {
