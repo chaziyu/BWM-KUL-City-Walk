@@ -1,2613 +1,1030 @@
-//PROBLEM: Kedai Ubat Kwong Ban Heng is not there anymore!!!
-//The garden flower stall is also not there anymore. Only the teochew association
-
-// --- CONFIGURATION ---
-import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './src/config/app-config.js';
-import { migrateData } from './src/services/storage-migration.js';
+import {
+  DEFAULT_CENTER,
+  HISTORY_WINDOW_SIZE,
+  MAX_FONT_SIZE,
+  MAX_MESSAGES_PER_SESSION,
+  ZOOM,
+} from './src/config/app-config.js';
+import { createAdminAccess } from './src/features/access/admin-access.js';
+import { createDemoAccess } from './src/features/access/demo-access.js';
+import { createLandingScreen } from './src/features/access/landing-screen.js';
+import { showOnly } from './src/features/access/access-ui.js';
+import { createVisitorAccess } from './src/features/access/visitor-access.js';
+import { createMapController } from './src/features/map/map-controller.js';
+import { bindMapUI } from './src/features/map/map-ui.js';
+import { createPassportController } from './src/features/passport/passport-controller.js';
+import { createProgressService } from './src/features/passport/progress-service.js';
+import { applyBadgeStatus } from './src/features/passport/progress-ui.js';
+import { createSiteActions } from './src/features/sites/site-actions.js';
+import { loadSiteData } from './src/features/sites/site-data.js';
+import { createSiteModalController } from './src/features/sites/site-modal.js';
 import { STRINGS } from './localization.js';
-import { endSession, getCurrentSession, refreshSession, startAdminSession, startDemoSession, startVisitorSession } from './src/services/session-client.js';
-import { clearScopedProgress, readScopedJSON, readScopedNumber, readScopedString, writeScopedJSON, writeScopedNumber, writeScopedString } from './src/services/storage.js';
-import { debounce } from './src/utils/debounce.js';
+import { migrateData } from './src/services/storage-migration.js';
+import {
+  endSession,
+  getCurrentSession,
+  refreshSession,
+  startAdminSession,
+  startDemoSession,
+  startVisitorSession,
+} from './src/services/session-client.js';
+import {
+  clearScopedProgress,
+  readScopedJSON,
+  readScopedNumber,
+  readScopedString,
+  writeScopedJSON,
+  writeScopedNumber,
+  writeScopedString,
+} from './src/services/storage.js';
 import { buildGoogleMapsUrls } from './src/utils/google-maps.js';
-import { animateCloseModal, animateOpenModal, animateScreenSwitch, installModalKeyboardHandlers, openModalState } from './src/utils/modal.js';
+import {
+  animateCloseModal,
+  animateOpenModal,
+  installModalKeyboardHandlers,
+  openModalState,
+} from './src/utils/modal.js';
 
-// --- UTILITIES ---
 const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const log = DEBUG ? console.log.bind(console) : () => { };
+const DEFAULT_BADGE_AVATAR = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280"><rect width="240" height="280" fill="#f8f1dd"/><circle cx="120" cy="90" r="52" fill="#1a3c5e"/><path d="M40 248c12-52 50-84 80-84s68 32 80 84" fill="#1a3c5e"/></svg>')}`;
+const allRiddles = [
+  { q: "My 41-meter clock tower houses a one-ton bell that first chimed for Queen Victoria's birthday. What am I?", a: '1' },
+  { q: 'I was designed by A.B. Hubback to perfectly match my famous neighbor, the Sultan Abdul Samad Building.', a: '2' },
+  { q: 'I am a 6-storey Art Deco building named after a famous tin tycoon, Loke Yew.', a: '3' },
+  { q: "I sit at the 'muddy confluence' of two rivers, the very birthplace of Kuala Lumpur.", a: '4' },
+  { q: 'My Art Deco clock tower was built in 1937 to commemorate the coronation of King George VI.', a: '5' },
+  { q: "I am KL's oldest Chinese temple, and I am uniquely angled to follow Feng Shui principles.", a: '6' },
+  { q: "I am an unusual triangular building with no 'five-foot way' and whimsical garlic-shaped finials on my roof.", a: '7' },
+  { q: 'In 1932, I was the tallest building in KL, standing at 85 feet. I also housed Radio Malaya.', a: '9' },
+  { q: 'My prayer services are held in both Arabic and Tamil, a unique feature for a mosque in this area.', a: '11' },
+  { q: "I am Malaysia's oldest existing jewellers, founded by a man who was shipwrecked!", a: '12' },
+  { q: "I was KL's only theatre, but I was heavily damaged by a major fire in the 1980s.", a: '13' },
+];
+
 let legacyStartPromise = null;
-
-function onDomReady(callback) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', callback, { once: true });
-        return;
-    }
-
-    callback();
-}
-
-
-// --- DATA MIGRATION ---
-// Run migration before loading any state variables
-migrateData();
-
-// --- HELPER FUNCTIONS ---
-
-/**
- * Opens Google Maps for directions or nearby search.
- * @param {number} lat - Latitude
- * @param {number} lon - Longitude
- * @param {string} mode - 'directions', 'restaurants', 'hotels', 'walk' or 'transit'
- * @param {string} [siteName] - Optional name of the location for richer place cards
- */
-function openGoogleMaps(lat, lon, mode, siteName = "") {
-    const { externalUrl, embedUrl } = buildGoogleMapsUrls(lat, lon, mode);
-
-    const directionsModal = document.getElementById('directionsModal');
-    const directionsIframe = document.getElementById('directionsIframe');
-    const directionsLoading = document.getElementById('directionsLoading');
-    const directionsTitle = document.getElementById('directionsTitle');
-    const externalMapsLink = document.getElementById('externalMapsLink');
-
-    if (directionsModal && directionsIframe) {
-        // --- Update Dynamic Title with Action Icons ---
-        if (directionsTitle) {
-            let titleText = "Directions";
-            let icon = "🗺️";
-            if (mode === 'restaurants') { titleText = `Food Near ${siteName || 'Site'}`; icon = "🍔"; }
-            else if (mode === 'hotels') { titleText = `Hotels Near ${siteName || 'Site'}`; icon = "🏨"; }
-            else if (mode === 'transit' || mode === 'directions') { titleText = `Transit to ${siteName || 'Site'}`; icon = "🚇"; }
-            else if (mode === 'walk') { titleText = `Walk to ${siteName || 'Site'}`; icon = "🚶"; }
-
-            directionsTitle.innerHTML = `<span>${icon}</span> ${titleText}`;
-        }
-        // Setup Iframe
-        if (directionsLoading) directionsLoading.classList.remove('hidden');
-        directionsIframe.onload = () => {
-            if (directionsLoading) directionsLoading.classList.add('hidden');
-        };
-
-        directionsIframe.src = embedUrl;
-        if (externalMapsLink) externalMapsLink.href = externalUrl;
-
-
-        // Open Modal if hidden
-        if (directionsModal.classList.contains('hidden')) {
-            animateOpenModal(directionsModal);
-        }
-    } else if (externalUrl) {
-        window.open(externalUrl, '_blank');
-    }
-}
-
-// --- GAME STATE ---
-let map = null;
 let activeSession = getCurrentSession();
-let visitedSites = [];
-let discoveredSites = [];
-const TOTAL_SITES = 11;
 let allSiteData = [];
-// NEW: Cached array of main heritage sites (numerical IDs) for performance
 let mainSites = [];
 let chatHistory = [];
 let userMessageCount = 0;
-let currentModalSite = null; // To track the currently open pin
-let currentModalMarker = null; // To track the currently open marker
-let userMarker = null; // Make userMarker global for proximity pulse
 let solvedRiddle = {};
-// Get or Create a unique Device ID for this browser
-let markersLayer = null;  // New: Layer group for markers
-let polygonsLayer = null; // New: Layer group for polygons
-// ZOOM_THRESHOLD imported from app config
-let allMarkers = {}; // NEW: Global object to store all Leaflet marker objects by site ID.
-let allPolygons = {}; // NEW: Global object to store all Leaflet polygon objects by site ID.
-const VISITED_POLYGON_COLOR = '#007bff'; // Blue color for visited polygons
-// --- END NEW FIXES ---
-
-// Cancels any in-progress pin-drop animation on a marker icon
-function cancelPinDrop(marker) {
-    const el = marker?._icon;
-    if (!el) return;
-    el.classList.remove('animate-pin-drop');
-}
+let gameUIBound = false;
 let deviceId = localStorage.getItem('bwm_device_id');
+
 if (!deviceId) {
-    deviceId = 'device-' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('bwm_device_id', deviceId);
+  deviceId = `device-${Math.random().toString(36).slice(2, 11)}`;
+  localStorage.setItem('bwm_device_id', deviceId);
 }
 
-// --- ADDED: DAILY RIDDLE DATABASE ---
-const allRiddles = [
-    { q: "My 41-meter clock tower houses a one-ton bell that first chimed for Queen Victoria's birthday. What am I?", a: "1" },
-    { q: "I was designed by A.B. Hubback to perfectly match my famous neighbor, the Sultan Abdul Samad Building.", a: "2" },
-    { q: "I am a 6-storey Art Deco building named after a famous tin tycoon, Loke Yew.", a: "3" },
-    { q: "I sit at the 'muddy confluence' of two rivers, the very birthplace of Kuala Lumpur.", a: "4" },
-    { q: "My Art Deco clock tower was built in 1937 to commemorate the coronation of King George VI.", a: "5" },
-    { q: "I am KL's oldest Chinese temple, and I am uniquely angled to follow Feng Shui principles.", a: "6" },
-    { q: "I am an unusual triangular building with no 'five-foot way' and whimsical garlic-shaped finials on my roof.", a: "7" },
-    { q: "In 1932, I was the tallest building in KL, standing at 85 feet. I also housed Radio Malaya.", a: "9" },
-    { q: "My prayer services are held in both Arabic and Tamil, a unique feature for a mosque in this area.", a: "11" },
-    { q: "I am Malaysia's oldest existing jewellers, founded by a man who was shipwrecked!", a: "12" },
-    { q: "I was KL's only theatre, but I was heavily damaged by a major fire in the 1980s.", a: "13" }
-];
+migrateData();
 
-// --- DOM Elements ---
-let siteModal, siteModalImage, siteModalLabel, siteModalTitle, siteModalInfo, siteModalQuizArea, siteModalQuizQ, siteModalQuizOptions, siteModalQuizInput, siteModalQuizBtn, siteModalQuizResult, closeSiteModal, siteModalAskAI, siteModalDirections, siteModalCheckInBtn, siteModalSolveChallengeBtn, siteModalMoreBtn, siteModalMoreContent, siteModalMore;
-let siteModalFoodBtn, siteModalHotelBtn; // NEW BUTTONS
-let chatModal, closeChatModal, chatHistoryEl, chatInput, chatSendBtn, chatLimitText;
-let passportModal, closePassportModal, passportInfo, passportGrid;
-let welcomeModal, closeWelcomeModal;
-let congratsModal, closeCongratsModal, shareWhatsAppBtn;
-let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challengeResult;
-let chaChingSound;
-let gameUIListenersAttached = false;
-let siteModalHintBtn, siteModalHintText;
+const progressService = createProgressService({
+  getNamespace: () => activeSession.progressNamespace || 'visitor',
+});
+
+const mapController = createMapController({
+  L: window.L,
+  loadSites: loadSiteData,
+  getIsCompleted: (siteId) => progressService.isCompleted(siteId),
+  onSiteSelected: (site) => siteModalController.open(site),
+  onSitesLoaded: (sites) => {
+    allSiteData = sites;
+    mainSites = sites.filter((site) => /^\d+$/.test(String(site.id)));
+    progressService.setMainSites(mainSites);
+    passportController.refreshProgress();
+  },
+});
+
+const passportController = createPassportController({
+  strings: STRINGS,
+  progressService,
+  getMainSites: () => mainSites,
+  getCongratsModal: () => document.getElementById('congratsModal'),
+  playCelebration() {
+    if (typeof confetti !== 'function') return;
+    const end = Date.now() + 3000;
+    (function frame() {
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+  },
+});
+
+const siteActions = createSiteActions({
+  strings: STRINGS,
+  progressController: passportController,
+  onMapRefresh: (siteId) => mapController.refreshVisitedState(siteId),
+  openGoogleMaps,
+  openChat(question) {
+    const siteModal = document.getElementById('siteModal');
+    const chatModal = document.getElementById('chatModal');
+    const chatInput = document.getElementById('chatInput');
+    siteModal?.classList.add('hidden');
+    animateOpenModal(chatModal);
+    if (chatInput) {
+      chatInput.value = question;
+      void handleSendMessage();
+    }
+  },
+  playChaChing() {
+    document.getElementById('chaChingSound')?.play?.();
+  },
+});
+
+const siteModalController = createSiteModalController({
+  strings: STRINGS,
+  actions: siteActions,
+  progressService,
+  getChallengeState() {
+    const day = getDayOfYear();
+    const today = allRiddles[day % allRiddles.length];
+    return {
+      siteId: today.a,
+      solved: solvedRiddle.day === day && solvedRiddle.id === today.a,
+    };
+  },
+  onChallengeSelected(site) {
+    const day = getDayOfYear();
+    const today = allRiddles[day % allRiddles.length];
+    solvedRiddle = { day, id: today.a };
+    writeScopedJSON('solved_riddle', solvedRiddle, getProgressNamespace());
+    document.getElementById('siteModal')?.classList.add('hidden');
+    updateChallengeModal();
+    animateOpenModal(document.getElementById('challengeModal'));
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    }
+  },
+});
+
+const demoAccess = createDemoAccess({
+  startDemoSession,
+  onSession(session) {
+    activeSession = session;
+    notifyLifecycle({ session: activeSession });
+  },
+});
+
+const visitorAccess = createVisitorAccess({
+  strings: STRINGS,
+  startVisitorSession,
+  deviceId,
+  onSession(session) {
+    activeSession = session;
+    notifyLifecycle({ session: activeSession });
+  },
+});
+
+const adminAccess = createAdminAccess({
+  strings: STRINGS,
+  startAdminSession,
+  endSession,
+  onSession(session) {
+    activeSession = session;
+    notifyLifecycle({ session: activeSession });
+  },
+  onShowMap() {
+    showMapExperience();
+  },
+});
+
+let lifecycleHandler = null;
+
+function notifyLifecycle(patch) {
+  if (typeof lifecycleHandler === 'function') lifecycleHandler(patch);
+}
+
+function onDomReady(callback) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', callback, { once: true });
+    return;
+  }
+
+  callback();
+}
 
 function getProgressNamespace() {
-    return activeSession.progressNamespace || 'visitor';
+  return activeSession.progressNamespace || 'visitor';
 }
 
 function getChatLimit() {
-    return Number(activeSession.chatLimit) || Number(MAX_MESSAGES_PER_SESSION) || 15;
+  return Number(activeSession.chatLimit) || Number(MAX_MESSAGES_PER_SESSION) || 15;
 }
 
 function loadScopedState() {
-    const namespace = getProgressNamespace();
-    visitedSites = readScopedJSON('visited', [], namespace);
-    discoveredSites = readScopedJSON('discovered', [], namespace);
-    chatHistory = readScopedJSON('chat_history', [], namespace);
-    userMessageCount = readScopedNumber('message_count', 0, namespace);
-    solvedRiddle = readScopedJSON('solved_riddle', {}, namespace);
-}
-
-function saveVisitedSites() {
-    writeScopedJSON('visited', visitedSites, getProgressNamespace());
-}
-
-function saveDiscoveredSites() {
-    writeScopedJSON('discovered', discoveredSites, getProgressNamespace());
+  progressService.load();
+  chatHistory = readScopedJSON('chat_history', [], getProgressNamespace());
+  userMessageCount = readScopedNumber('message_count', 0, getProgressNamespace());
+  solvedRiddle = readScopedJSON('solved_riddle', {}, getProgressNamespace());
 }
 
 function saveChatHistory() {
-    writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
+  writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
 }
 
 function saveMessageCount() {
-    writeScopedNumber('message_count', userMessageCount, getProgressNamespace());
+  writeScopedNumber('message_count', userMessageCount, getProgressNamespace());
 }
 
-function saveSolvedRiddle() {
-    writeScopedJSON('solved_riddle', solvedRiddle, getProgressNamespace());
+function applySessionChrome() {
+  document.documentElement.classList.toggle('jejak-hide-staff', activeSession?.role !== 'admin');
 }
 
-// --- BADGE GENERATION LOGIC ---
+function resetDailyChatIfNeeded() {
+  const todayStr = new Date().toDateString();
+  const namespace = getProgressNamespace();
+  const lastActiveDay = readScopedString('last_active_day', '', namespace);
 
-// 1. Setup Listeners
-function setupBadgeGeneration() {
-
-    // Elements
-    const badgeModal = document.getElementById('badgeInputModal');
-    const closeBadgeBtn = document.getElementById('closeBadgeModal');
-    const btnGenerate = document.getElementById('btnGenerateBadge');
-
-    const nameInput = document.getElementById('explorerNameInput');
-    const photoInput = document.getElementById('explorerPhotoInput');
-
-    // Template Elements
-    const badgeName = document.getElementById('badgeNameDisplay');
-    const badgeDate = document.getElementById('badgeDateDisplay');
-    const badgePhoto = document.getElementById('badgeProfileImage');
-
-    // Close Modal Logic
-    if (closeBadgeBtn) {
-        closeBadgeBtn.addEventListener('click', () => {
-            badgeModal.classList.add('hidden');
-        });
-    }
-
-    // 2. The Main Generation Function
-    if (btnGenerate) {
-        btnGenerate.addEventListener('click', async () => {
-            // A. Update the Template with User Data
-            const userName = nameInput.value.trim() || "Master Explorer"; // Default if empty
-            badgeName.textContent = userName;
-
-            // Set Date
-            const today = new Date();
-            badgeDate.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-
-            // Handle Photo
-            // Handle Photo
-            if (photoInput.files && photoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    badgePhoto.onload = () => {
-                        // Tiny delay to ensure rendering matches DOM
-                        requestAnimationFrame(() => captureAndDownload());
-                    };
-                    badgePhoto.src = e.target.result;
-                }
-                reader.readAsDataURL(photoInput.files[0]);
-            } else {
-                // Use default if no photo uploaded
-                badgePhoto.crossOrigin = "anonymous"; // Important for external images
-                badgePhoto.onload = () => {
-                    requestAnimationFrame(() => captureAndDownload());
-                };
-                badgePhoto.src = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
-            }
-        });
-    }
-
-    // 3. The Screenshot & Download Logic
-    function captureAndDownload() {
-        const badgeElement = document.getElementById('hiddenBadgeTemplate');
-
-        // Show loading state
-        btnGenerate.textContent = STRINGS.game.generatingBadge;
-        btnGenerate.disabled = true;
-
-        // UNHIDE TEMPLATE FOR CAPTURE
-        badgeElement.style.opacity = '1';
-        badgeElement.style.zIndex = '-50'; // Keep behind
-
-        // DYNAMIC STATUS & CAPTION UPDATE
-        const statusDisplay = document.getElementById('badgeStatusDisplay');
-        const captionDisplay = document.getElementById('badgeCaptionDisplay');
-        const statusStamp = document.getElementById('badgeStatusStamp');
-
-        if (statusDisplay && captionDisplay && statusStamp) {
-            const visitedCount = visitedSites.length;
-            const mainSitesTotal = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
-            const isComplete = visitedCount >= mainSitesTotal;
-
-            // 1. Determine Title based on count
-            let title = STRINGS.game.badgeLevels.beginner;
-            if (visitedCount >= 10) title = STRINGS.game.badgeLevels.master;
-            else if (visitedCount >= 6) title = STRINGS.game.badgeLevels.specialist;
-            else if (visitedCount >= 3) title = STRINGS.game.badgeLevels.explorer;
-
-            statusDisplay.textContent = title;
-
-            // 2. Determine Caption
-            const caption = isComplete
-                ? STRINGS.game.badgeCaptions.complete
-                : STRINGS.game.badgeCaptions.partial(visitedCount);
-
-            captionDisplay.textContent = `"${caption}"`;
-
-            // 3. Update Red Stamp
-            if (isComplete) {
-                statusStamp.innerHTML = '<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>COMPLETED</div>';
-            } else {
-                statusStamp.innerHTML = `<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>${visitedCount}/${mainSitesTotal} VISITED</div>`;
-            }
-        }
-
-        html2canvas(badgeElement, {
-            scale: 2, // High resolution
-            useCORS: true, // Allow loading external images
-            backgroundColor: null // Transparent background handling
-        }).then(canvas => {
-            // RE-HIDE TEMPLATE
-            badgeElement.style.opacity = '0';
-
-            // Create download link
-            const link = document.createElement('a');
-            link.download = `Heritage-Explorer-${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-
-            // Reset UI
-            btnGenerate.textContent = STRINGS.game.generateBadge;
-            btnGenerate.disabled = false;
-
-            // Play sound!
-            if (typeof chaChingSound !== 'undefined') chaChingSound.play();
-
-        }).catch(err => {
-            // RE-HIDE TEMPLATE
-            badgeElement.style.opacity = '0';
-
-            console.error("Badge generation failed:", err);
-            alert(STRINGS.game.badgeError);
-            btnGenerate.textContent = STRINGS.game.tryAgain;
-            btnGenerate.disabled = false;
-        });
-    }
+  if (lastActiveDay !== todayStr) {
+    userMessageCount = 0;
+    writeScopedNumber('message_count', 0, namespace);
+    writeScopedString('last_active_day', todayStr, namespace);
+  }
 }
 
-//BUG FIX
-// --- UTILITY FUNCTION FOR SAFELY MANAGING MARKER STATE ---
-function safelyUpdateMarkerVisitedState(marker, isVisited) {
-    if (!marker) return; // Defensive check
+function openGoogleMaps(lat, lon, mode, siteName = '') {
+  const { externalUrl, embedUrl } = buildGoogleMapsUrls(lat, lon, mode);
+  const directionsModal = document.getElementById('directionsModal');
+  const directionsIframe = document.getElementById('directionsIframe');
+  const directionsLoading = document.getElementById('directionsLoading');
+  const directionsTitle = document.getElementById('directionsTitle');
+  const externalMapsLink = document.getElementById('externalMapsLink');
 
-    // 1. Persist state on the Leaflet object (Custom Property)
-    marker.options.isVisited = isVisited;
-
-    // 2. Safely apply the CSS class to the icon (if currently rendered)
-    if (marker && marker._icon) {
-        if (isVisited) {
-            marker._icon.classList.add('marker-visited');
-        } else {
-            marker._icon.classList.remove('marker-visited');
-        }
+  if (directionsTitle) {
+    let titleText = 'Directions';
+    let icon = 'Map';
+    if (mode === 'restaurants') {
+      titleText = `Food Near ${siteName || 'Site'}`;
+      icon = 'Food';
+    } else if (mode === 'hotels') {
+      titleText = `Hotels Near ${siteName || 'Site'}`;
+      icon = 'Hotel';
+    } else if (mode === 'transit' || mode === 'directions') {
+      titleText = `Transit to ${siteName || 'Site'}`;
+      icon = 'Transit';
+    } else if (mode === 'walk') {
+      titleText = `Walk to ${siteName || 'Site'}`;
+      icon = 'Walk';
     }
+    directionsTitle.innerHTML = `<span>${icon}</span> ${titleText}`;
+  }
+
+  if (directionsModal && directionsIframe) {
+    directionsLoading?.classList.remove('hidden');
+    directionsIframe.onload = () => directionsLoading?.classList.add('hidden');
+    directionsIframe.src = embedUrl;
+    if (externalMapsLink) externalMapsLink.href = externalUrl;
+    if (directionsModal.classList.contains('hidden')) animateOpenModal(directionsModal);
+    return;
+  }
+
+  if (externalUrl) window.open(externalUrl, '_blank');
 }
 
-// NEW HELPER: Safely updates the polygon's color
-function safelyUpdatePolygonVisitedState(siteId, isVisited) {
-    const polygon = allPolygons[siteId];
-    if (polygon) {
-        // NEW HELPER: Safely updates the polygon's color
-        if (isVisited) {
-            polygon.setStyle({
-                color: VISITED_POLYGON_COLOR, // Blue Outline
-                fillColor: VISITED_POLYGON_COLOR, // Blue Fill
-                fillOpacity: POLYGON_OPACITY // Reduced opacity for visited
-            });
-        } else {
-            // Logic to revert to original colors if needed (for completeness)
-            const site = allSiteData.find(s => s.id === siteId);
-            if (site) {
-                const { markerColor, fillColor } = getSiteColors(site);
-                polygon.setStyle({
-                    color: markerColor,
-                    fillColor: fillColor,
-                    fillOpacity: 0.5
-                });
-            }
-        }
-    }
-}
-
-// --- MAP FILTER STATE ---
-let activeFilterMode = 'must_visit'; // Default: Top 6 Only (as requested "highlight only")
-
-// ... (existing code) ...
-
-//MAP LOGIC
-// 2. The Switcher Function (No "site" variable needed here!)
-// --- MAP VISIBILITY TOGGLE (UPDATED FOR TABS) ---
-function updateVisibility() {
-    // Safety check: ensure map and layers are initialized before proceeding
-    if (!map || !markersLayer || !polygonsLayer) return;
-
-    const currentZoom = map.getZoom();
-
-    // 1. Determine which Sites to Show based on Filter Mode
-    const visibleSiteIds = allSiteData
-        .filter(site => {
-            if (activeFilterMode === 'must_visit') {
-                return site.category === 'must_visit';
-            } else {
-                return site.category === 'recommended';
-            }
-        })
-        .map(site => site.id);
-
-    // A. Handle Markers (Show when Zoom < Threshold)
-    if (currentZoom < ZOOM_THRESHOLD) {
-        // Ensure Polygons are hidden
-        if (map.hasLayer(polygonsLayer)) map.removeLayer(polygonsLayer);
-
-        // Ensure Markers Layer Group is on map
-        if (!map.hasLayer(markersLayer)) map.addLayer(markersLayer);
-
-        // Toggle individual markers within the group
-        Object.keys(allMarkers).forEach(id => {
-            const marker = allMarkers[id];
-            if (visibleSiteIds.includes(id)) {
-                if (!markersLayer.hasLayer(marker)) markersLayer.addLayer(marker);
-            } else {
-                if (markersLayer.hasLayer(marker)) markersLayer.removeLayer(marker);
-            }
-        });
-
-    } else {
-        // Zoomed in: Show Polygons (Show when Zoom >= Threshold)
-        // Ensure Markers are hidden
-        if (map.hasLayer(markersLayer)) map.removeLayer(markersLayer);
-
-        // Ensure Polygons Layer Group is on map
-        if (!map.hasLayer(polygonsLayer)) map.addLayer(polygonsLayer);
-
-        // Toggle individual polygons within the group
-        Object.keys(allPolygons).forEach(id => {
-            const poly = allPolygons[id];
-            if (visibleSiteIds.includes(id)) {
-                if (!polygonsLayer.hasLayer(poly)) polygonsLayer.addLayer(poly);
-            } else {
-                if (polygonsLayer.hasLayer(poly)) polygonsLayer.removeLayer(poly);
-            }
-        });
-    }
-}
-
-// --- UTILITY FUNCTION FOR COLOR CODING BASED ON ID ---
-function getSiteColors(site) {
-    const isMainLocation = /^\d+$/.test(site.id); // Checks if ID is a number (1, 2, 3...)
-
-    if (isMainLocation) {
-        // Colors for Main Heritage Sites (Numerical ID: 1, 2, 3...)
-        const markerColor = "#A0522D"; // Sienna Brown
-        const fillColor = "#DEB887";   // Light Tan for polygon fill
-        const className = 'main-marker-pin';
-        return { markerColor, fillColor, className };
-    } else {
-        // Colors for Checkpoints/Bonus Sites (Alphabetical ID: A, B, M...)
-        // UPDATED: Changed from Green to Purple for better contrast against map greenery
-        const markerColor = "#9333EA"; // Vibrant Purple (Tailwind Purple-600)
-        const fillColor = "#E9D5FF";   // Light Purple (Tailwind Purple-200)
-        const className = 'bonus-marker-pin';
-        return { markerColor, fillColor, className };
-    }
-}
-
-// --- RELEASE RESOURCES ---
-function destroyMap() {
-    if (map) {
-        map.remove(); // Removes from DOM and cleans up Leaflet listeners
-        map = null;
-        allMarkers = {};
-        allPolygons = {};
-        markersLayer = null;
-        polygonsLayer = null;
-        userMarker = null;
-        log("Map destroyed and resources released.");
-    }
-}
-
-// --- CORE GAME & MAP INITIALIZATION ---
-function initializeGameAndMap() {
-    if (map) return;
-
-    // 1. Initialize the map object FIRST (Disable default zoom control)
-    // ADDED: maxBounds to prevent panning away from KL
-    map = L.map('map', {
-        zoomControl: false,
-        minZoom: 14,
-        maxBounds: [
-            [3.13, 101.67], // Southwest corner
-            [3.17, 101.72]  // Northeast corner
-        ],
-        maxBoundsViscosity: 1.0 // Bounce back immediately
-    }).setView(DEFAULT_CENTER, 16);
-
-    // 2. NOW you can SAFELY attach the event listener, preventing the TypeError
-    map.on('zoomend', updateVisibility); // <--- FIX IS HERE
-    // NEW: Handle resize events (e.g. device rotation) to keep markers/polygons in sync
-    window.addEventListener('resize', updateVisibility);
-
-    // MODIFIED: Reverted to the original map style
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors © CARTO',
-        maxZoom: 20
-    }).addTo(map);
-
-    setTimeout(() => { map.invalidateSize(); }, 100);
-
-    const heritageZoneCoords = [
-        [3.147975450896226, 101.69407218460753],
-        [3.147875669801323, 101.69457723912365],
-        [3.147127721948337, 101.6944130737071],
-        [3.1470551688521766, 101.69489184188524],
-        [3.147040581431142, 101.6953510702482],
-        [3.146910977360818, 101.69596787508766],
-        [3.146040219660293, 101.69582514844836],
-        [3.1459295524663276, 101.69591377737044],
-        [3.1458637739165027, 101.69617940300776],
-        [3.145620507639194, 101.69619754843524],
-        [3.1454236958548734, 101.69644408495282],
-        [3.1454269210279193, 101.69664152594663],
-        [3.145876457674504, 101.69661151752189],
-        [3.145989111582452, 101.69696174751328],
-        [3.1461807892438145, 101.6967713155949],
-        [3.146446040826959, 101.69663637886669],
-        [3.1466857109719655, 101.69655305879348],
-        [3.1468060604896664, 101.69655801223007],
-        [3.146937297155233, 101.69705182258997],
-        [3.1479001753267966, 101.69784272570865],
-        [3.1487399967401046, 101.69704196933861],
-        [3.1491752105470994, 101.69664523897148],
-        [3.149414835714637, 101.69667637206499],
-        [3.1496467598275046, 101.69679166205447],
-        [3.150331101888554, 101.69749987377344],
-        [3.1504978321912773, 101.69782269435706],
-        [3.1511062051509526, 101.69778453086059],
-        [3.151545588948821, 101.69793104810935],
-        [3.1518111265568223, 101.69815387102346],
-        [3.1520067804815, 101.69841858672044],
-        [3.152150698997616, 101.69845017521152],
-        [3.152608986205081, 101.69846133998499],
-        [3.1518050329278964, 101.6972225224726],
-        [3.1518256789736085, 101.69716162454762],
-        [3.152118750930242, 101.696964832047],
-        [3.1512956011897018, 101.69643352266093],
-        [3.1510097545517226, 101.69612397196687],
-        [3.1513137554572097, 101.69585324808077],
-        [3.151576527436319, 101.6955174573178],
-        [3.150015739068621, 101.69453740808854],
-        [3.147974025683567, 101.69407485071252]
-    ];
-
-    // Original heritage zone polygon
-    L.polyline(heritageZoneCoords, {
-        color: '#8B4513',
-        weight: 4,
-        dashArray: '20, 10', // Key: Sets a dashed line pattern
-        interactive: false,
-        className: 'animated-trail' // Key: Assign a CSS class
-    }).addTo(map);
-
-    // 3. Initialize the Layer Groups
-    markersLayer = L.layerGroup().addTo(map); // Add markers layer to map (visible by default)
-    polygonsLayer = L.layerGroup();           // Do NOT add polygons layer to map yet
-
-    markersLayer.on('add', () => {
-        markersLayer.eachLayer(layer => {
-            // Check the state we saved on the marker object
-            if (layer.options.isVisited) {
-                safelyUpdateMarkerVisitedState(layer, true);
-            }
-        });
-    });
-
-    fetch(new URL('./data/sites.json', import.meta.url)).then(res => res.json()).then(sites => {
-        allSiteData = sites;
-        // CACHE MAIN SITES (Performance Optimization)
-        mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
-        log("Loaded sites:", allSiteData.length);
-
-        sites.forEach(site => {
-
-            // 1. FIX: DEFINE THE VARIABLE HERE!
-            const isSiteVisited = visitedSites.includes(site.id) || discoveredSites.includes(site.id); // <--- FIX IS HERE
-
-            // 1. Get Colors and Classes based on ID (Numerical vs. Alphabetical)
-            const { markerColor, fillColor, className } = getSiteColors(site);
-
-            // --- Determine Coordinates ---
-            let latlng = Array.isArray(site.coordinates) ? site.coordinates : site.coordinates?.marker;
-            if (!latlng) return;
-
-            // 2. Create the Custom Div Icon using the calculated color
-            /*
-            const customIcon = L.divIcon({
-                className: 'custom-map-pin ' + className,
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                // Use inline style for the color block of the pin
-                html: `<div style="background-color: ${markerColor};" class="pin-head"></div><div class="pin-shadow"></div>`
-            });
-            */
-            // 3. Create the Marker
-            const marker = L.marker(latlng)
-                .bindTooltip(site.name, {
-                    permanent: false,
-                    direction: 'top',
-                    sticky: true
-                });
-
-            // NEW: Store the marker globally
-            allMarkers[site.id] = marker;
-
-            // FIX: Use the 'add' event and the helper to safely apply the class
-            if (visitedSites.includes(site.id) || discoveredSites.includes(site.id)) {
-                // Set the state on the marker object itself for persistence
-                marker.options.isVisited = true;
-            }
-
-            // Always attach the listener to handle re-adding to map (filtering)
-            marker.on('add', (e) => {
-                // ADDED: Pin Drop Animation (Safe delay and cleanup)
-                setTimeout(() => {
-                    const el = e.target._icon;
-                    if (el) {
-                        el.classList.add('animate-pin-drop');
-                        setTimeout(() => {
-                            el.classList.remove('animate-pin-drop');
-                        }, 500);
-                    }
-                }, 0);
-
-                if (e.target.options.isVisited) {
-                    safelyUpdateMarkerVisitedState(e.target, true);
-                }
-            });
-            // END FIX
-            // 4. Attach Click Event
-            marker.on('click', () => {
-                openSiteDetails(site, marker);
-            });
-            markersLayer.addLayer(marker);
-
-            // 4. Create the Polygon
-            if (site.coordinates.polygon) {
-                const poly = L.polygon(site.coordinates.polygon, {
-                    color: markerColor,          // Outline: Category Color
-                    fillColor: fillColor,        // Fill: Lighter Category Color
-                    fillOpacity: 0.5,
-                    weight: 2
-                });
-
-                // NEW: Store the polygon globally
-                allPolygons[site.id] = poly;
-
-                // NEW: Check if already visited and apply VISITED_POLYGON_COLOR
-                if (isSiteVisited) {
-                    safelyUpdatePolygonVisitedState(site.id, true);
-                }
-
-                poly.on('click', () => openSiteDetails(site, marker));
-                polygonsLayer.addLayer(poly);
-            }
-
-        });
-
-        updateGameProgress();
-        updatePassport();
-        // FIX: Apply initial filter immediately after loading data
-        updateVisibility();
-    }).catch(err => console.error("Error loading Map Data:", err));
-
-
-    // --- Custom User Location Pin ---
-    const userIcon = L.divIcon({
-        // 1. Keep the wrapper clean (no animation here!)
-        className: 'user-pin-wrapper',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-        // 2. Add the style class to this INNER div instead
-        html: '<div class="user-location-pin"></div>'
-    });
-
-    // Make userMarker global
-    userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
-    //userMarker = L.marker([0, 0]).addTo(map);
-
-    const userCircle = L.circle([0, 0], {
-        color: "#10B981",
-        opacity: 0.4,
-        fillColor: "#10B981",
-        fillOpacity: 0.05,
-        weight: 1
-    }).addTo(map);
-
-    // Create debounced version to limit proximity calculations
-    const debouncedProximityPulse = debounce(updateProximityPulse, 500);
-
-    map.on('locationfound', (e) => {
-        userMarker.setLatLng(e.latlng);
-        userCircle.setLatLng(e.latlng).setRadius(Math.min(e.accuracy / 2, 100));
-
-        // --- ADDED: Proximity Feature Logic ---
-        if (allSiteData.length > 0) {
-            debouncedProximityPulse(e.latlng);
-        }
-    });
-
-    // GPS State
-    let gpsRetryCount = 0;
-    let gpsFailed = false;
-
-    function showGpsWarning(message) {
-        let toast = document.getElementById('gpsStatusToast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'gpsStatusToast';
-            toast.className = 'fixed bottom-24 left-4 right-4 z-[5000] bg-amber-50 border border-amber-300 text-amber-900 text-sm font-semibold rounded-lg px-4 py-3 shadow-lg';
-            document.body.appendChild(toast);
-        }
-
-        toast.textContent = message;
-        toast.classList.remove('hidden');
-        clearTimeout(showGpsWarning.hideTimer);
-        showGpsWarning.hideTimer = setTimeout(() => toast.classList.add('hidden'), 7000);
-    }
-
-    map.on('locationerror', (e) => {
-        if (DEBUG) console.error("GPS Error:", e);
-
-        if (e.code === 3) {
-            gpsRetryCount++;
-            if (gpsRetryCount >= 2) {
-                console.warn("GPS timed out twice. Location updates stopped.");
-                showGpsWarning("GPS is having trouble finding you. Move outdoors or check location permissions, then refresh to try again.");
-                gpsFailed = true;
-                map.stopLocate();
-                return;
-            }
-        }
-
-        let errorMessage = "GPS Error: ";
-        switch (e.code) {
-            case 1:
-                errorMessage += "Permission Denied. Please allow location access in your browser or device settings, then refresh.";
-                break;
-            case 2:
-                errorMessage += "Position Unavailable. Please move directly under the open sky. GPS signals are weak indoors.";
-                break;
-            case 3:
-                errorMessage += "Request Timed Out. Trying a lower accuracy location method now.";
-                console.warn(errorMessage);
-                showGpsWarning("GPS timed out. Trying a lower accuracy location method now.");
-                map.locate({ watch: true, enableHighAccuracy: false, maximumAge: 10000 });
-                return;
-            default:
-                errorMessage += (e.message || "Unknown location error.") + " Ensure Location Services are ON and you are using HTTPS.";
-        }
-
-        console.warn(errorMessage);
-        showGpsWarning(errorMessage);
-    });
-
-    // Modified to include timeout and maximumAge to prevent infinite hanging
-    map.locate({
-        watch: true,
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 10000
-    });
-
-    // --- MAP FILTER STATE --- (Managed by activeFilterMode global)
-
-    // ... (existing code) ...
-
-    // 4. Set initial layer visibility based on starting zoom
-    updateVisibility();
-
-    // 5. Initialize Map Filter Tab Logic
-    const tabMustVisit = document.getElementById('tabMustVisit');
-    const tabRecommended = document.getElementById('tabRecommended');
-
-    function updateTabStyles() {
-        if (!tabMustVisit || !tabRecommended) return;
-
-        if (activeFilterMode === 'must_visit') {
-            // Must Visit Active
-            tabMustVisit.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
-            tabRecommended.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
-        } else {
-            // Recommended Active
-            tabMustVisit.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent";
-            tabRecommended.className = "w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700";
-        }
-    }
-
-    if (tabMustVisit && tabRecommended) {
-        tabMustVisit.addEventListener('click', () => {
-            activeFilterMode = 'must_visit';
-            updateTabStyles();
-            updateVisibility();
-        });
-
-        tabRecommended.addEventListener('click', () => {
-            activeFilterMode = 'recommended';
-            updateTabStyles();
-            updateVisibility();
-        });
-
-        // Init styles
-        updateTabStyles();
-    }
-
-
-    if (!sessionStorage.getItem('jejak_welcome_shown')) {
-        document.getElementById('welcomeModal').classList.remove('hidden');
-        sessionStorage.setItem('jejak_welcome_shown', 'true');
-    }
-}
-
-// --- GAME LOGIC FUNCTIONS ---
-
-// ADDED: Proximity Pulse Function
-// ADDED: Proximity Pulse Function with Performance Optimization
-let currentPulseClass = ''; // Track current state
-
-function updateProximityPulse(userLatLng) {
-    if (!userMarker || !userMarker._icon) return;
-
-    let closestDist = Infinity;
-
-    // Check all main sites (using cached array if available)
-    const sitesToCheck = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites : allSiteData;
-
-    // Filter out visited ones for the pulse (we want to guide them to NEW things)
-    const activeSites = sitesToCheck.filter(site =>
-        !visitedSites.includes(site.id) && !discoveredSites.includes(site.id)
-    );
-
-    activeSites.forEach(site => {
-        let latlng = null;
-        if (Array.isArray(site.coordinates)) {
-            latlng = site.coordinates;
-        } else if (site.coordinates && site.coordinates.marker) {
-            latlng = site.coordinates.marker;
-        }
-
-        if (latlng) {
-            const dist = userLatLng.distanceTo(latlng);
-            if (dist < closestDist) closestDist = dist;
-        }
-    });
-
-    // Determine target class
-    let newClass = 'pulse-slow';
-    if (closestDist < 75) newClass = 'pulse-fast';
-    else if (closestDist < 250) newClass = 'pulse-medium';
-
-    // OPTIMIZATION: Only touch DOM if class is different
-    if (currentPulseClass !== newClass) {
-        // Support both direct icon and inner wrapper depending on icon type
-        const pinElement = userMarker._icon.querySelector('.user-location-pin') || userMarker._icon;
-
-        // Remove old classes
-        pinElement.classList.remove('pulse-fast', 'pulse-medium', 'pulse-slow');
-
-        // Add new class
-        pinElement.classList.add(newClass);
-
-        currentPulseClass = newClass;
-    }
-}
-
-// ADDED: Get Day of Year Function
 function getDayOfYear() {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    return Math.floor(diff / oneDay);
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
 }
 
-// ADDED: Update Daily Challenge Modal Function
 function updateChallengeModal() {
-    const dayOfYear = getDayOfYear();
-    const riddleIndex = dayOfYear % allRiddles.length;
-    const todayRiddle = allRiddles[riddleIndex];
+  const challengeRiddle = document.getElementById('challengeRiddle');
+  const challengeResult = document.getElementById('challengeResult');
+  if (!challengeRiddle || !challengeResult) return;
 
-    challengeRiddle.textContent = `"${todayRiddle.q}"`;
-
-    if (solvedRiddle.day === dayOfYear && solvedRiddle.id === todayRiddle.a) {
-        challengeResult.textContent = STRINGS.game.challengeSolved;
-    } else {
-        challengeResult.textContent = STRINGS.game.challengeHint;
-    }
+  const day = getDayOfYear();
+  const today = allRiddles[day % allRiddles.length];
+  challengeRiddle.textContent = `"${today.q}"`;
+  challengeResult.textContent =
+    solvedRiddle.day === day && solvedRiddle.id === today.a
+      ? STRINGS.game.challengeSolved
+      : STRINGS.game.challengeHint;
 }
-
-function handleMarkerClick(site, marker) {
-    if (!siteModal) {
-        console.error("Site modal is not initialized!");
-        return;
-    }
-
-    // Ensure preview card is closed if it was open
-    closePreviewCard();
-
-    currentModalSite = site;
-    currentModalMarker = marker; // Store the marker reference
-
-    // --- STAGGERED ENTRANCE RESET ---
-    const elementsToStagger = [
-        siteModalTitle,
-        siteModalInfo,
-        document.getElementById('siteModalMore'),
-        document.getElementById('siteModalCheckInBtn'),
-        document.getElementById('siteModalSolveChallengeBtn'),
-        document.querySelector('#siteModal .flex.gap-2'), // Directions/AskAI row
-        document.querySelectorAll('#siteModal .flex.gap-2')[1] // Food/Hotel row
-    ];
-
-    elementsToStagger.forEach((el, index) => {
-        if (!el) return;
-        // If it's a NodeList (from querySelectorAll), handle each
-        if (el instanceof NodeList) {
-            el.forEach(subEl => {
-                // Skip animating buttons/links so action controls appear instantly
-                const tag = (subEl.tagName || '').toUpperCase();
-                if (tag === 'BUTTON' || tag === 'A') return;
-
-                subEl.classList.remove('animate-staggered');
-                subEl.style.opacity = '0';
-                void subEl.offsetWidth; // trigger reflow
-                subEl.classList.add('animate-staggered');
-                subEl.style.animationDelay = `${0.1 + (index * 0.1)}s`;
-            });
-        } else {
-            // If this element contains action controls, skip animating it
-            try {
-                if (el.querySelector && el.querySelector('button, a')) {
-                    return; // parent contains buttons/links -> don't animate parent
-                }
-            } catch (e) { }
-
-            el.classList.remove('animate-staggered');
-            el.style.opacity = '0';
-            void el.offsetWidth; // trigger reflow
-            el.classList.add('animate-staggered');
-            el.style.animationDelay = `${0.1 + (index * 0.1)}s`;
-        }
-    });
-
-    // 1. Basic Site Info
-    siteModalLabel.textContent = site.id ? `${site.id}.` : "";
-    siteModalTitle.textContent = site.name;
-    siteModalInfo.textContent = site.info;
-    siteModalImage.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
-
-    // Make sure action buttons/links inside the modal are visible immediately
-    try {
-        const modalRoot = document.getElementById('siteModal');
-        if (modalRoot) {
-            const actionIds = ['btnTextSizeLarge','btnTextSizeSmall','btnTextSizeReset','siteModalMoreBtn','siteModalDirections','siteModalAskAI','siteModalCheckInBtn'];
-            actionIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.classList.remove('animate-staggered');
-                    el.style.opacity = '1';
-                    el.style.animation = 'none';
-                    el.style.transition = 'none';
-                    el.style.transform = 'none';
-                }
-            });
-            // Also clear any buttons inside those flex rows
-            const flexButtons = modalRoot.querySelectorAll('.flex button, .flex a');
-            flexButtons.forEach(b => {
-                b.classList.remove('animate-staggered');
-                b.style.opacity = '1';
-                b.style.animation = 'none';
-                b.style.transition = 'none';
-                b.style.transform = 'none';
-            });
-
-            // Also ensure parent flex rows are visible immediately (they may have been animated)
-            const flexRows = modalRoot.querySelectorAll('.flex.gap-2');
-            flexRows.forEach(r => {
-                r.classList.remove('animate-staggered');
-                r.style.opacity = '1';
-                r.style.animation = 'none';
-                r.style.transition = 'none';
-                r.style.transform = 'none';
-            });
-        }
-    } catch (e) { /* ignore */ }
-
-    // 2. MORE INFO SECTION (Replaced AI-Context with Flyer-Text, kept original font)
-    if (!siteModalMore || !siteModalMoreBtn || !siteModalMoreContent) {
-        siteModalMore = document.getElementById('siteModalMore');
-        siteModalMoreBtn = document.getElementById('siteModalMoreBtn');
-        siteModalMoreContent = document.getElementById('siteModalMoreContent');
-    }
-
-    if (siteModalMore && siteModalMoreBtn && siteModalMoreContent) {
-        // --- Flyer Image (B&W PNG) ---
-        const bwImageHtml = (site.flyer_image && site.flyer_image.trim() !== "")
-            ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">`
-            : "";
-
-        // --- Flyer Text (Replacing AI Context - Kept original text styling) ---
-        const flyerTextHtml = site.flyer_text
-            ? `<p class="text-gray-700 mb-4">${site.flyer_text}</p>`
-            : "";
-
-        // --- Visitor FAQ ---
-        let faqHtml = "";
-        if (site.faq) {
-            faqHtml = `
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h4 class="font-bold text-gray-900 text-sm">📍 Visitor Quick Facts</h4>
-                    <ul class="text-sm text-gray-700">
-                        <li><strong>🕒 Hours:</strong> ${site.faq.opening_hours || 'Exterior view 24/7'}</li>
-                        <li><strong>🎟️ Fee:</strong> ${site.faq.ticket_fee || 'Free Admission'}</li>
-                        <li><strong>💡 Tip:</strong> ${site.faq.tips || 'Great for photography!'}</li>
-                    </ul>
-                </div>
-            `;
-        }
-
-        // --- Combine into the dropdown ---
-        // Strictly using Flyer info only. ai_context is deleted here.
-        siteModalMoreContent.innerHTML = `${bwImageHtml}${flyerTextHtml}${faqHtml}`;
-
-        // Reset visibility for each new site opened
-        siteModalMoreContent.classList.add('hidden');
-        siteModalMoreBtn.textContent = 'More info';
-
-        // Only show button if Flyer or FAQ data exists
-        const hasExtraInfo = bwImageHtml || flyerTextHtml || faqHtml;
-        siteModalMore.style.display = hasExtraInfo ? 'block' : 'none';
-
-        siteModalMoreBtn.onclick = () => {
-            const isHidden = siteModalMoreContent.classList.contains('hidden');
-            if (isHidden) {
-                siteModalMoreContent.classList.remove('hidden');
-                siteModalMoreBtn.textContent = 'Hide info';
-            } else {
-                siteModalMoreContent.classList.add('hidden');
-                siteModalMoreBtn.textContent = 'More info';
-            }
-        };
-    }
-
-    // 3. ACTIONS (Kept the AI button visible)
-    siteModalDirections.style.display = 'block';
-    siteModalAskAI.style.display = 'block';
-
-    // 4. QUIZ & CHECK-IN LOGIC
-    const isMainSite = site.quiz && !isNaN(parseInt(site.id));
-    if (isMainSite) {
-        siteModalQuizArea.style.display = 'block';
-        siteModalCheckInBtn.style.display = 'none';
-
-        siteModalQuizQ.textContent = site.quiz.q;
-        siteModalQuizResult.classList.add('hidden');
-
-        // Reset Hint
-        siteModalHintText.textContent = site.quiz.hint || "Try again!";
-        siteModalHintText.classList.add('hidden');
-
-        // Clear Options
-        siteModalQuizOptions.innerHTML = '';
-
-        // Get and Shuffle Options
-        let options = site.quiz.options ? [...site.quiz.options] : [site.quiz.a];
-        options.sort(() => Math.random() - 0.5);
-
-        // Create Buttons
-        options.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.className = "w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-lg border-2 border-gray-200 hover:bg-blue-50 hover:border-blue-400 transition text-center shadow-sm";
-            btn.textContent = opt;
-
-            btn.onclick = () => {
-                // Check Answer
-                if (opt === site.quiz.a) {
-                    // CORRECT
-                    siteModalQuizResult.textContent = STRINGS.game.quizCorrect;
-                    siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-green-600";
-                    siteModalQuizResult.classList.remove('hidden');
-
-                    // Highlight Correct Button
-                    btn.classList.remove('bg-white', 'border-gray-200', 'hover:bg-blue-50', 'hover:border-blue-400');
-                    btn.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-
-                    // Disable all buttons
-                    const allBtns = siteModalQuizOptions.querySelectorAll('button');
-                    allBtns.forEach(b => b.disabled = true);
-
-                    if (!visitedSites.includes(site.id)) {
-                        visitedSites.push(site.id);
-                        saveVisitedSites();
-
-                        const markerToUpdate = allMarkers[site.id];
-                        safelyUpdateMarkerVisitedState(markerToUpdate, true);
-                        safelyUpdatePolygonVisitedState(site.id, true);
-
-                        updateGameProgress();
-                        updatePassport();
-                        chaChingSound.play();
-
-                        if (visitedSites.length === TOTAL_SITES) {
-                            congratsModal.classList.remove('hidden');
-                            if (typeof confetti === 'function') {
-                                const duration = 3 * 1000;
-                                const end = Date.now() + duration;
-                                (function frame() {
-                                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-                                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-                                    if (Date.now() < end) requestAnimationFrame(frame);
-                                }());
-                            }
-                        }
-                    }
-
-                } else {
-                    // WRONG
-                    siteModalQuizResult.textContent = STRINGS.game.quizWrong;
-                    siteModalQuizResult.className = "text-sm mt-2 text-center font-bold text-red-600";
-                    siteModalQuizResult.classList.remove('hidden');
-
-                    // Shake/Red Effect
-                    btn.classList.add('bg-red-50', 'border-red-300');
-                    setTimeout(() => {
-                        btn.classList.remove('bg-red-50', 'border-red-300');
-                    }, 500);
-
-                    // SHOW HINT
-                    siteModalHintText.classList.remove('hidden');
-                }
-            };
-            siteModalQuizOptions.appendChild(btn);
-        });
-
-    } else {
-        siteModalQuizArea.style.display = 'none';
-        siteModalCheckInBtn.style.display = 'block';
-
-        if (discoveredSites.includes(site.id)) {
-            siteModalCheckInBtn.disabled = true;
-            siteModalCheckInBtn.textContent = 'Visited';
-            siteModalCheckInBtn.classList.remove('bg-purple-700', 'hover:bg-purple-800', 'text-white');
-            siteModalCheckInBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
-        } else {
-            siteModalCheckInBtn.disabled = false;
-            siteModalCheckInBtn.textContent = 'Check In to this Site';
-            siteModalCheckInBtn.classList.remove('bg-gray-300', 'text-gray-600', 'cursor-not-allowed', 'bg-gray-400');
-            siteModalCheckInBtn.classList.add('bg-purple-700', 'hover:bg-purple-800', 'text-white');
-        }
-    }
-
-    // 5. DAILY CHALLENGE LOGIC
-    const todayRiddle = allRiddles[getDayOfYear() % allRiddles.length];
-    if (solvedRiddle.day !== getDayOfYear() && currentModalSite.id === todayRiddle.a) {
-        siteModalSolveChallengeBtn.style.display = 'block';
-    } else {
-        siteModalSolveChallengeBtn.style.display = 'none';
-    }
-
-    siteModal.classList.remove('hidden');
-}
-
-function openSiteDetails(site, marker = null) {
-    if (!site) return;
-
-    closePreviewCard();
-    handleMarkerClick(site, marker);
-    animateOpenModal(siteModal);
-    openModalState('siteModal');
-}
-
-/**
- * NEW: Handles the "Check In" button click for discovery sites
- */
-function handleCheckIn() {
-    if (!currentModalSite || !currentModalMarker) return;
-
-    // Add to discovered list if not already there
-    if (!discoveredSites.includes(currentModalSite.id)) {
-        discoveredSites.push(currentModalSite.id);
-        saveDiscoveredSites();
-
-        // Update the marker icon to "visited" (red)
-        // FIX: Look up marker from global map and use safe helper
-        const markerToUpdate = allMarkers[currentModalSite.id]; // Look up the marker globally
-        safelyUpdateMarkerVisitedState(markerToUpdate, true);
-        // END FIX
-
-        // NEW: Update polygon color
-        safelyUpdatePolygonVisitedState(currentModalSite.id, true); // <--- ADD THIS LINE
-        // END NEW
-
-        // Update the button state
-        siteModalCheckInBtn.disabled = true;
-        siteModalCheckInBtn.textContent = STRINGS.game.visitedBtn;
-        siteModalCheckInBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
-        siteModalCheckInBtn.classList.remove('bg-purple-700', 'hover:bg-purple-800', 'text-white');
-    }
-}
-
-async function handleSendMessage() {
-    const userQuery = chatInput.value.trim();
-    const limit = getChatLimit();
-
-    // Strict check before sending
-    if (!userQuery || userMessageCount >= limit) {
-        if (userMessageCount >= limit) disableChatUI(true); // Ensure UI reflects state
-        return;
-    }
-
-    chatInput.value = "";
-    chatInput.disabled = true;
-    chatSendBtn.disabled = true;
-
-    addChatMessage('user', userQuery);
-    // Modified: Use skeleton loader instead of "..."
-    const thinkingEl = addChatMessage('model', 'Loading...', { loading: true });
-
-    try {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Jejak-Device': deviceId
-            },
-            body: JSON.stringify({
-                userQuery: userQuery,
-                history: chatHistory.slice(-HISTORY_WINDOW_SIZE)
-            })
-        });
-
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(data.reply || data.error || 'AI server error');
-        }
-
-        chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
-        chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-        saveChatHistory();
-
-        userMessageCount++;
-        saveMessageCount();
-        updateChatUIWithCount();
-
-        // Render sanitized Markdown for AI reply
-        const thinkingContent = thinkingEl.querySelector('.chat-content');
-        renderSafeMarkdown(thinkingContent, data.reply);
-        thinkingEl.classList.add('chat-bubble'); // Ensure styling applies
-
-    } catch (error) {
-        console.error("Chat error:", error);
-        thinkingEl.querySelector('.chat-content').textContent = error.message || STRINGS.chat.error;
-        thinkingEl.classList.add('bg-red-100', 'text-red-900');
-    }
-
-    // Only re-enable if we haven't hit the limit
-    if (userMessageCount < limit) {
-        chatInput.disabled = false;
-        chatSendBtn.disabled = false;
-        chatInput.focus();
-    } else {
-        disableChatUI(true); // Explicitly disable if limit reached
-    }
-}
-
-function getCurrentSessionRole() {
-    return activeSession?.role || 'guest';
-}
-
-function sanitizeRenderedHtml(html) {
-    const template = document.createElement('template');
-    template.innerHTML = html;
-
-    const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI', 'A', 'CODE', 'PRE', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
-    const allowedProtocols = new Set(['http:', 'https:', 'mailto:', 'tel:']);
-
-    function cleanNode(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            return document.createTextNode(node.textContent || '');
-        }
-
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-            return document.createDocumentFragment();
-        }
-
-        const tagName = node.tagName.toUpperCase();
-        const fragment = document.createDocumentFragment();
-
-        if (!allowedTags.has(tagName)) {
-            node.childNodes.forEach(child => fragment.appendChild(cleanNode(child)));
-            return fragment;
-        }
-
-        const cleanElement = document.createElement(tagName.toLowerCase());
-        if (tagName === 'A') {
-            const rawHref = node.getAttribute('href') || '';
-            try {
-                const url = new URL(rawHref, window.location.origin);
-                if (allowedProtocols.has(url.protocol)) {
-                    cleanElement.setAttribute('href', url.href);
-                    cleanElement.setAttribute('target', '_blank');
-                    cleanElement.setAttribute('rel', 'noopener noreferrer');
-                }
-            } catch (e) {
-                // Drop invalid links but keep the link text.
-            }
-        }
-
-        node.childNodes.forEach(child => cleanElement.appendChild(cleanNode(child)));
-        return cleanElement;
-    }
-
-    const cleanFragment = document.createDocumentFragment();
-    template.content.childNodes.forEach(node => cleanFragment.appendChild(cleanNode(node)));
-    return cleanFragment;
-}
-
-async function renderSafeMarkdown(container, text) {
-    if (!container) return;
-    container.replaceChildren();
-
-    if (typeof marked === 'undefined') {
-        container.textContent = text || '';
-        return;
-    }
-
-    const rawHtml = await marked.parse(text || '');
-    container.appendChild(sanitizeRenderedHtml(rawHtml));
-}
-
-function addChatMessage(role, text, options = {}) {
-    const messageEl = document.createElement('div');
-    const isUser = role === 'user';
-    const name = isUser ? STRINGS.chat.userName : STRINGS.chat.aiName;
-    const align = isUser ? 'self-end' : 'self-start';
-    const bg = isUser ? 'bg-white' : 'bg-blue-100';
-    const textCol = isUser ? 'text-gray-900' : 'text-blue-900';
-
-    messageEl.className = `p-3 rounded-lg ${bg} ${textCol} max-w-xs shadow-sm ${align} chat-bubble`;
-
-    const nameEl = document.createElement('p');
-    nameEl.className = 'font-bold text-sm mb-1';
-    nameEl.textContent = name;
-
-    const contentEl = document.createElement('div');
-    contentEl.className = 'chat-content';
-
-    if (options.loading) {
-        const loadingEl = document.createElement('span');
-        loadingEl.className = 'skeleton-loading text-xs px-8 rounded';
-        loadingEl.textContent = text;
-        contentEl.appendChild(loadingEl);
-    } else if (role === 'model') {
-        renderSafeMarkdown(contentEl, text);
-    } else {
-        contentEl.textContent = text;
-    }
-
-    messageEl.appendChild(nameEl);
-    messageEl.appendChild(contentEl);
-    chatHistoryEl.appendChild(messageEl);
-    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
-    return messageEl;
-}
-/**
- * NEW: Loads chat history from localStorage and populates the UI
- */
-function loadChatHistory() {
-    if (!chatHistoryEl) return;
-    chatHistoryEl.innerHTML = ""; // Clear loader if any
-    chatHistory.forEach(msg => {
-        const text = msg.parts ? msg.parts[0].text : msg.text;
-        addChatMessage(msg.role, text);
-    });
-}
-
-// --- UI UPDATE FUNCTIONS ---
-
-function updateGameProgress() {
-    const count = visitedSites.length;
-    // Use cached mainSites
-    const mainSitesTotal = mainSites.length || TOTAL_SITES;
-
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-
-    if (progressBar && progressText) {
-        const percentage = (count / mainSitesTotal) * 100;
-        progressBar.style.width = `${percentage}%`;
-        progressText.textContent = STRINGS.game.progressShort(count, mainSitesTotal);
-    }
-}
-
-
 
 function updateChatUIWithCount() {
-    if (!chatLimitText) return;
-    const remaining = getChatLimit() - userMessageCount;
-    chatLimitText.textContent = `You have ${remaining} messages remaining.`;
-
-    if (remaining <= 0) {
-        disableChatUI(true);
-    }
+  const chatLimitText = document.getElementById('chatLimitText');
+  const remaining = getChatLimit() - userMessageCount;
+  if (!chatLimitText) return;
+  chatLimitText.textContent = `You have ${remaining} messages remaining.`;
+  if (remaining <= 0) disableChatUI(true);
 }
 
 function disableChatUI(flag) {
-    if (!chatInput || !chatSendBtn) return;
-    chatInput.disabled = flag;
-    chatSendBtn.disabled = flag;
-    if (flag) {
-        chatLimitText.textContent = STRINGS.chat.limitReached;
-        chatInput.placeholder = STRINGS.chat.limitReached;
-    } else {
-        chatInput.placeholder = STRINGS.chat.placeholder;
-    }
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+  const chatLimitText = document.getElementById('chatLimitText');
+  if (!chatInput || !chatSendBtn || !chatLimitText) return;
+
+  chatInput.disabled = flag;
+  chatSendBtn.disabled = flag;
+  chatInput.placeholder = flag ? STRINGS.chat.limitReached : STRINGS.chat.placeholder;
+  if (flag) chatLimitText.textContent = STRINGS.chat.limitReached;
 }
 
-function updatePassport() {
-    if (!passportInfo || !passportGrid || mainSites.length === 0) {
-        return;
+function sanitizeRenderedHtml(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'UL', 'OL', 'LI', 'A', 'CODE', 'PRE', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+  const allowedProtocols = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+  function cleanNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || '');
+    if (node.nodeType !== Node.ELEMENT_NODE) return document.createDocumentFragment();
+
+    const tagName = node.tagName.toUpperCase();
+    const fragment = document.createDocumentFragment();
+    if (!allowedTags.has(tagName)) {
+      node.childNodes.forEach((child) => fragment.appendChild(cleanNode(child)));
+      return fragment;
     }
 
-    const visitedCount = visitedSites.length;
-
-    passportInfo.textContent = STRINGS.game.progress(visitedCount, mainSites.length);
-    passportGrid.innerHTML = "";
-
-    mainSites.forEach(site => {
-        const stamp = document.createElement('div');
-        stamp.className = 'passport-stamp';
-
-        const isVisited = visitedSites.includes(site.id) || discoveredSites.includes(site.id);
-        if (!isVisited) {
-            stamp.classList.add('grayscale');
-        } else {
-            // ADDED: Stamp animation for visited sites
-            stamp.querySelector('img')?.classList.add('stamp-animate'); // Optional: animate the image or the whole stamp
+    const cleanElement = document.createElement(tagName.toLowerCase());
+    if (tagName === 'A') {
+      const rawHref = node.getAttribute('href') || '';
+      try {
+        const url = new URL(rawHref, window.location.origin);
+        if (allowedProtocols.has(url.protocol)) {
+          cleanElement.href = url.href;
+          cleanElement.target = '_blank';
+          cleanElement.rel = 'noopener noreferrer';
         }
+      } catch {}
+    }
 
+    node.childNodes.forEach((child) => cleanElement.appendChild(cleanNode(child)));
+    return cleanElement;
+  }
 
-        const img = document.createElement('img');
-        img.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=?';
-        img.alt = site.name;
-
-        const name = document.createElement('p');
-        name.textContent = `${site.id}. ${site.name}`;
-
-        stamp.appendChild(img);
-        stamp.appendChild(name);
-        passportGrid.appendChild(stamp);
-    });
+  const cleanFragment = document.createDocumentFragment();
+  template.content.childNodes.forEach((node) => cleanFragment.appendChild(cleanNode(node)));
+  return cleanFragment;
 }
 
+async function renderSafeMarkdown(container, text) {
+  if (!container) return;
+  container.replaceChildren();
+  if (typeof marked === 'undefined') {
+    container.textContent = text || '';
+    return;
+  }
 
-// --- APP STARTUP & LANDING PAGE LOGIC ---
-function setupAppStartup({ onLifecycleChange } = {}) {
-    const notifyLifecycle = (patch) => {
-        if (typeof onLifecycleChange === 'function') onLifecycleChange(patch);
+  const rawHtml = await marked.parse(text || '');
+  container.appendChild(sanitizeRenderedHtml(rawHtml));
+}
+
+function addChatMessage(role, text, options = {}) {
+  const chatHistoryEl = document.getElementById('chatHistory');
+  if (!chatHistoryEl) return null;
+
+  const messageEl = document.createElement('div');
+  const isUser = role === 'user';
+  messageEl.className = `p-3 rounded-lg ${isUser ? 'bg-white text-gray-900 self-end' : 'bg-blue-100 text-blue-900 self-start'} max-w-xs shadow-sm chat-bubble`;
+
+  const nameEl = document.createElement('p');
+  nameEl.className = 'font-bold text-sm mb-1';
+  nameEl.textContent = isUser ? STRINGS.chat.userName : STRINGS.chat.aiName;
+
+  const contentEl = document.createElement('div');
+  contentEl.className = 'chat-content';
+  if (options.loading) {
+    const loadingEl = document.createElement('span');
+    loadingEl.className = 'skeleton-loading text-xs px-8 rounded';
+    loadingEl.textContent = text;
+    contentEl.appendChild(loadingEl);
+  } else if (role === 'model') {
+    void renderSafeMarkdown(contentEl, text);
+  } else {
+    contentEl.textContent = text;
+  }
+
+  messageEl.append(nameEl, contentEl);
+  chatHistoryEl.appendChild(messageEl);
+  chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+  return messageEl;
+}
+
+function loadChatHistory() {
+  const chatHistoryEl = document.getElementById('chatHistory');
+  if (!chatHistoryEl) return;
+  chatHistoryEl.innerHTML = '';
+  chatHistory.forEach((msg) => {
+    const text = msg.parts ? msg.parts[0].text : msg.text;
+    addChatMessage(msg.role, text);
+  });
+}
+
+async function handleSendMessage() {
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+  if (!chatInput || !chatSendBtn) return;
+
+  const userQuery = chatInput.value.trim();
+  const limit = getChatLimit();
+  if (!userQuery || userMessageCount >= limit) {
+    if (userMessageCount >= limit) disableChatUI(true);
+    return;
+  }
+
+  chatInput.value = '';
+  chatInput.disabled = true;
+  chatSendBtn.disabled = true;
+
+  addChatMessage('user', userQuery);
+  const thinkingEl = addChatMessage('model', 'Loading...', { loading: true });
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Jejak-Device': deviceId,
+      },
+      body: JSON.stringify({
+        userQuery,
+        history: chatHistory.slice(-HISTORY_WINDOW_SIZE),
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.reply || data.error || 'AI server error');
+
+    chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
+    chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
+    saveChatHistory();
+
+    userMessageCount += 1;
+    saveMessageCount();
+    updateChatUIWithCount();
+
+    const thinkingContent = thinkingEl?.querySelector('.chat-content');
+    await renderSafeMarkdown(thinkingContent, data.reply);
+    thinkingEl?.classList.add('chat-bubble');
+  } catch (error) {
+    if (thinkingEl?.querySelector('.chat-content')) {
+      thinkingEl.querySelector('.chat-content').textContent = error.message || STRINGS.chat.error;
+      thinkingEl.classList.add('bg-red-100', 'text-red-900');
+    }
+  }
+
+  if (userMessageCount < limit) {
+    chatInput.disabled = false;
+    chatSendBtn.disabled = false;
+    chatInput.focus();
+  } else {
+    disableChatUI(true);
+  }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target?.result || '');
+    reader.onerror = () => reject(new Error('Could not read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function waitForImage(image) {
+  if (!image) return Promise.reject(new Error('Badge image element is missing.'));
+  if (image.complete && image.naturalWidth > 0) return Promise.resolve(image);
+
+  return new Promise((resolve, reject) => {
+    const handleLoad = () => {
+      cleanup();
+      resolve(image);
+    };
+    const handleError = () => {
+      cleanup();
+      reject(new Error('Badge image failed to load.'));
+    };
+    const cleanup = () => {
+      image.removeEventListener('load', handleLoad);
+      image.removeEventListener('error', handleError);
     };
 
-    function isAuthorized() {
-        return Boolean(activeSession?.authenticated);
-    }
-
-    function applySessionChrome() {
-        try {
-            if (activeSession?.role === 'admin') {
-                document.documentElement.classList.remove('jejak-hide-staff');
-            } else {
-                document.documentElement.classList.add('jejak-hide-staff');
-            }
-        } catch (e) {
-            // ignore DOM errors
-        }
-    }
-
-    function resetDailyChatIfNeeded() {
-        const todayStr = new Date().toDateString();
-        const namespace = getProgressNamespace();
-        const lastActiveDay = readScopedString('last_active_day', '', namespace);
-
-        if (lastActiveDay !== todayStr) {
-            userMessageCount = 0;
-            writeScopedNumber('message_count', 0, namespace);
-            writeScopedString('last_active_day', todayStr, namespace);
-        }
-    }
-
-    function showMapExperience() {
-        notifyLifecycle({ activeView: 'map' });
-        applySessionChrome();
-        loadScopedState();
-        resetDailyChatIfNeeded();
-
-        const landingPage = document.getElementById('landing-page');
-        const gatekeeper = document.getElementById('gatekeeper');
-        const staffScreen = document.getElementById('staff-screen');
-        if (landingPage) landingPage.classList.add('hidden');
-        if (gatekeeper) gatekeeper.classList.add('hidden');
-        if (staffScreen) staffScreen.classList.add('hidden');
-
-        document.getElementById('progress-container')?.classList.remove('hidden');
-        document.getElementById('map')?.classList.remove('hidden');
-
-        if (!map) initializeGameAndMap();
-        if (!gameUIListenersAttached) {
-            setupGameUIListeners();
-            gameUIListenersAttached = true;
-        }
-
-        updateGameProgress();
-        if (chatLimitText) {
-            if (userMessageCount >= getChatLimit()) {
-                disableChatUI(true);
-            } else {
-                updateChatUIWithCount();
-                disableChatUI(false);
-            }
-        }
-    }
-
-    function showAdminExperience() {
-        notifyLifecycle({ activeView: 'admin' });
-        applySessionChrome();
-        const landingPage = document.getElementById('landing-page');
-        const gatekeeper = document.getElementById('gatekeeper');
-        const staffScreen = document.getElementById('staff-screen');
-        if (landingPage) landingPage.classList.add('hidden');
-        if (gatekeeper) gatekeeper.classList.add('hidden');
-        if (staffScreen) staffScreen.classList.remove('hidden');
-        setupAdminLoginLogic();
-        showAdminTools();
-    }
-
-    // --- CHECK FOR URL PASSKEY (AUTO-FILL ONLY) ---
-    async function checkForURLPasskey() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlCode = urlParams.get('code');
-
-        if (urlCode && !isAuthorized()) {
-            console.log("Magic link detected, auto-filling passkey:", urlCode);
-
-            // Clean URL immediately for professional look
-            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-
-            // Show Gatekeeper with auto-filled passkey (but don't auto-login)
-            const gatekeeper = document.getElementById('gatekeeper');
-            const passcodeInput = document.getElementById('passcodeInput');
-            const landingPage = document.getElementById('landing-page');
-
-            if (gatekeeper && landingPage) {
-                landingPage.classList.add('hidden');
-                gatekeeper.classList.remove('hidden');
-                notifyLifecycle({ activeView: 'gatekeeper' });
-                // Auto-fill the passkey input, but let user click unlock manually
-                passcodeInput.value = urlCode;
-
-                // SHOW PLATFORM WARNING BEFORE ALLOWING LOGIN
-                showPlatformWarning();
-            }
-        }
-    }
-
-    // --- PWA DETECTION ---
-    function isPWAMode() {
-        // Check if running in standalone mode (PWA)
-        return window.matchMedia('(display-mode: standalone)').matches ||
-            window.navigator.standalone || // iOS Safari standalone
-            document.referrer.includes('android-app://'); // Android TWA
-    }
-
-    // --- PLATFORM WARNING MODAL ---
-    function showPlatformWarning() {
-        const modal = document.getElementById('platformWarningModal');
-        const warningContent = document.querySelector('#warningContent p');
-        const continueBtn = document.getElementById('continueLoginBtn');
-        const cancelBtn = document.getElementById('cancelLoginBtn');
-        const unlockBtn = document.getElementById('unlockBtn');
-        const passkeyDisplay = document.getElementById('passkeyDisplay');
-        const copyBtn = document.getElementById('copyPasskeyBtn');
-        const copySuccess = document.getElementById('copySuccess');
-
-        // Get the passkey value from the input field
-        const passkey = document.getElementById('passcodeInput').value;
-
-        // Display the passkey in the modal
-        if (passkeyDisplay) {
-            passkeyDisplay.value = passkey;
-        }
-
-        // Determine platform and set appropriate warning
-        const isPWA = isPWAMode();
-
-        if (isPWA) {
-            // User is on PWA
-            warningContent.innerHTML = `
-                <strong>📱 You're using the PWA (App Mode)</strong><br><br>
-                Once you log in here, this passkey will be locked to the <strong>PWA only</strong>. 
-                You won't be able to use it in a regular browser on this device.<br><br>
-                If you prefer to use a browser instead, please close this app and open the link in your browser.
-            `;
-        } else {
-            // User is on Browser
-            warningContent.innerHTML = `
-                <strong>🌐 You're using a Browser</strong><br><br>
-                Once you log in here, this passkey will be locked to <strong>browser mode only</strong>. 
-                You won't be able to use it in the PWA (installed app) on this device.<br><br>
-                If you'd like the best experience with better GPS and offline features, we recommend installing the PWA first.
-            `;
-        }
-
-        // Show modal
-        modal.classList.remove('hidden');
-
-        // Disable unlock button until user confirms
-        unlockBtn.disabled = true;
-        unlockBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-        // Copy button functionality
-        if (copyBtn) {
-            copyBtn.onclick = async () => {
-                try {
-                    await navigator.clipboard.writeText(passkey);
-                    // Show success message
-                    if (copySuccess) {
-                        copySuccess.classList.remove('hidden');
-                        copyBtn.innerHTML = '<span>✓</span><span>Copied!</span>';
-                        setTimeout(() => {
-                            copySuccess.classList.add('hidden');
-                            copyBtn.innerHTML = '<span>📋</span><span>Copy</span>';
-                        }, 2000);
-                    }
-                } catch (err) {
-                    console.error('Failed to copy:', err);
-                    // Fallback for older browsers
-                    passkeyDisplay.select();
-                    document.execCommand('copy');
-                }
-            };
-        }
-
-        // Continue button - proceeds with login
-        continueBtn.onclick = async () => {
-            modal.classList.add('hidden');
-            await proceedWithLogin();
-        };
-
-        // Cancel button - clears input and hides warning
-        cancelBtn.onclick = () => {
-            modal.classList.add('hidden');
-            document.getElementById('passcodeInput').value = '';
-            unlockBtn.disabled = false;
-            unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        };
-
-        // "What is PWA?" button - shows explanation modal
-        const whatIsPWABtn = document.getElementById('whatIsPWABtn');
-        if (whatIsPWABtn) {
-            whatIsPWABtn.onclick = () => {
-                showPWAExplanation();
-            };
-        }
-    }
-
-    // --- PWA EXPLANATION MODAL ---
-    function showPWAExplanation() {
-        const explanationModal = document.getElementById('pwaExplanationModal');
-        const closeBtn = document.getElementById('closePWAExplanation');
-        const gotItBtn = document.getElementById('gotItPWABtn');
-
-        // Show the explanation modal
-        explanationModal.classList.remove('hidden');
-
-        // Close button handler
-        if (closeBtn) {
-            closeBtn.onclick = () => {
-                explanationModal.classList.add('hidden');
-            };
-        }
-
-        // Got It button handler - close and return to platform warning
-        if (gotItBtn) {
-            gotItBtn.onclick = () => {
-                explanationModal.classList.add('hidden');
-            };
-        }
-    }
-
-    async function initApp() {
-        try {
-            activeSession = await refreshSession();
-        } catch (error) {
-            console.warn('Unable to read current session:', error);
-            activeSession = getCurrentSession();
-        }
-        notifyLifecycle({ session: activeSession });
-
-        await checkForURLPasskey();
-
-        if (activeSession?.authenticated) {
-            if (activeSession.role === 'admin') {
-                showAdminExperience();
-            } else {
-                showMapExperience();
-            }
-            return;
-        }
-
-        setupLandingPage();
-    }
-
-    // --- THIS FUNCTION ATTACHES LISTENERS TO THE LANDING PAGE ---
-    function setupLandingPage() {
-        notifyLifecycle({ activeView: 'landing' });
-        document.documentElement.classList.remove('jejak-hide-staff');
-
-        const exploreDemoBtn = document.getElementById('btnExploreDemo');
-        if (exploreDemoBtn) {
-            exploreDemoBtn.addEventListener('click', async () => {
-                exploreDemoBtn.disabled = true;
-                exploreDemoBtn.textContent = 'Starting demo...';
-                try {
-                    activeSession = await startDemoSession();
-                    notifyLifecycle({ session: activeSession });
-                    showMapExperience();
-                } catch (error) {
-                    console.error('Demo session error:', error);
-                    alert('Unable to start the demo session. Please try again.');
-                    exploreDemoBtn.disabled = false;
-                    exploreDemoBtn.innerHTML = '<span class="mr-2 sm:mr-3 text-lg sm:text-xl">▶</span><span>Explore Demo</span>';
-                }
-            });
-        }
-
-        document.getElementById('btnVisitor').addEventListener('click', () => {
-            animateScreenSwitch(
-                document.getElementById('landing-page'),
-                document.getElementById('gatekeeper')
-            );
-            notifyLifecycle({ activeView: 'gatekeeper' });
-        });
-
-        document.getElementById('btnStaff').addEventListener('click', () => {
-            showAdminCode();
-        });
-
-        document.getElementById('backToHome').addEventListener('click', () => {
-            const gatekeeper = document.getElementById('gatekeeper');
-            const landingPage = document.getElementById('landing-page');
-            gatekeeper.classList.add('hidden');
-            landingPage.classList.remove('hidden');
-            notifyLifecycle({ activeView: 'landing' });
-        });
-
-        const closeStaffBtn = document.getElementById('closeStaffScreen');
-        if (closeStaffBtn) {
-            closeStaffBtn.addEventListener('click', () => {
-                const staffScreen = document.getElementById('staff-screen');
-                const landingPage = document.getElementById('landing-page');
-                staffScreen.classList.add('hidden');
-                landingPage.classList.remove('hidden');
-                notifyLifecycle({ activeView: 'landing' });
-            });
-        }
-
-        setupGatekeeperLogic();
-        setupAdminLoginLogic();
-    }
-
-
-    // --- LOGIN & MODAL FUNCTIONS ---
-
-    function showAdminCode() {
-        animateScreenSwitch(
-            document.getElementById('landing-page'),
-            document.getElementById('staff-screen')
-        );
-        notifyLifecycle({ activeView: 'admin' });
-    }
-
-
-
-    function setupAdminLoginLogic() {
-        const adminLoginBtn = document.getElementById('adminLoginBtn');
-        if (!adminLoginBtn) return;
-
-        if (activeSession?.authenticated && activeSession.role === 'admin') {
-            showAdminTools();
-        }
-
-        // NEW: Allow Enter key to submit (Moved outside click handler)
-        const passwordInput = document.getElementById('adminPasswordInput');
-        if (passwordInput) {
-            passwordInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    adminLoginBtn.click();
-                }
-            });
-        }
-
-        adminLoginBtn.addEventListener('click', async () => {
-            const password = passwordInput ? passwordInput.value : ''; // Use existing ref or get value
-            const errorMsg = document.getElementById('adminErrorMsg');
-            // loginBtn is adminLoginBtn
-            const loginBtn = adminLoginBtn;
-
-            loginBtn.disabled = true;
-            loginBtn.textContent = STRINGS.auth.verifying;
-            errorMsg.classList.add('hidden');
-
-            try {
-                activeSession = await startAdminSession(password);
-                notifyLifecycle({ session: activeSession });
-                showAdminTools();
-            } catch (error) {
-                console.error('Error in admin login:', error);
-                errorMsg.textContent = error.message || STRINGS.auth.invalidAdmin;
-                errorMsg.classList.remove('hidden');
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = STRINGS.auth.login;
-            }
-        });
-    }
-
-    // --- REUSABLE ADMIN TOOL HANDLER ---
-    function showAdminTools() {
-        // Ensure any page-level hide class is removed when admin tools are shown
-        try {
-            document.documentElement.classList.remove('jejak-hide-staff');
-        } catch (e) { /* ignore */ }
-        document.getElementById('adminLoginForm').classList.add('hidden');
-        document.getElementById('adminResult').classList.remove('hidden');
-        document.getElementById('passkeyDate').textContent = STRINGS.auth.adminDate;
-
-        // NEW: Hide the redundant "Back" button once logged in
-        const closeStaffBtn = document.getElementById('closeStaffScreen');
-        if (closeStaffBtn) closeStaffBtn.classList.add('hidden');
-
-        // Show the admin toggle on the map
-        const btnAdminToggle = document.getElementById('btnAdminToggle');
-        if (btnAdminToggle) btnAdminToggle.classList.remove('hidden');
-
-        const generateBtn = document.getElementById('adminGenerateBtn');
-        const shareBtn = document.getElementById('adminShareBtn');
-        const statusMsg = document.getElementById('adminStatusMsg');
-        const resultText = document.getElementById('passkeyResult');
-        const logoutBtn = document.getElementById('adminLogoutBtn');
-        const switchToMapBtn = document.getElementById('adminSwitchToMapBtn');
-
-        let lastGeneratedCode = "";
-
-        generateBtn.onclick = async () => {
-            generateBtn.disabled = true;
-            generateBtn.textContent = "Generating...";
-            statusMsg.classList.add('hidden');
-
-            try {
-                const genResponse = await fetch('/api/admin/generate-passkey', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const genResult = await genResponse.json();
-                if (genResponse.ok && genResult.success) {
-                    lastGeneratedCode = genResult.passkey || genResult.code;
-                    resultText.textContent = lastGeneratedCode;
-                    statusMsg.textContent = STRINGS.auth.adminGenSuccess;
-                    statusMsg.classList.remove('hidden');
-                    shareBtn.classList.remove('hidden');
-                } else {
-                    alert("Failed: " + (genResult.error || "Check password"));
-                }
-            } catch (err) {
-                console.error("Gen error:", err);
-            } finally {
-                generateBtn.disabled = false;
-                generateBtn.textContent = STRINGS.auth.adminGenerateBtn;
-            }
-        };
-
-        shareBtn.onclick = () => {
-            if (!lastGeneratedCode) return;
-            const shareUrl = `${window.location.origin}${window.location.pathname}?code=${lastGeneratedCode}`;
-            const subject = encodeURIComponent(STRINGS.auth.emailSubject);
-            const body = encodeURIComponent(STRINGS.auth.emailBody.replace('[CODE]', lastGeneratedCode).replace('[LINK]', shareUrl));
-            window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-        };
-
-        logoutBtn.onclick = async () => {
-            await endSession();
-            window.location.reload();
-        };
-
-        switchToMapBtn.onclick = () => {
-            showMapExperience();
-            const adminToggle = document.getElementById('btnAdminToggle');
-            if (adminToggle) {
-                adminToggle.classList.remove('hidden');
-                adminToggle.onclick = () => {
-                    document.getElementById('staff-screen').classList.remove('hidden');
-                };
-            }
-        };
-    }
-
-    function setupGatekeeperLogic() {
-        const unlockBtn = document.getElementById('unlockBtn');
-        if (!unlockBtn) return;
-
-        unlockBtn.addEventListener('click', async () => {
-            const passcodeInput = document.getElementById('passcodeInput');
-            const enteredCode = passcodeInput.value.trim();
-            if (!enteredCode) return;
-
-            // Show platform warning for manual login too (not just magic links)
-            showPlatformWarning();
-        });
-    }
-
-    async function proceedWithLogin() {
-        const passcodeInput = document.getElementById('passcodeInput');
-        const unlockBtn = document.getElementById('unlockBtn');
-        const enteredCode = passcodeInput.value.trim();
-
-        if (!enteredCode) return;
-
-        unlockBtn.disabled = true;
-        unlockBtn.textContent = STRINGS.auth.verifying;
-
-        await verifyCode(enteredCode);
-
-        // If verification failed, reset the button
-        if (!activeSession?.authenticated) {
-            unlockBtn.disabled = false;
-            unlockBtn.textContent = STRINGS.auth.verifyUnlock;
-        }
-    }
-
-    async function verifyCode(enteredCode) {
-        const errorMsg = document.getElementById('errorMsg');
-        errorMsg.classList.add('hidden');
-
-        try {
-            activeSession = await startVisitorSession(enteredCode, deviceId);
-            notifyLifecycle({ session: activeSession });
-            showMapExperience();
-        } catch (error) {
-            console.error('Verification Error:', error);
-            errorMsg.textContent = error.message || STRINGS.auth.networkError;
-            errorMsg.classList.remove('hidden');
-        }
-    }
-
-    /**
-     * Finds all DOM elements and attaches all in-game listeners.
-     */
-    function setupGameUIListeners() {
-        // --- NEW: LOGO CLICK LISTENER ---
-        const logoElement = document.getElementById('logoOverlay');
-        if (logoElement) {
-            logoElement.addEventListener('click', () => {
-                // Open the Badan Warisan Malaysia website in a new tab
-                window.open('https://badanwarisanmalaysia.org/', '_blank');
-            });
-            // Optional: Change cursor to indicate clickability
-            logoElement.style.cursor = 'pointer';
-        }
-
-        // --- Find all elements first ---
-        siteModal = document.getElementById('siteModal');
-        siteModalImage = document.getElementById('siteModalImage');
-        siteModalLabel = document.getElementById('siteModalLabel');
-        siteModalTitle = document.getElementById('siteModalTitle');
-        siteModalInfo = document.getElementById('siteModalInfo');
-        siteModalQuizArea = document.getElementById('siteModalQuizArea');
-        siteModalQuizQ = document.getElementById('siteModalQuizQ');
-        siteModalQuizOptions = document.getElementById('siteModalQuizOptions');
-        // siteModalQuizInput = document.getElementById('siteModalQuizInput'); // REMOVED
-        // siteModalQuizBtn = document.getElementById('siteModalQuizBtn'); // REMOVED
-        siteModalQuizResult = document.getElementById('siteModalQuizResult');
-        closeSiteModal = document.getElementById('closeSiteModal');
-        siteModalAskAI = document.getElementById('siteModalAskAI');
-        siteModalDirections = document.getElementById('siteModalDirections');
-        siteModalCheckInBtn = document.getElementById('siteModalCheckInBtn');
-        siteModalSolveChallengeBtn = document.getElementById('siteModalSolveChallengeBtn'); // ADDED
-        siteModalHintBtn = document.getElementById('siteModalHintBtn');
-        siteModalHintText = document.getElementById('siteModalHintText');
-        siteModalFoodBtn = document.getElementById('siteModalFoodBtn'); // NEW
-        siteModalHotelBtn = document.getElementById('siteModalHotelBtn'); // NEW
-
-        chatModal = document.getElementById('chatModal');
-        closeChatModal = document.getElementById('closeChatModal');
-        chatHistoryEl = document.getElementById('chatHistory');
-        chatInput = document.getElementById('chatInput');
-        chatSendBtn = document.getElementById('chatSendBtn');
-        chatLimitText = document.getElementById('chatLimitText');
-
-        passportModal = document.getElementById('passportModal');
-        closePassportModal = document.getElementById('closePassportModal');
-        passportInfo = document.getElementById('passportInfo');
-        passportGrid = document.getElementById('passportGrid');
-
-        welcomeModal = document.getElementById('welcomeModal');
-        closeWelcomeModal = document.getElementById('closeWelcomeModal');
-
-        // --- AUDIO UNLOCK LOGIC ---
-        // Mobile browsers fix: Unlock audio context on first interaction
-        const unlockAudio = () => {
-            if (typeof chaChingSound !== 'undefined') {
-                chaChingSound.volume = 0;
-                chaChingSound.play().then(() => {
-                    chaChingSound.pause();
-                    chaChingSound.currentTime = 0;
-                    chaChingSound.volume = 1; // Restore volume
-                }).catch(() => { }); // Ignore errors
-
-                // Remove listeners once unlocked
-                document.removeEventListener('click', unlockAudio);
-                document.removeEventListener('touchstart', unlockAudio);
-                document.removeEventListener('keydown', unlockAudio);
-            }
-        };
-
-        document.addEventListener('click', unlockAudio);
-        document.addEventListener('touchstart', unlockAudio);
-        document.addEventListener('keydown', unlockAudio);
-
-        // ADDED: New Modal Elements
-        congratsModal = document.getElementById('congratsModal');
-        closeCongratsModal = document.getElementById('closeCongratsModal');
-        shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
-        challengeModal = document.getElementById('challengeModal');
-        closeChallengeModal = document.getElementById('closeChallengeModal');
-        btnChallenge = document.getElementById('btnChallenge');
-        challengeRiddle = document.getElementById('challengeRiddle');
-        challengeResult = document.getElementById('challengeResult');
-        chaChingSound = document.getElementById('chaChingSound');
-
-        // --- Attach Listeners ---
-
-        document.getElementById('btnRecenter').addEventListener('click', () => {
-            if (!map) return;
-            // Revert back to focusing on map center (Dataran Merdeka)
-            import('./src/config/app-config.js').then(config => {
-                map.setView(config.DEFAULT_CENTER, config.ZOOM);
-            });
-        });
-
-        // --- NEW: Preview Card "Read Full History" Listener ---
-        const pOB = document.getElementById('previewOpenBtn');
-        if (pOB) {
-            pOB.addEventListener('click', () => {
-                const sid = document.getElementById('previewCard')?.dataset?.siteId;
-                if (sid) { // Find site by string ID (to support '1' vs 1)
-                    const site = allSiteData.find(s => s.id == sid);
-                    if (site) handleMarkerClick(site, null);
-                }
-            });
-        }
-
-        // Back button handler is already defined below
-
-        // --- BACK BUTTON HANDLER ---
-        window.addEventListener('popstate', (event) => {
-            // Close all known modals with animation
-            [siteModal, chatModal, passportModal, welcomeModal, congratsModal, challengeModal, document.getElementById('badgeInputModal')].forEach(m => {
-                if (m && !m.classList.contains('hidden')) animateCloseModal(m);
-            });
-            if (typeof closePreviewCard === 'function') closePreviewCard();
-        });
-
-        document.getElementById('btnChat').addEventListener('click', () => {
-            animateOpenModal(chatModal);
-            openModalState('chatModal');
-        });
-        closeChatModal.addEventListener('click', () => {
-            animateCloseModal(chatModal);
-        });
-
-        document.getElementById('btnPassport').addEventListener('click', () => {
-            updatePassport();
-            animateOpenModal(passportModal);
-            openModalState('passportModal');
-        });
-        closePassportModal.addEventListener('click', () => {
-            animateCloseModal(passportModal);
-        });
-
-        closeSiteModal.addEventListener('click', () => {
-            animateCloseModal(siteModal);
-        });
-
-        chatSendBtn.addEventListener('click', handleSendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                handleSendMessage();
-            }
-        });
-
-        siteModalAskAI.addEventListener('click', () => {
-            const siteName = siteModalTitle.textContent;
-            if (!siteName || siteName === "Site Title") return;
-
-            const question = `Tell me more about ${siteName}.`;
-
-            siteModal.classList.add('hidden'); // Close site modal immediately to prevent overlap transition
-            animateOpenModal(chatModal);
-
-            chatInput.value = question;
-            handleSendMessage();
-        });
-
-        siteModalDirections.addEventListener('click', () => {
-            if (!currentModalSite) return;
-            openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'directions', currentModalSite.name);
-        });
-
-        // --- NEW LISTENER FOR "CHECK IN" BUTTON ---
-        siteModalCheckInBtn.addEventListener('click', handleCheckIn);
-
-        // --- NEW LISTENERS FOR FOOD & HOTEL ---
-        // --- NEW LISTENERS FOR FOOD & HOTEL ---
-        if (siteModalFoodBtn) {
-            siteModalFoodBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'restaurants', currentModalSite.name);
-            });
-        }
-
-        if (siteModalHotelBtn) {
-            siteModalHotelBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!currentModalSite) return;
-                openGoogleMaps(currentModalSite.coordinates.marker[0], currentModalSite.coordinates.marker[1], 'hotels', currentModalSite.name);
-            });
-        }
-
-        // --- GLOBAL UI ZOOM LOGIC ---
-        const btnUIZoomIn = document.getElementById('btnUIZoomIn');
-        const btnUIZoomOut = document.getElementById('btnUIZoomOut');
-        let currentRootFontSize = 100; // Percentage
-
-        if (btnUIZoomIn && btnUIZoomOut) {
-            btnUIZoomIn.addEventListener('click', () => {
-                if (currentRootFontSize < 130) { // Max 130%
-                    currentRootFontSize += 10;
-                    document.documentElement.style.fontSize = `${currentRootFontSize}%`;
-                }
-            });
-
-            btnUIZoomOut.addEventListener('click', () => {
-                if (currentRootFontSize > 80) { // Min 80%
-                    currentRootFontSize -= 10;
-                    document.documentElement.style.fontSize = `${currentRootFontSize}%`;
-                }
-            });
-        }
-
-        // --- NEW LISTENERS FOR NEW FEATURES ---
-        if (closeWelcomeModal) {
-            closeWelcomeModal.addEventListener('click', () => {
-                animateCloseModal(welcomeModal);
-            });
-        }
-
-        const sharePassportBtn = document.getElementById('sharePassportBtn');
-        if (sharePassportBtn) {
-            sharePassportBtn.addEventListener('click', () => {
-                const count = visitedSites.length;
-                const text = `I'm exploring Kuala Lumpur's Heritage Sites! I've visited ${count} so far on the BWM KUL City Walk. 🏛️✨`;
-                const url = 'https://bwm-kul-city-walk.vercel.app/';
-
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'BWM KUL City Walk',
-                        text: text,
-                        url: url
-                    }).catch(console.error);
-                } else {
-                    const message = `${text}\n\nJoin the adventure: ${url}`;
-                    const whatsappMsg = encodeURIComponent(message);
-                    window.open(`https://api.whatsapp.com/send?text=${whatsappMsg}`, '_blank');
-                }
-            });
-        }
-
-        const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
-        if (resetDemoProgressBtn) {
-            if (activeSession?.role === 'demo') {
-                resetDemoProgressBtn.classList.remove('hidden');
-            } else {
-                resetDemoProgressBtn.classList.add('hidden');
-            }
-
-            resetDemoProgressBtn.addEventListener('click', () => {
-                if (activeSession?.role !== 'demo') return;
-                const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
-                if (!confirmed) return;
-                clearScopedProgress('demo');
-                window.location.reload();
-            });
-        }
-
-        closeCongratsModal.addEventListener('click', () => {
-            animateCloseModal(congratsModal);
-        });
-
-        // --- DIRECTIONS VIEWER LISTENERS ---
-        const directionsModal = document.getElementById('directionsModal');
-        const directionsIframe = document.getElementById('directionsIframe');
-        const closeDirectionsModal = document.getElementById('closeDirectionsModal');
-        const closeDirectionsModalBtn = document.getElementById('closeDirectionsModalBtn');
-
-        if (closeDirectionsModal) {
-            closeDirectionsModal.addEventListener('click', () => {
-                animateCloseModal(directionsModal);
-                if (directionsIframe) directionsIframe.src = ""; // Clear source
-            });
-        }
-
-        if (closeDirectionsModalBtn) {
-            closeDirectionsModalBtn.addEventListener('click', () => {
-                animateCloseModal(directionsModal);
-                if (directionsIframe) directionsIframe.src = ""; // Clear source
-            });
-        }
-
-
-        shareWhatsAppBtn.addEventListener('click', () => {
-            const count = visitedSites.length;
-            const total = (typeof mainSites !== 'undefined' && mainSites.length > 0) ? mainSites.length : 11;
-            const text = (count >= total)
-                ? "🎉 Mission Accomplished! I've collected all 11 heritage stamps on the BWM KUL City Walk! 🏛️✨"
-                : `I'm exploring Kuala Lumpur's Heritage Sites! I've visited ${count}/${total} so far on the BWM KUL City Walk. 🏛️✨`;
-
-            const url = 'https://bwm-kul-city-walk.vercel.app/';
-
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Mission Accomplished!',
-                    text: text,
-                    url: url
-                }).catch(console.error);
-            } else {
-                const message = `${text}\n\nDiscover KL's history and start your own adventure here: ${url}`;
-                const whatsappMsg = encodeURIComponent(message);
-                window.open(`https://api.whatsapp.com/send?text=${whatsappMsg}`, '_blank');
-            }
-        });
-
-
-        btnChallenge.addEventListener('click', () => {
-            updateChallengeModal();
-            animateOpenModal(challengeModal);
-        });
-
-        closeChallengeModal.addEventListener('click', () => {
-            animateCloseModal(challengeModal);
-        });
-
-        siteModalSolveChallengeBtn.addEventListener('click', () => {
-            const dayOfYear = getDayOfYear();
-            const riddleIndex = dayOfYear % allRiddles.length;
-            const todayRiddle = allRiddles[riddleIndex];
-
-            // Mark as solved
-            solvedRiddle = { day: dayOfYear, id: todayRiddle.a };
-            saveSolvedRiddle();
-
-            // Hide button in site modal
-            siteModalSolveChallengeBtn.style.display = 'none';
-            siteModal.classList.add('hidden');
-
-            // Show result in challenge modal
-            updateChallengeModal();
-            animateOpenModal(challengeModal);
-            // BOMBASTIC: Trigger Small Confetti Burst!
-            if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
-        });
-
-        // Load persisted chat history
-        loadChatHistory();
-
-        // --- NEW: ANIMATED CLOSING FOR BADGE MODAL ---
-        const badgeInputModal = document.getElementById('badgeInputModal');
-        const closeBadgeModal = document.getElementById('closeBadgeModal');
-        if (closeBadgeModal) {
-            closeBadgeModal.addEventListener('click', () => {
-                animateCloseModal(badgeInputModal);
-            });
-        }
-    }
-
-
-
-    // --- Run the app ---
-    return initApp();
+    image.addEventListener('load', handleLoad, { once: true });
+    image.addEventListener('error', handleError, { once: true });
+  });
 }
 
-// --- ZOOM FUNCTIONALITY ---
-// Globals for Preview Card (referenced by helpers)
-let previewCard, previewImage, previewTitle, previewDist, previewOpenBtn, previewCloseBtn;
-let currentPreviewSiteId = null;
+function setupBadgeGeneration() {
+  const badgeModal = document.getElementById('badgeInputModal');
+  const closeBadgeBtn = document.getElementById('closeBadgeModal');
+  const btnGenerate = document.getElementById('btnGenerateBadge');
+  const nameInput = document.getElementById('explorerNameInput');
+  const photoInput = document.getElementById('explorerPhotoInput');
+  const badgeName = document.getElementById('badgeNameDisplay');
+  const badgeDate = document.getElementById('badgeDateDisplay');
+  const badgePhoto = document.getElementById('badgeProfileImage');
 
-function setupPreviewControls() {
-    const btnTextSizeReset = document.getElementById('btnTextSizeReset');
-    const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
-    const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
-    const contentText = document.getElementById('siteModalInfo');
-    const moreContentText = document.getElementById('siteModalMoreContent');
+  if (!badgeModal || !btnGenerate || !badgeName || !badgeDate || !badgePhoto) return;
+  if (btnGenerate.dataset.badgeBound === 'true') return;
 
-    let currentTextSize = 100; // Percentage
+  btnGenerate.dataset.badgeBound = 'true';
+  badgePhoto.src = DEFAULT_BADGE_AVATAR;
+  if (closeBadgeBtn) closeBadgeBtn.type = 'button';
 
-    function updateTextSize() {
-        // Updated: Use CSS Variable interaction
-        document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
+  btnGenerate.addEventListener('click', async () => {
+    const userName = nameInput.value.trim() || 'Master Explorer';
+    const today = new Date();
+    let nextPhotoSrc = DEFAULT_BADGE_AVATAR;
+
+    btnGenerate.textContent = STRINGS.game.generatingBadge;
+    btnGenerate.disabled = true;
+
+    try {
+      badgeName.textContent = userName;
+      badgeDate.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      if (photoInput.files?.[0]) nextPhotoSrc = await readFileAsDataUrl(photoInput.files[0]);
+      badgePhoto.src = nextPhotoSrc;
+      await waitForImage(badgePhoto);
+      await captureAndDownloadBadge();
+      document.getElementById('chaChingSound')?.play?.();
+      btnGenerate.textContent = STRINGS.game.generateBadge;
+    } catch (error) {
+      btnGenerate.textContent = STRINGS.game.tryAgain;
+      window.alert(STRINGS.game.badgeError);
+    } finally {
+      btnGenerate.disabled = false;
     }
-
-    if (btnTextSizeSmall) {
-        btnTextSizeSmall.addEventListener('click', () => {
-            if (currentTextSize > 80) {
-                currentTextSize -= 10;
-                updateTextSize();
-            }
-        });
-    }
-
-    if (btnTextSizeLarge) {
-        btnTextSizeLarge.addEventListener('click', () => {
-            if (currentTextSize < MAX_FONT_SIZE) { // Use constant
-                currentTextSize += 10;
-                updateTextSize();
-            }
-        });
-    }
-
-    if (btnTextSizeReset) {
-        btnTextSizeReset.addEventListener('click', () => {
-            currentTextSize = 100;
-            updateTextSize();
-        });
-    }
-
-    // --- PREVIEW CARD LOGIC ---
-    previewCard = document.getElementById('previewCard');
-    previewImage = document.getElementById('previewImage');
-    previewTitle = document.getElementById('previewTitle');
-    previewDist = document.getElementById('previewDist');
-    previewOpenBtn = document.getElementById('previewOpenBtn');
-    previewCloseBtn = document.getElementById('previewCloseBtn');
-    // Ensure currentPreviewSiteId is global or scoped correctly (it is global)
-
-    if (previewCloseBtn) {
-        previewCloseBtn.addEventListener('click', closePreviewCard);
-    }
-
-    if (previewOpenBtn) {
-        previewOpenBtn.addEventListener('click', () => {
-            if (currentPreviewSiteId) {
-                const site = allSiteData.find(s => s.id === currentPreviewSiteId);
-                const marker = allMarkers[currentPreviewSiteId];
-                if (site && marker) {
-                    openSiteDetails(site, marker);
-                }
-            }
-        });
-    }
-
-    if (previewCard) {
-        previewCard.addEventListener('click', (e) => {
-            if (e.target.closest('#previewCloseBtn')) return;
-            if (currentPreviewSiteId) previewOpenBtn.click();
-        });
-    }
-} // END DOMContentLoaded
-
-// --- PREVIEW CARD HELPER FUNCTIONS ---
-function showPreviewCard(site) {
-    if (!previewCard) return;
-
-    currentPreviewSiteId = site.id;
-
-    // Set Content
-    previewTitle.textContent = site.id + '. ' + site.name;
-
-    // SKELETON LOADING FOR IMAGE
-    previewImage.classList.add('skeleton-loading');
-    previewImage.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=Site';
-    previewImage.onload = () => previewImage.classList.remove('skeleton-loading');
-
-    previewDist.textContent = STRINGS.preview.tapForDetails; // Placeholder for distance if we had coords
-
-    // Show Card
-    previewCard.classList.remove('hidden', 'preview-card-closing');
-    previewCard.classList.add('preview-card-opening');
+  });
 }
 
-function closePreviewCard() {
-    if (!previewCard || previewCard.classList.contains('hidden')) return;
+async function captureAndDownloadBadge() {
+  const badgeElement = document.getElementById('hiddenBadgeTemplate');
+  if (!badgeElement) throw new Error('Badge template not found.');
 
-    previewCard.classList.remove('preview-card-opening');
-    previewCard.classList.add('preview-card-closing');
+  badgeElement.style.opacity = '1';
+  badgeElement.style.zIndex = '-50';
 
-    setTimeout(() => {
-        previewCard.classList.add('hidden');
-        previewCard.classList.remove('preview-card-closing');
-    }, 400); // Wait for animation
-}
+  try {
+    const statusDisplay = document.getElementById('badgeStatusDisplay');
+    const captionDisplay = document.getElementById('badgeCaptionDisplay');
+    const statusStamp = document.getElementById('badgeStatusStamp');
+    const state = progressService.getCompletionState();
 
-// Override the global click handler behavior via a flag or modifying the loop?
-// Better: We need to intercept where marker.on('click') is defined.
-// Since that is deep in 'initializeGameAndMap', we might need to patch it.
-
-// --- USER GUIDE MODAL LOGIC ---
-function setupUserGuideAndPWA() {
-    // Setup listeners for pre-login help button
-    const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
-    const userGuideModal = document.getElementById('userGuideModal');
-    const closeUserGuideModal = document.getElementById('closeUserGuideModal');
-    const closeUserGuideModalBtn = document.getElementById('closeUserGuideModalBtn');
-
-    if (btnPreLoginHelp && userGuideModal) {
-        btnPreLoginHelp.addEventListener('click', () => {
-            userGuideModal.classList.remove('hidden');
-        });
-    }
-
-    if (closeUserGuideModal && userGuideModal) {
-        closeUserGuideModal.addEventListener('click', () => {
-            userGuideModal.classList.add('hidden');
-        });
-    }
-
-    if (closeUserGuideModalBtn && userGuideModal) {
-        closeUserGuideModalBtn.addEventListener('click', () => {
-            userGuideModal.classList.add('hidden');
-        });
-    }
-
-// --- PWA INSTALL PROMPT LOGIC ---
-let deferredPrompt = null;
-
-// Detect if app is already installed
-function isAppInstalled() {
-    // Check if running in standalone mode (installed PWA)
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        return true;
-    }
-    // Check iOS standalone mode
-    if (window.navigator.standalone === true) {
-        return true;
-    }
-    return false;
-}
-
-// Detect device type
-function getDeviceType() {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-
-    // iOS detection
-    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        return 'ios';
-    }
-
-    // Android detection
-    if (/android/i.test(userAgent)) {
-        return 'android';
-    }
-
-    // Desktop/other
-    return 'desktop';
-}
-
-// Show PWA install prompt
-function showPWAPrompt() {
-    const pwaPrompt = document.getElementById('pwaInstallPrompt');
-    const installBtn = document.getElementById('pwaInstallBtn');
-    const iosInstructions = document.getElementById('iosInstructions');
-    const genericInstructions = document.getElementById('genericInstructions');
-
-    if (!pwaPrompt) return;
-
-    const deviceType = getDeviceType();
-
-    // Show appropriate UI based on device
-    if (deviceType === 'ios') {
-        // iOS: Show manual instructions (no programmatic install)
-        iosInstructions.classList.remove('hidden');
-        installBtn.classList.add('hidden');
-        genericInstructions.classList.add('hidden');
-    } else if (deferredPrompt && deviceType === 'android') {
-        // Android/Chrome: Show install button
-        installBtn.classList.remove('hidden');
-        iosInstructions.classList.add('hidden');
-        genericInstructions.classList.add('hidden');
-    } else {
-        // Desktop/other: Show generic instructions
-        genericInstructions.classList.remove('hidden');
-        installBtn.classList.add('hidden');
-        iosInstructions.classList.add('hidden');
-    }
-
-    pwaPrompt.classList.remove('hidden');
-}
-
-// Setup PWA install prompt
-function setupPWAInstallPrompt() {
-    // Check if already installed
-    if (isAppInstalled()) {
-        console.log('PWA already installed');
-        return;
-    }
-
-    // Check if user already dismissed the prompt
-    const dismissedUntil = localStorage.getItem('pwa_prompt_dismissed');
-    if (dismissedUntil && new Date().getTime() < parseInt(dismissedUntil)) {
-        console.log('PWA prompt dismissed by user');
-        return;
-    }
-
-    // Check if user is logged in
-    if (getCurrentSession()?.authenticated) {
-        console.log('User already logged in, skip PWA prompt');
-        return;
-    }
-
-    // Show prompt after 0.3 seconds delay (appears quickly for better UX)
-    setTimeout(() => {
-        showPWAPrompt();
-    }, 300);
-}
-
-// Capture the beforeinstallprompt event (Android/Chrome)
-    window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('beforeinstallprompt event captured');
-        e.preventDefault(); // Prevent Chrome's default mini-infobar
-        deferredPrompt = e;
+    applyBadgeStatus({
+      statusDisplay,
+      captionDisplay,
+      statusStamp,
+      count: state.count,
+      total: state.total,
+      isComplete: state.isComplete,
+      strings: STRINGS,
     });
 
-// Setup event listeners
-    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-    const closePWAPrompt = document.getElementById('closePWAPrompt');
-    const continueBrowser = document.getElementById('continueBrowser');
-    const pwaPrompt = document.getElementById('pwaInstallPrompt');
+    const canvas = await html2canvas(badgeElement, {
+      scale: 2,
+      backgroundColor: null,
+    });
 
-    if (pwaInstallBtn) {
-        pwaInstallBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
+    const filename = `Heritage-Explorer-${Date.now()}.png`;
+    const triggerDownload = (href) => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = href;
+      link.click();
+    };
 
-        // Show the install prompt
+    if (typeof canvas.toBlob === 'function') {
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((value) => (value ? resolve(value) : reject(new Error('Canvas export failed.'))), 'image/png');
+      });
+      const objectUrl = URL.createObjectURL(blob);
+      triggerDownload(objectUrl);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      return;
+    }
+
+    triggerDownload(canvas.toDataURL('image/png'));
+  } finally {
+    badgeElement.style.opacity = '0';
+  }
+}
+
+function setupTextSizeControls() {
+  const btnTextSizeReset = document.getElementById('btnTextSizeReset');
+  const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
+  const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
+  let currentTextSize = 100;
+
+  if (btnTextSizeSmall && btnTextSizeSmall.dataset.bound !== 'true') {
+    btnTextSizeSmall.dataset.bound = 'true';
+    btnTextSizeSmall.addEventListener('click', () => {
+      if (currentTextSize > 80) currentTextSize -= 10;
+      document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
+    });
+  }
+
+  if (btnTextSizeLarge && btnTextSizeLarge.dataset.bound !== 'true') {
+    btnTextSizeLarge.dataset.bound = 'true';
+    btnTextSizeLarge.addEventListener('click', () => {
+      if (currentTextSize < MAX_FONT_SIZE) currentTextSize += 10;
+      document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
+    });
+  }
+
+  if (btnTextSizeReset && btnTextSizeReset.dataset.bound !== 'true') {
+    btnTextSizeReset.dataset.bound = 'true';
+    btnTextSizeReset.addEventListener('click', () => {
+      currentTextSize = 100;
+      document.documentElement.style.setProperty('--content-font-size', '100%');
+    });
+  }
+}
+
+function setupPlatformWarning() {
+  const modal = document.getElementById('platformWarningModal');
+  const warningContent = document.querySelector('#warningContent p');
+  const continueBtn = document.getElementById('continueLoginBtn');
+  const cancelBtn = document.getElementById('cancelLoginBtn');
+  const passkeyDisplay = document.getElementById('passkeyDisplay');
+  const copyBtn = document.getElementById('copyPasskeyBtn');
+  const copySuccess = document.getElementById('copySuccess');
+  const whatIsPWABtn = document.getElementById('whatIsPWABtn');
+
+  function isPwaMode() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+  }
+
+  function showPwaExplanation() {
+    const explanationModal = document.getElementById('pwaExplanationModal');
+    explanationModal?.classList.remove('hidden');
+    document.getElementById('closePWAExplanation')?.addEventListener('click', () => explanationModal?.classList.add('hidden'), { once: true });
+    document.getElementById('gotItPWABtn')?.addEventListener('click', () => explanationModal?.classList.add('hidden'), { once: true });
+  }
+
+  return async function showPlatformWarning() {
+    const passcodeInput = document.getElementById('passcodeInput');
+    const passkey = passcodeInput?.value || '';
+    if (passkeyDisplay) passkeyDisplay.value = passkey;
+
+    if (warningContent) {
+      warningContent.innerHTML = isPwaMode()
+        ? "<strong>You're using the PWA (App Mode)</strong><br><br>Once you log in here, this passkey will be locked to the <strong>PWA only</strong>."
+        : "<strong>You're using a Browser</strong><br><br>Once you log in here, this passkey will be locked to <strong>browser mode only</strong>.";
+    }
+
+    modal?.classList.remove('hidden');
+
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(passkey);
+          copySuccess?.classList.remove('hidden');
+          setTimeout(() => copySuccess?.classList.add('hidden'), 2000);
+        } catch {
+          passkeyDisplay?.select();
+          document.execCommand('copy');
+        }
+      };
+    }
+
+    if (continueBtn) {
+      continueBtn.onclick = async () => {
+        modal?.classList.add('hidden');
+        const session = await visitorAccess.submit(passkey, {
+          button: document.getElementById('unlockBtn'),
+          errorElement: document.getElementById('errorMsg'),
+        });
+        if (session?.authenticated) showMapExperience();
+      };
+    }
+
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        modal?.classList.add('hidden');
+        if (passcodeInput) passcodeInput.value = '';
+      };
+    }
+
+    if (whatIsPWABtn) whatIsPWABtn.onclick = showPwaExplanation;
+  };
+}
+
+const showPlatformWarning = setupPlatformWarning();
+
+function setupGameUIListeners() {
+  if (gameUIBound) return;
+  gameUIBound = true;
+
+  document.getElementById('logoOverlay')?.addEventListener('click', () => {
+    window.open('https://badanwarisanmalaysia.org/', '_blank');
+  });
+
+  const siteModal = document.getElementById('siteModal');
+  const passportModal = document.getElementById('passportModal');
+  const chatModal = document.getElementById('chatModal');
+  const welcomeModal = document.getElementById('welcomeModal');
+  const challengeModal = document.getElementById('challengeModal');
+  const badgeInputModal = document.getElementById('badgeInputModal');
+  const congratsModal = document.getElementById('congratsModal');
+
+  siteModalController.bind({
+    modal: siteModal,
+    image: document.getElementById('siteModalImage'),
+    label: document.getElementById('siteModalLabel'),
+    title: document.getElementById('siteModalTitle'),
+    info: document.getElementById('siteModalInfo'),
+    quizArea: document.getElementById('siteModalQuizArea'),
+    quizQuestion: document.getElementById('siteModalQuizQ'),
+    quizOptions: document.getElementById('siteModalQuizOptions'),
+    quizResult: document.getElementById('siteModalQuizResult'),
+    closeButton: document.getElementById('closeSiteModal'),
+    askAI: document.getElementById('siteModalAskAI'),
+    directions: document.getElementById('siteModalDirections'),
+    checkIn: document.getElementById('siteModalCheckInBtn'),
+    solveChallenge: document.getElementById('siteModalSolveChallengeBtn'),
+    more: document.getElementById('siteModalMore'),
+    moreButton: document.getElementById('siteModalMoreBtn'),
+    moreContent: document.getElementById('siteModalMoreContent'),
+    food: document.getElementById('siteModalFoodBtn'),
+    hotel: document.getElementById('siteModalHotelBtn'),
+    hintText: document.getElementById('siteModalHintText'),
+  });
+
+  passportController.bind({
+    btnPassport: document.getElementById('btnPassport'),
+    passportModal,
+    closePassportModal: document.getElementById('closePassportModal'),
+    passportInfo: document.getElementById('passportInfo'),
+    passportGrid: document.getElementById('passportGrid'),
+    progressBar: document.getElementById('progressBar'),
+    progressText: document.getElementById('progressText'),
+  });
+
+  document.getElementById('btnChat')?.addEventListener('click', () => {
+    animateOpenModal(chatModal);
+    openModalState('chatModal');
+  });
+  document.getElementById('closeChatModal')?.addEventListener('click', () => animateCloseModal(chatModal));
+  document.getElementById('chatSendBtn')?.addEventListener('click', handleSendMessage);
+  document.getElementById('chatInput')?.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') void handleSendMessage();
+  });
+
+  document.getElementById('closeWelcomeModal')?.addEventListener('click', () => animateCloseModal(welcomeModal));
+  document.getElementById('closeCongratsModal')?.addEventListener('click', () => animateCloseModal(congratsModal));
+  document.getElementById('btnChallenge')?.addEventListener('click', () => {
+    updateChallengeModal();
+    animateOpenModal(challengeModal);
+  });
+  document.getElementById('closeChallengeModal')?.addEventListener('click', () => animateCloseModal(challengeModal));
+  document.getElementById('closeBadgeModal')?.addEventListener('click', () => animateCloseModal(badgeInputModal));
+
+  document.getElementById('sharePassportBtn')?.addEventListener('click', () => {
+    const payload = passportController.buildSharePayload();
+    if (navigator.share) {
+      navigator.share({ title: 'BWM KUL City Walk', text: payload.text, url: payload.url }).catch(console.error);
+      return;
+    }
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nJoin the adventure: ${payload.url}`)}`, '_blank');
+  });
+
+  document.getElementById('shareWhatsAppBtn')?.addEventListener('click', () => {
+    const payload = passportController.buildSharePayload();
+    if (navigator.share) {
+      navigator.share({ title: 'Mission Accomplished!', text: payload.text, url: payload.url }).catch(console.error);
+      return;
+    }
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nDiscover KL's history and start your own adventure here: ${payload.url}`)}`, '_blank');
+  });
+
+  document.getElementById('resetDemoProgressBtn')?.addEventListener('click', () => {
+    if (activeSession?.role !== 'demo') return;
+    const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
+    if (!confirmed) return;
+    clearScopedProgress('demo');
+    window.location.reload();
+  });
+
+  const directionsModal = document.getElementById('directionsModal');
+  const directionsIframe = document.getElementById('directionsIframe');
+  const closeDirections = () => {
+    animateCloseModal(directionsModal);
+    if (directionsIframe) directionsIframe.src = '';
+  };
+  document.getElementById('closeDirectionsModal')?.addEventListener('click', closeDirections);
+  document.getElementById('closeDirectionsModalBtn')?.addEventListener('click', closeDirections);
+
+  window.addEventListener('popstate', () => {
+    [siteModal, chatModal, passportModal, welcomeModal, congratsModal, challengeModal, badgeInputModal].forEach((modal) => {
+      if (modal && !modal.classList.contains('hidden')) animateCloseModal(modal);
+    });
+  });
+
+  setupTextSizeControls();
+  setupBadgeGeneration();
+  loadChatHistory();
+}
+
+function bindAdminUI() {
+  adminAccess.bindLogin({
+    button: document.getElementById('adminLoginBtn'),
+    input: document.getElementById('adminPasswordInput'),
+    errorElement: document.getElementById('adminErrorMsg'),
+    onSuccess: showAdminTools,
+  });
+
+  adminAccess.bindTools({
+    generateBtn: document.getElementById('adminGenerateBtn'),
+    shareBtn: document.getElementById('adminShareBtn'),
+    statusMsg: document.getElementById('adminStatusMsg'),
+    resultText: document.getElementById('passkeyResult'),
+    logoutBtn: document.getElementById('adminLogoutBtn'),
+    switchToMapBtn: document.getElementById('adminSwitchToMapBtn'),
+  });
+}
+
+function showAdminTools() {
+  document.documentElement.classList.remove('jejak-hide-staff');
+  document.getElementById('adminLoginForm')?.classList.add('hidden');
+  document.getElementById('adminResult')?.classList.remove('hidden');
+  document.getElementById('passkeyDate')?.replaceChildren(document.createTextNode(STRINGS.auth.adminDate));
+  document.getElementById('closeStaffScreen')?.classList.add('hidden');
+  document.getElementById('btnAdminToggle')?.classList.remove('hidden');
+}
+
+function showAdminCode() {
+  showOnly(['staff-screen']);
+  notifyLifecycle({ activeView: 'admin' });
+}
+
+async function checkForURLPasskey() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  if (!code || activeSession?.authenticated) return;
+
+  const cleanUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+  window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+  showOnly(['gatekeeper']);
+  notifyLifecycle({ activeView: 'gatekeeper' });
+  const input = document.getElementById('passcodeInput');
+  if (input) input.value = code;
+  await showPlatformWarning();
+}
+
+async function showMapExperience() {
+  notifyLifecycle({ activeView: 'map' });
+  applySessionChrome();
+  loadScopedState();
+  resetDailyChatIfNeeded();
+
+  showOnly([]);
+  document.getElementById('progress-container')?.classList.remove('hidden');
+  document.getElementById('map')?.classList.remove('hidden');
+
+  setupGameUIListeners();
+  await mapController.initMap();
+  bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
+  passportController.refreshProgress();
+  updateChatUIWithCount();
+  disableChatUI(userMessageCount >= getChatLimit());
+
+  const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
+  if (resetDemoProgressBtn) {
+    resetDemoProgressBtn.classList.toggle('hidden', activeSession?.role !== 'demo');
+  }
+
+  if (!sessionStorage.getItem('jejak_welcome_shown')) {
+    document.getElementById('welcomeModal')?.classList.remove('hidden');
+    sessionStorage.setItem('jejak_welcome_shown', 'true');
+  }
+}
+
+function showAdminExperience() {
+  notifyLifecycle({ activeView: 'admin' });
+  applySessionChrome();
+  showOnly(['staff-screen']);
+  bindAdminUI();
+  showAdminTools();
+}
+
+function showLandingPage() {
+  notifyLifecycle({ activeView: 'landing' });
+  document.documentElement.classList.remove('jejak-hide-staff');
+  showOnly(['landing-page']);
+}
+
+function setupAccessFlow() {
+  const landingScreen = createLandingScreen({
+    notifyLifecycle,
+    async onExploreDemo() {
+      try {
+        await demoAccess.start();
+        await showMapExperience();
+      } catch {
+        window.alert('Unable to start the demo session. Please try again.');
+      }
+    },
+    onVisitor() {},
+    onStaff: showAdminCode,
+    onBackHome: showLandingPage,
+    onCloseStaff: showLandingPage,
+  });
+
+  landingScreen.init();
+  bindAdminUI();
+
+  const unlockBtn = document.getElementById('unlockBtn');
+  if (unlockBtn && unlockBtn.dataset.bound !== 'true') {
+    unlockBtn.dataset.bound = 'true';
+    unlockBtn.addEventListener('click', async () => {
+      const passcodeInput = document.getElementById('passcodeInput');
+      if (!passcodeInput?.value.trim()) return;
+      await showPlatformWarning();
+    });
+  }
+}
+
+function setupUserGuideAndPwa() {
+  const userGuideModal = document.getElementById('userGuideModal');
+  document.getElementById('btnPreLoginHelp')?.addEventListener('click', () => userGuideModal?.classList.remove('hidden'));
+  document.getElementById('closeUserGuideModal')?.addEventListener('click', () => userGuideModal?.classList.add('hidden'));
+  document.getElementById('closeUserGuideModalBtn')?.addEventListener('click', () => userGuideModal?.classList.add('hidden'));
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+  });
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (getCurrentSession()?.authenticated) return;
+      const dismissedUntil = localStorage.getItem('pwa_prompt_dismissed');
+      if (dismissedUntil && Date.now() < Number.parseInt(dismissedUntil, 10)) return;
+
+      const pwaPrompt = document.getElementById('pwaInstallPrompt');
+      const installBtn = document.getElementById('pwaInstallBtn');
+      const iosInstructions = document.getElementById('iosInstructions');
+      const genericInstructions = document.getElementById('genericInstructions');
+      if (!pwaPrompt || !installBtn || !iosInstructions || !genericInstructions) return;
+
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+      const isAndroid = /android/i.test(ua);
+
+      iosInstructions.classList.toggle('hidden', !isIos);
+      installBtn.classList.toggle('hidden', !(deferredPrompt && isAndroid));
+      genericInstructions.classList.toggle('hidden', isIos || (deferredPrompt && isAndroid));
+      pwaPrompt.classList.remove('hidden');
+
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
         deferredPrompt.prompt();
-
-        // Wait for the user's response
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response: ${outcome}`);
-
-        // Clear the deferredPrompt
+        await deferredPrompt.userChoice;
         deferredPrompt = null;
+        pwaPrompt.classList.add('hidden');
+      }, { once: true });
+    }, 1000);
+  });
 
-        // Hide the prompt
-        if (pwaPrompt) pwaPrompt.classList.add('hidden');
-        });
-    }
+  const dismissPrompt = () => {
+    document.getElementById('pwaInstallPrompt')?.classList.add('hidden');
+    localStorage.setItem('pwa_prompt_dismissed', String(Date.now() + (7 * 24 * 60 * 60 * 1000)));
+  };
+  document.getElementById('closePWAPrompt')?.addEventListener('click', dismissPrompt);
+  document.getElementById('continueBrowser')?.addEventListener('click', dismissPrompt);
+}
 
-    if (closePWAPrompt) {
-        closePWAPrompt.addEventListener('click', () => {
-            if (pwaPrompt) pwaPrompt.classList.add('hidden');
-            // Remember dismissal for 7 days
-            const sevenDays = 7 * 24 * 60 * 60 * 1000;
-            localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
-        });
-    }
+async function initApp() {
+  try {
+    activeSession = await refreshSession();
+  } catch {
+    activeSession = getCurrentSession();
+  }
 
-    if (continueBrowser) {
-        continueBrowser.addEventListener('click', () => {
-            if (pwaPrompt) pwaPrompt.classList.add('hidden');
-            // Remember dismissal for 7 days
-            const sevenDays = 7 * 24 * 60 * 60 * 1000;
-            localStorage.setItem('pwa_prompt_dismissed', (new Date().getTime() + sevenDays).toString());
-        });
-    }
+  notifyLifecycle({ session: activeSession });
+  await checkForURLPasskey();
 
-// Initialize PWA prompt after session startup has had time to resolve.
-    window.addEventListener('load', () => {
-        setTimeout(setupPWAInstallPrompt, 1000);
-    });
+  if (activeSession?.authenticated) {
+    if (activeSession.role === 'admin') showAdminExperience();
+    else await showMapExperience();
+    return;
+  }
+
+  showLandingPage();
+  setupAccessFlow();
 }
 
 export function startLegacyApp(options = {}) {
-    if (legacyStartPromise) return legacyStartPromise;
+  if (legacyStartPromise) return legacyStartPromise;
 
-    legacyStartPromise = new Promise((resolve, reject) => {
-        onDomReady(() => {
-            try {
-                installModalKeyboardHandlers();
-                setupBadgeGeneration();
-                setupPreviewControls();
-                setupUserGuideAndPWA();
-                resolve(setupAppStartup(options));
-            } catch (error) {
-                reject(error);
-            }
-        });
+  lifecycleHandler = options.onLifecycleChange;
+  legacyStartPromise = new Promise((resolve, reject) => {
+    onDomReady(() => {
+      try {
+        installModalKeyboardHandlers();
+        setupUserGuideAndPwa();
+        resolve(initApp());
+      } catch (error) {
+        reject(error);
+      }
     });
+  });
 
-    return legacyStartPromise;
+  return legacyStartPromise;
 }
-
-// --- OPTIMIZATION: DYNAMIC IMPORT FOR TOUR SYSTEM ---
-// Load Tour System on idle (2s delay) or user interaction
-// --- TOUR SYSTEM REMOVED ---
-// (User requested removal of help button functionality)
-
