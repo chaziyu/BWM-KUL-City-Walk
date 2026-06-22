@@ -16,6 +16,15 @@ const DEBUG = window.location.hostname === 'localhost' || window.location.hostna
 const log = DEBUG ? console.log.bind(console) : () => { };
 installModalKeyboardHandlers();
 
+function onDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true });
+        return;
+    }
+
+    callback();
+}
+
 
 // --- DATA MIGRATION ---
 // Run migration before loading any state variables
@@ -173,7 +182,7 @@ function saveSolvedRiddle() {
 // --- BADGE GENERATION LOGIC ---
 
 // 1. Setup Listeners
-document.addEventListener('DOMContentLoaded', () => {
+onDomReady(() => {
 
     // Elements
     const badgeModal = document.getElementById('badgeInputModal');
@@ -1424,7 +1433,7 @@ function updatePassport() {
 
 
 // --- APP STARTUP & LANDING PAGE LOGIC ---
-document.addEventListener('DOMContentLoaded', () => {
+onDomReady(() => {
 
     function isAuthorized() {
         return Boolean(activeSession?.authenticated);
@@ -2269,7 +2278,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let previewCard, previewImage, previewTitle, previewDist, previewOpenBtn, previewCloseBtn;
 let currentPreviewSiteId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+onDomReady(() => {
     const btnTextSizeReset = document.getElementById('btnTextSizeReset');
     const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
     const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');

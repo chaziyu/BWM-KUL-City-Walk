@@ -6,6 +6,10 @@ html {
     overflow: hidden;
 }
 
+.hidden {
+    display: none !important;
+}
+
 #map {
     width: 100vw;
     height: 100vh;
@@ -220,6 +224,11 @@ html {
     align-items: center;
     justify-content: center;
     transition: opacity 0.4s ease;
+}
+
+.classic-modal-backdrop.hidden,
+.modern-modal-backdrop.hidden {
+    display: none !important;
 }
 
 .classic-modal-backdrop.hidden-animate,
