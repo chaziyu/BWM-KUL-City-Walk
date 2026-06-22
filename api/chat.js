@@ -5,14 +5,13 @@ const fs = require('fs');
 
 const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js');
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
+const { isRateLimited, isQuotaExceeded } = require('./_shared/rate-limit');
 
 const MAX_QUERY_CHARS = Number(process.env.CHAT_MAX_QUERY_CHARS) || 1000;
 const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
 const MAX_HISTORY_TEXT_CHARS = Number(process.env.CHAT_HISTORY_TEXT_CHARS) || 1500;
 const RATE_LIMIT_WINDOW_MS = Number(process.env.CHAT_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000;
 const RATE_LIMIT_MAX = Number(process.env.CHAT_RATE_LIMIT_MAX) || 30;
-const rateBuckets = new Map();
-const quotaBuckets = new Map();
 
 // --- CONTEXT ENGINEERING LAYER: SANITIZATION ---
 function sanitizeText(str, maxLength = 4000) {
@@ -66,19 +65,8 @@ function getClientKey(request) {
     return `${ip.split(',')[0].trim()}|${device}`;
 }
 
-function isRateLimited(key) {
-    const now = Date.now();
-    const bucket = rateBuckets.get(key) || [];
-    const recent = bucket.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW_MS);
-
-    if (recent.length >= RATE_LIMIT_MAX) {
-        rateBuckets.set(key, recent);
-        return true;
-    }
-
-    recent.push(now);
-    rateBuckets.set(key, recent);
-    return false;
+async function checkRateLimit(key) {
+    return await isRateLimited(`chat:${key}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
 }
 
 function getQuotaWindow(session) {
@@ -94,16 +82,12 @@ function getQuotaWindow(session) {
     return session.sessionId;
 }
 
-function isQuotaExceeded(session) {
+async function checkQuotaExceeded(session) {
     const limit = ROLE_LIMITS[session.role] || 0;
     if (limit <= 0) return true;
 
-    const key = `${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
-    const count = quotaBuckets.get(key) || 0;
-    if (count >= limit) return true;
-
-    quotaBuckets.set(key, count + 1);
-    return false;
+    const key = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+    return await isQuotaExceeded(key, limit);
 }
 
 // --- OPTIMIZATION: GLOBAL CONTEXT CACHING ---
@@ -164,12 +148,12 @@ module.exports = async (request, response) => {
         return response.status(401).json({ reply: 'Please unlock the app before using the AI guide.' });
     }
 
-    if (isQuotaExceeded(session)) {
+    if (await checkQuotaExceeded(session)) {
         return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.' });
     }
 
     const clientKey = getClientKey(request);
-    if (isRateLimited(clientKey)) {
+    if (await checkRateLimit(clientKey)) {
         return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
     }
 

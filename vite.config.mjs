@@ -4,6 +4,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [tailwindcss()],
   build: {
-    sourcemap: true,
+    sourcemap: process.env.ENABLE_SOURCEMAPS === 'true',
+  },
+  test: {
+    exclude: ['node_modules', 'tests/browser/**'],
   },
 });

@@ -3,6 +3,7 @@ const {
     getSafeSessionDetails,
     setSessionCookie
 } = require('../_shared/session');
+const { isRateLimited } = require('../_shared/rate-limit');
 
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
@@ -12,6 +13,15 @@ module.exports = async (request, response) => {
     try {
         const { password } = request.body || {};
         const correctPassword = process.env.ADMIN_PASSWORD;
+
+        const forwardedFor = request.headers['x-forwarded-for'];
+        const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
+        
+        // Rate limit: Max 5 attempts per IP per 10 minutes
+        const isLimited = await isRateLimited(`login:admin:${ip}`, 5, 10 * 60 * 1000);
+        if (isLimited) {
+            return response.status(429).json({ error: 'Too many attempts. Please try again later.' });
+        }
 
         if (!correctPassword) {
             return response.status(500).json({ error: 'Server misconfigured: admin password missing.' });

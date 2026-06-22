@@ -3,6 +3,7 @@ const {
     getSafeSessionDetails,
     setSessionCookie
 } = require('../_shared/session');
+const { isRateLimited } = require('../_shared/rate-limit');
 
 function getTodayString() {
     return new Date().toLocaleDateString('en-GB', {
@@ -31,36 +32,6 @@ async function validateWithAppsScript(passkey, deviceId) {
     return scriptResponse.json();
 }
 
-async function validateWithPublishedSheet(passkey) {
-    const sheetUrl = process.env.GOOGLE_SHEET_URL;
-    if (!sheetUrl) {
-        return { success: false, error: 'Server misconfigured: passkey validation missing.' };
-    }
-
-    const sheetResponse = await fetch(sheetUrl);
-    if (!sheetResponse.ok) {
-        return { success: false, error: 'Could not connect to passkey sheet.' };
-    }
-
-    const data = await sheetResponse.text();
-    const rows = data.split('\n');
-    const todayStr = getTodayString();
-    let validCode = null;
-
-    for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i].split(',');
-        if (cols.length >= 2 && cols[0].trim() === todayStr) {
-            validCode = cols[1].trim();
-            break;
-        }
-    }
-
-    return {
-        success: Boolean(validCode && passkey === validCode.trim().toUpperCase()),
-        error: 'Invalid or expired passkey.'
-    };
-}
-
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
@@ -78,8 +49,16 @@ module.exports = async (request, response) => {
             return response.status(400).json({ error: 'Passkey format is invalid.' });
         }
 
-        const validation = await validateWithAppsScript(normalizedPasskey, deviceId)
-            || await validateWithPublishedSheet(normalizedPasskey);
+        const forwardedFor = request.headers['x-forwarded-for'];
+        const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
+        
+        // Rate limit: Max 10 attempts per IP per 10 minutes
+        const isLimited = await isRateLimited(`login:visitor:${ip}`, 10, 10 * 60 * 1000);
+        if (isLimited) {
+            return response.status(429).json({ error: 'Too many attempts. Please try again later.' });
+        }
+
+        const validation = await validateWithAppsScript(normalizedPasskey, deviceId);
 
         if (!validation?.success || validation?.isAdmin) {
             return response.status(401).json({ error: validation?.error || 'Invalid or expired passkey.' });

@@ -6,27 +6,6 @@ function getTodayString() {
     });
 }
 
-async function getTodayCodeFromSheet() {
-    const sheetUrl = process.env.GOOGLE_SHEET_URL;
-    if (!sheetUrl) return null;
-
-    const sheetResponse = await fetch(sheetUrl);
-    if (!sheetResponse.ok) return null;
-
-    const data = await sheetResponse.text();
-    const rows = data.split('\n');
-    const todayStr = getTodayString();
-
-    for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i].split(',');
-        if (cols.length >= 2 && cols[0].trim() === todayStr) {
-            return cols[1].trim();
-        }
-    }
-
-    return null;
-}
-
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
@@ -62,13 +41,13 @@ module.exports = async (request, response) => {
                 return response.status(502).json({ error: genResult.error || 'Passkey generation failed.' });
             }
             generatedCode = genResult.code || genResult.passkey;
-        } else {
-            generatedCode = await getTodayCodeFromSheet();
         }
 
         if (!generatedCode) {
             return response.status(500).json({ error: 'Passkey generation service is not configured.' });
         }
+
+        console.info(`[AUDIT] Admin generated a passkey on ${getTodayString()}`);
 
         return response.status(200).json({
             success: true,
