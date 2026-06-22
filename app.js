@@ -7,27 +7,14 @@ import { migrateData } from './storage-migration.js';
 import { STRINGS } from './localization.js';
 import { endSession, getCurrentSession, refreshSession, startAdminSession, startDemoSession, startVisitorSession } from './session.js';
 import { clearScopedProgress, readScopedJSON, readScopedNumber, readScopedString, writeScopedJSON, writeScopedNumber, writeScopedString } from './storage.js';
+import { debounce } from './src/utils/debounce.js';
+import { buildGoogleMapsUrls } from './src/utils/google-maps.js';
+import { animateCloseModal, animateOpenModal, animateScreenSwitch, installModalKeyboardHandlers, openModalState } from './src/utils/modal.js';
 
 // --- UTILITIES ---
 const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const log = DEBUG ? console.log.bind(console) : () => { };
-
-/**
- * Debounce function to limit execution frequency
- * @param {Function} func - Function to debounce
- * @param {number} wait - Wait time in ms
- */
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
+installModalKeyboardHandlers();
 
 
 // --- DATA MIGRATION ---
@@ -44,31 +31,7 @@ migrateData();
  * @param {string} [siteName] - Optional name of the location for richer place cards
  */
 function openGoogleMaps(lat, lon, mode, siteName = "") {
-    const destination = `${lat},${lon}`;
-    let externalUrl = '';
-    let embedUrl = '';
-
-    // Determine the query text: use siteName if possible for richer cards
-    const placeQuery = siteName ? encodeURIComponent(siteName) : destination;
-
-    if (mode === 'directions' || mode === 'transit') {
-        externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
-        // Legacy Embed: saddr=My+Location triggers route visualization on the map
-        embedUrl = `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=r&output=embed`;
-    } else if (mode === 'walk') {
-        externalUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
-        embedUrl = `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=w&output=embed`;
-    } else if (mode === 'restaurants') {
-        // Search restaurants centered on the heritage site location, not user location
-        externalUrl = `https://www.google.com/maps/search/restaurants/@${lat},${lon},16z`;
-        // For embed: explicitly center on site coordinates and search nearby
-        embedUrl = `https://maps.google.com/maps?q=restaurants&sll=${lat},${lon}&t=m&z=16&output=embed`;
-    } else if (mode === 'hotels') {
-        // Search hotels centered on the heritage site location, not user location
-        externalUrl = `https://www.google.com/maps/search/hotels/@${lat},${lon},16z`;
-        // For embed: explicitly center on site coordinates and search nearby
-        embedUrl = `https://maps.google.com/maps?q=hotels&sll=${lat},${lon}&t=m&z=16&output=embed`;
-    }
+    const { externalUrl, embedUrl } = buildGoogleMapsUrls(lat, lon, mode);
 
     const directionsModal = document.getElementById('directionsModal');
     const directionsIframe = document.getElementById('directionsIframe');
@@ -105,103 +68,6 @@ function openGoogleMaps(lat, lon, mode, siteName = "") {
     } else if (externalUrl) {
         window.open(externalUrl, '_blank');
     }
-}
-
-// --- PREMIUM MODAL ANIMATION HELPERS ---
-function animateOpenModal(modal) {
-    if (!modal) return;
-    modal.classList.remove('hidden', 'modal-closing');
-    modal.classList.add('modal-opening');
-
-    // ACCESSIBILITY: Set focus to the first focusable element inside the modal
-    const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const firstFocusableElement = modal.querySelectorAll(focusableElements)[0];
-    if (firstFocusableElement) {
-        setTimeout(() => firstFocusableElement.focus(), 100); // Small delay for visibility
-    }
-}
-
-function animateCloseModal(modal) {
-    if (!modal || modal.classList.contains('hidden')) return;
-    modal.classList.remove('modal-opening');
-    modal.classList.add('modal-closing');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('modal-closing');
-        // Return focus to the trigger button if needed (Context specific, skipping generic implementation to avoid errors)
-    }, 400); // Match CSS cinematicFadeOut duration
-}
-
-// NEW: Helper for smooth screen transitions (e.g. Landing -> Gatekeeper)
-function animateScreenSwitch(fromScreen, toScreen) {
-    if (!fromScreen || !toScreen) return;
-
-    // Use a slide-out instead of fade-out so the outgoing screen keeps opacity
-    // This prevents underlying content (map) from briefly showing through.
-    // Show target immediately so there's no perceptible delay
-    // Ensure it appears above the current screen during the transition
-    const fromZ = parseInt(window.getComputedStyle(fromScreen).zIndex) || 0;
-    toScreen.style.zIndex = (fromZ + 1).toString();
-    toScreen.classList.remove('hidden');
-    toScreen.classList.remove('animate-fade-scale');
-    void toScreen.offsetWidth; // Trigger reflow
-    toScreen.classList.add('animate-fade-scale');
-
-    // Then slide the outgoing screen slightly while keeping its opacity
-    fromScreen.classList.add('screen-slide-out');
-
-    setTimeout(() => {
-        fromScreen.classList.add('hidden');
-        fromScreen.classList.remove('screen-slide-out');
-        // cleanup temporary zIndex
-        toScreen.style.removeProperty('z-index');
-    }, 360); // match the new animation duration
-}
-
-// ACCESSIBILITY: Global Key Listener for Escape and Tab Trapping
-document.addEventListener('keydown', (e) => {
-    // 1. Close Modals on ESC
-    if (e.key === 'Escape') {
-        const sensitiveModals = ['#gatekeeper', '#landing-page']; // Don't close these on ESC
-        const openModals = document.querySelectorAll('[role="dialog"]:not(.hidden)');
-
-        openModals.forEach(modal => {
-            if (!sensitiveModals.includes('#' + modal.id)) {
-                animateCloseModal(modal);
-                // Special case handling for overlays
-                if (modal.id === 'badgeInputModal') modal.classList.add('hidden');
-            }
-        });
-    }
-
-    // 2. Trap Focus in Modals
-    if (e.key === 'Tab') {
-        const openModal = document.querySelector('[role="dialog"]:not(.hidden)');
-        if (openModal) {
-            const focusableElements = openModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            if (focusableElements.length === 0) return;
-
-            const firstElement = focusableElements[0];
-            const lastElement = focusableElements[focusableElements.length - 1];
-
-            if (e.shiftKey) { /* Shift + Tab */
-                if (document.activeElement === firstElement) {
-                    lastElement.focus();
-                    e.preventDefault();
-                }
-            } else { /* Tab */
-                if (document.activeElement === lastElement) {
-                    firstElement.focus();
-                    e.preventDefault();
-                }
-            }
-        }
-    }
-});
-
-// --- HISTORY API HELPER ---
-function openModalState(modalId) {
-    window.history.pushState({ modal: modalId }, '', window.location.pathname);
 }
 
 // --- GAME STATE ---
@@ -677,7 +543,7 @@ function initializeGameAndMap() {
         });
     });
 
-    fetch('data.json').then(res => res.json()).then(sites => {
+    fetch(new URL('./data.json', import.meta.url)).then(res => res.json()).then(sites => {
         allSiteData = sites;
         // CACHE MAIN SITES (Performance Optimization)
         mainSites = allSiteData.filter(site => !isNaN(parseInt(site.id)));
@@ -1420,7 +1286,7 @@ function sanitizeRenderedHtml(html) {
     return cleanFragment;
 }
 
-function renderSafeMarkdown(container, text) {
+async function renderSafeMarkdown(container, text) {
     if (!container) return;
     container.replaceChildren();
 
@@ -1429,7 +1295,7 @@ function renderSafeMarkdown(container, text) {
         return;
     }
 
-    const rawHtml = marked.parse(text || '');
+    const rawHtml = await marked.parse(text || '');
     container.appendChild(sanitizeRenderedHtml(rawHtml));
 }
 
@@ -2406,6 +2272,7 @@ let currentPreviewSiteId = null;
 document.addEventListener('DOMContentLoaded', () => {
     const btnTextSizeReset = document.getElementById('btnTextSizeReset');
     const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
+    const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
     const contentText = document.getElementById('siteModalInfo');
     const moreContentText = document.getElementById('siteModalMoreContent');
 

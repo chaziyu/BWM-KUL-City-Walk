@@ -7,11 +7,6 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no, viewport-fit=cover">
     <title>BWM KUL City Walk</title>
 
-    <!-- ANTI-CACHE META TAGS -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-
     <!-- PWA MANIFEST & META -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
@@ -22,20 +17,6 @@
     <meta name="apple-mobile-web-app-title" content="BWM Walk">
     <link rel="apple-touch-icon" href="images/icon-192.png">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet"
-        href="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.css" />
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="stylesheet" href="style.css" />
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script
-        src="https://unpkg.com/leaflet-defaulticon-compatibility@0.1.2/dist/leaflet-defaulticon-compatibility.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --content-font-size: 100%;
@@ -56,19 +37,13 @@
 
 <body class="overflow-hidden bg-gray-100">
 
-    <!-- Google Translate Widget (Aligned with Zoom buttons) -->
-    <div id="google_translate_element" class="fixed top-[calc(5rem+env(safe-area-inset-top))] right-4 z-[5000]"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,ms,zh-CN,zh-TW,ta,id,ar,ja,ko,th,vi,fr,de,es,ru',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-            }, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript"
-        src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <!-- Google Translate loads only after the visitor asks for it. -->
+    <div id="google_translate_element" class="fixed top-[calc(5rem+env(safe-area-inset-top))] right-4 z-[5000]">
+        <button id="loadTranslateBtn"
+            class="rounded-full bg-white/90 px-3 py-2 text-xs font-bold text-gray-700 shadow-lg backdrop-blur-sm border border-gray-200">
+            Translate
+        </button>
+    </div>
 
     <!-- ROBUST JS SUPPRESSION FOR GOOGLE TRANSLATE POPUPS -->
     <script>
@@ -895,7 +870,7 @@
     <div id="hiddenBadgeTemplate"
         class="fixed top-0 left-0 z-[-50] opacity-0 pointer-events-none w-[800px] h-[450px] bg-[#fdfaf5] border-[12px] border-[#1a3c5e] rounded-lg shadow-2xl flex flex-col overflow-hidden font-serif relative">
 
-        <div class="absolute inset-0 opacity-[0.05] bg-[url('images/cream-paper.png')] pointer-events-none"></div>
+        <div class="absolute inset-0 opacity-[0.05] bg-[url('/images/cream-paper.png')] pointer-events-none"></div>
 
         <div
             class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#1a3c5e] opacity-[0.03] text-9xl font-bold pointer-events-none uppercase tracking-widest">
@@ -978,7 +953,7 @@
 
 
 
-    <script src="app.js" type="module"></script>
+    <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>

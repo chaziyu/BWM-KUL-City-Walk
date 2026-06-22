@@ -1,23 +1,23 @@
 # 🏛️ BWM KUL City Walk (Heritage Trail)
 
-> A modern, interactive, and Progressive Web App (PWA) for exploring Kuala Lumpur's heritage sites.
+> A modern, interactive, installable PWA shell for exploring Kuala Lumpur's heritage sites.
 > **Live Website:** [https://bwm-kul-city-walk.vercel.app/](https://bwm-kul-city-walk.vercel.app/)
 
 **Prepared For:** Badan Warisan Malaysia (BWM)
 
 ## 📖 Project Overview
 
-**BWM KUL City Walk** is a cutting-edge Progressive Web App designed to guide visitors through **11 core heritage sites** in Kuala Lumpur. It combines an interactive map, gamification, AI-powered assistance, and a beautiful onboarding system into a seamless, **native-app-like** mobile experience.
+**BWM KUL City Walk** is a Vanilla JavaScript portfolio prototype designed to guide visitors through **11 core heritage sites** in Kuala Lumpur. It combines an interactive map, gamification, AI-powered assistance, and access-controlled demo/visitor/admin flows.
 
-The project is built to be **zero-cost** to maintain, utilizing free tiers of modern cloud services.
+The project is designed as a low-cost portfolio prototype using Vercel serverless functions and managed third-party services where appropriate.
 
 ### Key Highlights
-*   **📱 Native App Experience:** Feels like a real app with instant touch response, smooth 60fps animations, and offline-ready capabilities
+*   **📱 Installable App Shell:** Manifest-based PWA install metadata with offline support planned for a later phase
 *   **🎓 Interactive Onboarding:** Beautiful guided tour system with spotlight effects to help new users discover features instantly
 *   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google Gemini with rich knowledge of all heritage sites
 *   **🛂 Digital Passport:** Collect stamps, check-in to sites, and track your exploration progress
 *   **📍 Interactive Map:** Rich transit routes, food & hotel search, and beautiful site details
-*   **⚡ Lightning Fast:** Hardware-accelerated animations, zero tap delay, and optimized performance
+*   **⚡ Performance Aware:** Hardware-accelerated animations, local build assets, and lazy-loaded optional libraries
 *   **♿ Accessible:** Global UI zoom controls, high-contrast design, and keyboard navigation support
 
 ---
@@ -90,7 +90,7 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 *   **AI Engine:** Google GenAI SDK with Gemini/Gemma fallback models
 
 ### Performance
-*   **PWA:** Service worker ready, installable on all platforms
+*   **PWA:** Installable app shell; full offline behavior is planned for a later phase
 *   **Optimization:** Hardware acceleration, CSS containment, will-change hints
 *   **Caching:** Scoped localStorage for demo and visitor tour progress; authorization is stored in signed cookies
 *   **Load Time:** Optimized for fast initial paint and interaction
@@ -100,40 +100,43 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 ## 🚀 Quick Start
 
 ### Prerequisites
-1.  **Vercel Account** for hosting
-2.  **Google Cloud Account** for Gemini AI API
-3.  **Google Apps Script** for passkey generation (optional)
+1. **Node.js 18+**
+2. **Vercel Account** for deployment
+3. **Google Cloud Account** for Gemini AI API
+4. **Google Apps Script** for visitor passkey validation/generation (optional prototype workflow)
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/chaziyu/BWM-KUL-City-Walk.git
 cd BWM-KUL-City-Walk
-
-# Install dependencies
 npm install
+npm run dev
+```
 
-# Run locally (Requires Vercel CLI for API functions)
+Open the Vite URL printed by the terminal, usually `http://localhost:5173`.
+
+### Local Development
+
+Use `npm run dev` for frontend development. The app uses ES modules and cannot be run directly from `file://`.
+
+For full API behavior, run through Vercel’s local runtime after installing the Vercel CLI:
+
+```bash
 vercel dev
-
-### ⚠️ Local Development Note (Important)
-This project uses ES6 Modules (`import`/`export`), which **cannot** runs directly from the file system (e.g., `file:///path/to/index.html`). You must use a local HTTP server.
-
-**Option 1: Using Node.js (Recommended)**
-```bash
-# Start a local server
-npx serve .
-# Then open http://localhost:3000
 ```
 
-**Option 2: Using Python**
-```bash
-# Start a simple HTTP server
-python -m http.server 8000
-# Then open http://localhost:8000
-```
+Static file servers can show the frontend shell, but they cannot execute the serverless routes in `api/`.
 
+### Build and Test Commands
+
+```bash
+npm run lint
+npm run test
+npm run validate:data
+npm run build
+npm run preview
+```
 
 ### Environment Variables
 
@@ -193,23 +196,59 @@ The serverless chat endpoint tries models in this order:
 
 ```
 BWM-KUL-City-Walk/
-├── index.html          # Main app entry point
-├── app.js              # Core application logic
-├── tour.js             # Interactive onboarding system
-├── style.css           # Global styles + animations
-├── config.js           # Runtime configuration
-├── session.js          # Browser-safe session helper
-├── storage.js          # Demo/visitor scoped localStorage helper
-├── data.json           # Heritage site data (SSOT)
-├── localization.js     # Multi-language support
+├── index.html              # Vite HTML entry
+├── src/
+│   ├── main.js             # Browser dependency bootstrap
+│   ├── styles/main.css     # Tailwind, Leaflet, and app CSS imports
+│   └── utils/              # Extracted low-risk utility modules
+├── app.js                  # Legacy app controller, being modularized gradually
+├── config.js               # Runtime configuration
+├── session.js              # Browser-safe session helper
+├── storage.js              # Demo/visitor scoped localStorage helper
+├── data.json               # Heritage site data source
+├── data/sites.schema.json  # Data validation schema
+├── scripts/validate-data.js
+├── tests/                  # Vitest unit/data tests
 ├── api/
-│   ├── _session.js     # Signed cookie session utilities
-│   ├── chat.js         # Serverless AI chat endpoint
-│   ├── session/        # Demo, visitor, admin, current, logout session APIs
-│   └── admin/          # Protected admin prototype APIs
-├── images/             # Site photos + PWA icons
-└── manifest.json       # PWA configuration
+│   ├── _session.js         # Signed cookie session utilities
+│   ├── chat.js             # Serverless AI chat endpoint
+│   ├── session/            # Demo, visitor, admin, current, logout session APIs
+│   └── admin/              # Protected admin prototype APIs
+├── images/                 # Site photos + PWA icons
+├── manifest.json           # PWA install metadata
+└── vite.config.mjs         # Vite build configuration
 ```
+
+---
+
+## Architecture
+
+The frontend remains Vanilla JavaScript. Vite builds the browser entry, bundles local dependencies, and emits hashed production assets in `dist/`. The large legacy controller is still present, but Phase 2 extraction has started with shared utility modules for debounce, modal behavior, and Google Maps URL construction.
+
+`api/` remains outside `src/` because those files are Vercel serverless functions.
+
+## Access Model
+
+**Demo Mode:** `Explore Demo` creates a signed short-lived demo session and stores progress under the demo localStorage namespace.
+
+**Visitor Passkey Workflow:** Visitor codes are submitted to `/api/session/visitor`; the server validates the code and issues a signed HttpOnly cookie.
+
+**Project Admin Prototype Scope:** The admin screen demonstrates organiser passkey tooling. It remains a prototype workflow and should not be described as an operated BWM production admin system.
+
+## Data Validation
+
+Run `npm run validate:data` before deployment. The validator checks required fields, unique IDs/names, valid coordinates, image references, quiz consistency for main sites, AI context for main sites, and the expected 11 `must_visit` records.
+
+## Security Boundaries
+
+Client UI state is not trusted for authorization. Demo, visitor, admin, and chat authorization are based on the signed `bwm_session` cookie read by serverless APIs.
+
+## Known Limitations
+
+- Full offline support is planned for a later phase; third-party map tiles are online-only.
+- The admin workflow is a portfolio prototype.
+- Recommended sites do not all have quiz content yet.
+- Google Translate is a third-party widget loaded only when requested.
 
 ---
 

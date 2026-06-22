@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BWM KUL City Walk Sites",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "name",
+      "category",
+      "coordinates",
+      "image",
+      "info",
+      "ai_context"
+    ],
+    "anyOf": [
+      { "required": ["info_more"] },
+      { "required": ["flyer_text"] }
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "category": {
+        "enum": ["must_visit", "recommended"]
+      },
+      "coordinates": {
+        "type": "object",
+        "required": ["marker"],
+        "properties": {
+          "marker": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "polygon": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number",
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                {
+                  "type": "number",
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      },
+      "image": {
+        "type": "string",
+        "minLength": 1
+      },
+      "info": {
+        "type": "string",
+        "minLength": 1
+      },
+      "info_more": {
+        "type": "string",
+        "minLength": 1
+      },
+      "flyer_text": {
+        "type": "string",
+        "minLength": 1
+      },
+      "quiz": {
+        "type": "object",
+        "required": ["options"],
+        "anyOf": [
+          { "required": ["question", "answer"] },
+          { "required": ["q", "a"] }
+        ],
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "answer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "q": {
+            "type": "string",
+            "minLength": 1
+          },
+          "a": {
+            "type": "string",
+            "minLength": 1
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 2,
+            "uniqueItems": true
+          }
+        }
+      },
+      "ai_context": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source": {
+        "type": "string"
+      },
+      "lastReviewed": {
+        "type": "string"
+      },
+      "reviewStatus": {
+        "enum": ["draft", "needs_review", "reviewed"]
+      },
+      "accessibilityNotes": {
+        "type": "string"
+      },
+      "estimatedVisitMinutes": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  }
+}
