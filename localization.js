@@ -8,12 +8,12 @@ export const STRINGS = {
         getAccess: "Get Access",
         invalidAdmin: "Invalid Admin Password.",
         adminSuccess: "ACCESS GRANTED",
-        adminDate: "Authenticated as Admin",
+        adminDate: "Project Admin Prototype Access",
         adminGenerateBtn: "Generate New Passkey",
         adminShareBtn: "Share via Email",
         adminGenSuccess: "New Passkey Generated!",
-        emailSubject: "Your BWM KUL City Walk Access Code",
-        emailBody: "Hello!\n\nThank you for joining the BWM KUL City Walk. Here is your unique access code:\n\nCODE: [CODE]\n\nONE-CLICK LOGIN: [LINK]\n\nEnjoy your walk!"
+        emailSubject: "Your BWM KUL City Walk Visitor Passkey",
+        emailBody: "Hello!\n\nThank you for joining the BWM KUL City Walk. Here is your visitor passkey:\n\nCODE: [CODE]\n\nONE-CLICK LOGIN: [LINK]\n\nEnjoy your walk!"
     },
     game: {
         progress: (visited, total) => `You have visited ${visited} of the ${total} heritage buildings in Kuala Lumpur!`,

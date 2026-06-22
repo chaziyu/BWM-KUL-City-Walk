@@ -1,8 +1,46 @@
 // storage-migration.js
 // Handles localStorage data validation, versioning, and migration.
 
-const LATEST_VERSION = 2;
+const LATEST_VERSION = 3;
 const REMOVED_SITE_IDS = [];
+const PROGRESS_NAMESPACES = ['demo', 'visitor'];
+
+function scopedKey(name, namespace) {
+    return `jejak_${namespace}_${name}`;
+}
+
+function migrateLegacyKey(name, fallback) {
+    const legacyKey = `jejak_${name}`;
+    const visitorKey = scopedKey(name, 'visitor');
+    const legacyValue = localStorage.getItem(legacyKey);
+
+    if (legacyValue !== null && localStorage.getItem(visitorKey) === null) {
+        localStorage.setItem(visitorKey, legacyValue);
+    } else if (legacyValue === null && localStorage.getItem(visitorKey) === null && fallback !== undefined) {
+        localStorage.setItem(visitorKey, fallback);
+    }
+
+    localStorage.removeItem(legacyKey);
+}
+
+function validateArrayKey(keyName, namespace) {
+    const key = scopedKey(keyName, namespace);
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+
+    try {
+        let values = JSON.parse(raw);
+        if (!Array.isArray(values)) {
+            console.warn(`Resetting corrupt ${key}`);
+            values = [];
+        }
+        values = values.map(String).filter(id => !REMOVED_SITE_IDS.includes(id));
+        localStorage.setItem(key, JSON.stringify(values));
+    } catch (e) {
+        console.error(`Error parsing ${key}, resetting.`, e);
+        localStorage.setItem(key, '[]');
+    }
+}
 
 /**
  * Validates and upgrades localStorage data to the latest schema version.
@@ -22,55 +60,29 @@ export function migrateData() {
 
         console.log(`Migrating storage from v${currentVersion} to v${LATEST_VERSION}...`);
 
-        // --- MIGRATION LOGIC ---
+        // Move old unscoped visitor progress into the visitor namespace.
+        migrateLegacyKey('visited', '[]');
+        migrateLegacyKey('discovered', '[]');
+        migrateLegacyKey('chat_history', '[]');
+        migrateLegacyKey('message_count', '0');
+        migrateLegacyKey('last_active_day');
+        migrateLegacyKey('solved_riddle', '{}');
 
-        // Fix: Ensure visitedSites is an array and filter removed IDs
-        let visitedRaw = localStorage.getItem('jejak_visited');
-        if (visitedRaw) {
-            try {
-                let visited = JSON.parse(visitedRaw);
-                if (!Array.isArray(visited)) {
-                    console.warn('Resetting corrupt visitedSites');
-                    visited = [];
-                }
-                // Filter out deprecated IDs
-                const originalLen = visited.length;
-                visited = visited.map(String).filter(id => !REMOVED_SITE_IDS.includes(id));
+        // Remove obsolete auth state. Local storage is no longer trusted for roles.
+        localStorage.removeItem('jejak_session');
+        localStorage.removeItem('jejak_interview_access');
 
-                if (visited.length !== originalLen) {
-                    console.log('Removed deprecated sites from visited list.');
-                }
-                localStorage.setItem('jejak_visited', JSON.stringify(visited));
-            } catch (e) {
-                console.error('Error parsing visitedSites, resetting.', e);
-                localStorage.setItem('jejak_visited', '[]');
+        PROGRESS_NAMESPACES.forEach(namespace => {
+            validateArrayKey('visited', namespace);
+            validateArrayKey('discovered', namespace);
+
+            const msgKey = scopedKey('message_count', namespace);
+            let msgCount = localStorage.getItem(msgKey);
+            if (msgCount && isNaN(parseInt(msgCount, 10))) {
+                console.warn(`Resetting invalid message count for ${namespace}`);
+                localStorage.setItem(msgKey, '0');
             }
-        }
-
-        // Fix: Ensure discoveredSites is an array and filter removed IDs
-        let discoveredRaw = localStorage.getItem('jejak_discovered');
-        if (discoveredRaw) {
-            try {
-                let discovered = JSON.parse(discoveredRaw);
-                if (!Array.isArray(discovered)) {
-                    console.warn('Resetting corrupt discoveredSites');
-                    discovered = [];
-                }
-                // Filter out deprecated IDs
-                discovered = discovered.map(String).filter(id => !REMOVED_SITE_IDS.includes(id));
-                localStorage.setItem('jejak_discovered', JSON.stringify(discovered));
-            } catch (e) {
-                console.error('Error parsing discoveredSites, resetting.', e);
-                localStorage.setItem('jejak_discovered', '[]');
-            }
-        }
-
-        // Fix: Ensure message count is a valid number
-        let msgCount = localStorage.getItem('jejak_message_count');
-        if (msgCount && isNaN(parseInt(msgCount))) {
-            console.warn('Resetting invalid message count');
-            localStorage.setItem('jejak_message_count', '0');
-        }
+        });
 
         // --- END MIGRATION LOGIC ---
 

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js');
+const { ROLE_LIMITS, getSessionFromRequest } = require('./_session');
 
 const MAX_QUERY_CHARS = Number(process.env.CHAT_MAX_QUERY_CHARS) || 1000;
 const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
@@ -11,6 +12,7 @@ const MAX_HISTORY_TEXT_CHARS = Number(process.env.CHAT_HISTORY_TEXT_CHARS) || 15
 const RATE_LIMIT_WINDOW_MS = Number(process.env.CHAT_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000;
 const RATE_LIMIT_MAX = Number(process.env.CHAT_RATE_LIMIT_MAX) || 30;
 const rateBuckets = new Map();
+const quotaBuckets = new Map();
 
 // --- CONTEXT ENGINEERING LAYER: SANITIZATION ---
 function sanitizeText(str, maxLength = 4000) {
@@ -79,6 +81,31 @@ function isRateLimited(key) {
     return false;
 }
 
+function getQuotaWindow(session) {
+    const now = new Date();
+    if (session.role === 'admin') {
+        return `${now.getUTCFullYear()}-${now.getUTCMonth()}-${now.getUTCDate()}-${now.getUTCHours()}`;
+    }
+
+    if (session.role === 'visitor') {
+        return now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+    }
+
+    return session.sessionId;
+}
+
+function isQuotaExceeded(session) {
+    const limit = ROLE_LIMITS[session.role] || 0;
+    if (limit <= 0) return true;
+
+    const key = `${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+    const count = quotaBuckets.get(key) || 0;
+    if (count >= limit) return true;
+
+    quotaBuckets.set(key, count + 1);
+    return false;
+}
+
 // --- OPTIMIZATION: GLOBAL CONTEXT CACHING ---
 let FINAL_SYSTEM_PROMPT = "";
 try {
@@ -132,9 +159,13 @@ module.exports = async (request, response) => {
         return response.status(403).json({ reply: 'Chat access is only available from the app.' });
     }
 
-    const role = sanitizeText(request.headers['x-jejak-role'] || '', 20);
-    if (!['user', 'admin'].includes(role)) {
+    const session = getSessionFromRequest(request);
+    if (!session || !['demo', 'visitor', 'admin'].includes(session.role)) {
         return response.status(401).json({ reply: 'Please unlock the app before using the AI guide.' });
+    }
+
+    if (isQuotaExceeded(session)) {
+        return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.' });
     }
 
     const clientKey = getClientKey(request);

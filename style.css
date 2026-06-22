@@ -958,3 +958,20 @@ font {
 #btnChallenge {
     display: none !important;
 }
+
+.prototype-notice {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.95);
+    color: #475569;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.prototype-notice strong {
+    color: #0f172a;
+    display: block;
+    margin-bottom: 0.2rem;
+}

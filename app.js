@@ -2,9 +2,11 @@
 //The garden flower stall is also not there anymore. Only the teochew association
 
 // --- CONFIGURATION ---
-import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE, INTERVIEW_ACCESS_CODES } from './config.js';
+import { HISTORY_WINDOW_SIZE, MAX_MESSAGES_PER_SESSION, DEFAULT_CENTER, ZOOM, ZOOM_THRESHOLD, POLYGON_OPACITY, MAX_FONT_SIZE } from './config.js';
 import { migrateData } from './storage-migration.js';
 import { STRINGS } from './localization.js';
+import { endSession, getCurrentSession, refreshSession, startAdminSession, startDemoSession, startVisitorSession } from './session.js';
+import { clearScopedProgress, readScopedJSON, readScopedNumber, readScopedString, writeScopedJSON, writeScopedNumber, writeScopedString } from './storage.js';
 
 // --- UTILITIES ---
 const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -204,18 +206,19 @@ function openModalState(modalId) {
 
 // --- GAME STATE ---
 let map = null;
-let visitedSites = JSON.parse(localStorage.getItem('jejak_visited')) || [];
-let discoveredSites = JSON.parse(localStorage.getItem('jejak_discovered')) || [];
+let activeSession = getCurrentSession();
+let visitedSites = [];
+let discoveredSites = [];
 const TOTAL_SITES = 11;
 let allSiteData = [];
 // NEW: Cached array of main heritage sites (numerical IDs) for performance
 let mainSites = [];
-let chatHistory = JSON.parse(localStorage.getItem('jejak_chat_history')) || [];
-let userMessageCount = parseInt(localStorage.getItem('jejak_message_count')) || 0;
+let chatHistory = [];
+let userMessageCount = 0;
 let currentModalSite = null; // To track the currently open pin
 let currentModalMarker = null; // To track the currently open marker
 let userMarker = null; // Make userMarker global for proximity pulse
-let solvedRiddle = JSON.parse(localStorage.getItem('jejak_solved_riddle')) || {};
+let solvedRiddle = {};
 // Get or Create a unique Device ID for this browser
 let markersLayer = null;  // New: Layer group for markers
 let polygonsLayer = null; // New: Layer group for polygons
@@ -261,8 +264,45 @@ let welcomeModal, closeWelcomeModal;
 let congratsModal, closeCongratsModal, shareWhatsAppBtn;
 let challengeModal, closeChallengeModal, btnChallenge, challengeRiddle, challengeResult;
 let chaChingSound;
-let currentAdminPassword = '';
+let gameUIListenersAttached = false;
 let siteModalHintBtn, siteModalHintText;
+
+function getProgressNamespace() {
+    return activeSession.progressNamespace || 'visitor';
+}
+
+function getChatLimit() {
+    return Number(activeSession.chatLimit) || Number(MAX_MESSAGES_PER_SESSION) || 15;
+}
+
+function loadScopedState() {
+    const namespace = getProgressNamespace();
+    visitedSites = readScopedJSON('visited', [], namespace);
+    discoveredSites = readScopedJSON('discovered', [], namespace);
+    chatHistory = readScopedJSON('chat_history', [], namespace);
+    userMessageCount = readScopedNumber('message_count', 0, namespace);
+    solvedRiddle = readScopedJSON('solved_riddle', {}, namespace);
+}
+
+function saveVisitedSites() {
+    writeScopedJSON('visited', visitedSites, getProgressNamespace());
+}
+
+function saveDiscoveredSites() {
+    writeScopedJSON('discovered', discoveredSites, getProgressNamespace());
+}
+
+function saveChatHistory() {
+    writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
+}
+
+function saveMessageCount() {
+    writeScopedNumber('message_count', userMessageCount, getProgressNamespace());
+}
+
+function saveSolvedRiddle() {
+    writeScopedJSON('solved_riddle', solvedRiddle, getProgressNamespace());
+}
 
 // --- BADGE GENERATION LOGIC ---
 
@@ -1162,7 +1202,7 @@ function handleMarkerClick(site, marker) {
 
                     if (!visitedSites.includes(site.id)) {
                         visitedSites.push(site.id);
-                        localStorage.setItem('jejak_visited', JSON.stringify(visitedSites));
+                        saveVisitedSites();
 
                         const markerToUpdate = allMarkers[site.id];
                         safelyUpdateMarkerVisitedState(markerToUpdate, true);
@@ -1242,7 +1282,7 @@ function handleCheckIn() {
     // Add to discovered list if not already there
     if (!discoveredSites.includes(currentModalSite.id)) {
         discoveredSites.push(currentModalSite.id);
-        localStorage.setItem('jejak_discovered', JSON.stringify(discoveredSites));
+        saveDiscoveredSites();
 
         // Update the marker icon to "visited" (red)
         // FIX: Look up marker from global map and use safe helper
@@ -1264,7 +1304,7 @@ function handleCheckIn() {
 
 async function handleSendMessage() {
     const userQuery = chatInput.value.trim();
-    const limit = Number(MAX_MESSAGES_PER_SESSION); // Explicit cast
+    const limit = getChatLimit();
 
     // Strict check before sending
     if (!userQuery || userMessageCount >= limit) {
@@ -1283,9 +1323,9 @@ async function handleSendMessage() {
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Jejak-Role': getCurrentSessionRole(),
                 'X-Jejak-Device': deviceId
             },
             body: JSON.stringify({
@@ -1294,18 +1334,17 @@ async function handleSendMessage() {
             })
         });
 
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error('AI server error');
+            throw new Error(data.reply || data.error || 'AI server error');
         }
-
-        const data = await response.json();
 
         chatHistory.push({ role: 'user', parts: [{ text: userQuery }] });
         chatHistory.push({ role: 'model', parts: [{ text: data.reply }] });
-        localStorage.setItem('jejak_chat_history', JSON.stringify(chatHistory));
+        saveChatHistory();
 
         userMessageCount++;
-        localStorage.setItem('jejak_message_count', userMessageCount.toString());
+        saveMessageCount();
         updateChatUIWithCount();
 
         // Render sanitized Markdown for AI reply
@@ -1315,7 +1354,7 @@ async function handleSendMessage() {
 
     } catch (error) {
         console.error("Chat error:", error);
-        thinkingEl.querySelector('.chat-content').textContent = STRINGS.chat.error;
+        thinkingEl.querySelector('.chat-content').textContent = error.message || STRINGS.chat.error;
         thinkingEl.classList.add('bg-red-100', 'text-red-900');
     }
 
@@ -1330,12 +1369,7 @@ async function handleSendMessage() {
 }
 
 function getCurrentSessionRole() {
-    try {
-        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-        return sessionData?.valid && sessionData.role ? sessionData.role : 'guest';
-    } catch (e) {
-        return 'guest';
-    }
+    return activeSession?.role || 'guest';
 }
 
 function sanitizeRenderedHtml(html) {
@@ -1466,7 +1500,7 @@ function updateGameProgress() {
 
 function updateChatUIWithCount() {
     if (!chatLimitText) return;
-    const remaining = MAX_MESSAGES_PER_SESSION - userMessageCount;
+    const remaining = getChatLimit() - userMessageCount;
     chatLimitText.textContent = `You have ${remaining} messages remaining.`;
 
     if (remaining <= 0) {
@@ -1481,6 +1515,8 @@ function disableChatUI(flag) {
     if (flag) {
         chatLimitText.textContent = STRINGS.chat.limitReached;
         chatInput.placeholder = STRINGS.chat.limitReached;
+    } else {
+        chatInput.placeholder = STRINGS.chat.placeholder;
     }
 }
 
@@ -1524,10 +1560,76 @@ function updatePassport() {
 // --- APP STARTUP & LANDING PAGE LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Helper to check if user is authorized
     function isAuthorized() {
-        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-        return sessionData && sessionData.valid;
+        return Boolean(activeSession?.authenticated);
+    }
+
+    function applySessionChrome() {
+        try {
+            if (activeSession?.role === 'admin') {
+                document.documentElement.classList.remove('jejak-hide-staff');
+            } else {
+                document.documentElement.classList.add('jejak-hide-staff');
+            }
+        } catch (e) {
+            // ignore DOM errors
+        }
+    }
+
+    function resetDailyChatIfNeeded() {
+        const todayStr = new Date().toDateString();
+        const namespace = getProgressNamespace();
+        const lastActiveDay = readScopedString('last_active_day', '', namespace);
+
+        if (lastActiveDay !== todayStr) {
+            userMessageCount = 0;
+            writeScopedNumber('message_count', 0, namespace);
+            writeScopedString('last_active_day', todayStr, namespace);
+        }
+    }
+
+    function showMapExperience() {
+        applySessionChrome();
+        loadScopedState();
+        resetDailyChatIfNeeded();
+
+        const landingPage = document.getElementById('landing-page');
+        const gatekeeper = document.getElementById('gatekeeper');
+        const staffScreen = document.getElementById('staff-screen');
+        if (landingPage) landingPage.classList.add('hidden');
+        if (gatekeeper) gatekeeper.classList.add('hidden');
+        if (staffScreen) staffScreen.classList.add('hidden');
+
+        document.getElementById('progress-container')?.classList.remove('hidden');
+        document.getElementById('map')?.classList.remove('hidden');
+
+        if (!map) initializeGameAndMap();
+        if (!gameUIListenersAttached) {
+            setupGameUIListeners();
+            gameUIListenersAttached = true;
+        }
+
+        updateGameProgress();
+        if (chatLimitText) {
+            if (userMessageCount >= getChatLimit()) {
+                disableChatUI(true);
+            } else {
+                updateChatUIWithCount();
+                disableChatUI(false);
+            }
+        }
+    }
+
+    function showAdminExperience() {
+        applySessionChrome();
+        const landingPage = document.getElementById('landing-page');
+        const gatekeeper = document.getElementById('gatekeeper');
+        const staffScreen = document.getElementById('staff-screen');
+        if (landingPage) landingPage.classList.add('hidden');
+        if (gatekeeper) gatekeeper.classList.add('hidden');
+        if (staffScreen) staffScreen.classList.remove('hidden');
+        setupAdminLoginLogic();
+        showAdminTools();
     }
 
     // --- CHECK FOR URL PASSKEY (AUTO-FILL ONLY) ---
@@ -1685,100 +1787,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function initApp() {
-        // Run auto-login check
+        try {
+            activeSession = await refreshSession();
+        } catch (error) {
+            console.warn('Unable to read current session:', error);
+            activeSession = getCurrentSession();
+        }
+
         await checkForURLPasskey();
 
-        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-
-        // Hide staff-related UI for regular users immediately
-        try {
-            if (sessionData && sessionData.valid && sessionData.role === 'user') {
-                console.log("Hiding staff UI for regular user session.");
-                const btnStaff = document.getElementById('btnStaff');
-                if (btnStaff) btnStaff.classList.add('hidden');
-
-                const btnAdminToggle = document.getElementById('btnAdminToggle');
-                if (btnAdminToggle) btnAdminToggle.classList.add('hidden');
+        if (activeSession?.authenticated) {
+            if (activeSession.role === 'admin') {
+                showAdminExperience();
+            } else {
+                showMapExperience();
             }
-        } catch (e) {
-            console.error("Error during staff UI hide:", e);
+            return;
         }
 
-        if (sessionData && sessionData.valid) {
-            const gatekeeper = document.getElementById('gatekeeper');
-            const landingPage = document.getElementById('landing-page');
-            const staffScreen = document.getElementById('staff-screen');
-
-            // --- ADMIN PERSISTENCE ---
-            if (sessionData.role === 'admin') {
-                if (landingPage) landingPage.remove();
-                if (gatekeeper) gatekeeper.remove();
-
-                // Show Staff Screen Tools directly
-                if (staffScreen) {
-                    staffScreen.classList.remove('hidden');
-                    document.getElementById('adminLoginForm').classList.add('hidden');
-                    document.getElementById('adminResult').classList.remove('hidden');
-
-                    // We need to trigger the setup logic to attach listeners to the Result UI
-                    setupAdminLoginLogic();
-                    // Note: setupAdminLoginLogic needs to be "re-entrant" or handle the result state
-                }
-                return; // Stop here, don't show map yet
-            }
-
-            // --- USER PERSISTENCE ---
-            // const sessionData = JSON.parse(localStorage.getItem('jejak_session')); // No longer needed directly here
-
-            // --- DAILY RATE LIMIT RESET ---
-            const todayStr = new Date().toDateString();
-            const lastActiveDay = localStorage.getItem('jejak_last_active_day');
-
-            if (lastActiveDay !== todayStr) {
-                console.log("New day detected. Resetting chat limit.");
-                userMessageCount = 0;
-                localStorage.setItem('jejak_message_count', '0');
-                localStorage.setItem('jejak_last_active_day', todayStr);
-            }
-            // -----------------------------
-
-            // Session is VALID: Go straight to map
-            if (landingPage) landingPage.remove();
-            if (gatekeeper) gatekeeper.remove();
-            document.getElementById('progress-container').classList.remove('hidden');
-            document.getElementById('map').classList.remove('hidden'); // Show map for user session
-
-            initializeGameAndMap();
-            setupGameUIListeners();
-
-            if (chatLimitText) {
-                if (userMessageCount >= MAX_MESSAGES_PER_SESSION) {
-                    disableChatUI(true);
-                } else {
-                    updateChatUIWithCount();
-                }
-            }
-        } else {
-            // Session is INVALID or EXPIRED: Show landing page
-            localStorage.removeItem('jejak_message_count');
-            userMessageCount = 0;
-            localStorage.removeItem('jejak_session');
-            setupLandingPage(); // <-- This is the crucial call
-        }
+        setupLandingPage();
     }
 
     // --- THIS FUNCTION ATTACHES LISTENERS TO THE LANDING PAGE ---
     function setupLandingPage() {
-        // If someone is already logged in as a regular user, hide the Staff button
-        try {
-            const sessionCheck = JSON.parse(localStorage.getItem('jejak_session'));
-            if (sessionCheck && sessionCheck.valid && sessionCheck.role === 'user') {
-                const btnStaffExisting = document.getElementById('btnStaff');
-                if (btnStaffExisting) btnStaffExisting.classList.add('hidden');
-            }
-        } catch (e) {
-            // ignore malformed session
+        document.documentElement.classList.remove('jejak-hide-staff');
+
+        const exploreDemoBtn = document.getElementById('btnExploreDemo');
+        if (exploreDemoBtn) {
+            exploreDemoBtn.addEventListener('click', async () => {
+                exploreDemoBtn.disabled = true;
+                exploreDemoBtn.textContent = 'Starting demo...';
+                try {
+                    activeSession = await startDemoSession();
+                    showMapExperience();
+                } catch (error) {
+                    console.error('Demo session error:', error);
+                    alert('Unable to start the demo session. Please try again.');
+                    exploreDemoBtn.disabled = false;
+                    exploreDemoBtn.innerHTML = '<span class="mr-2 sm:mr-3 text-lg sm:text-xl">▶</span><span>Explore Demo</span>';
+                }
+            });
         }
+
         document.getElementById('btnVisitor').addEventListener('click', () => {
             animateScreenSwitch(
                 document.getElementById('landing-page'),
@@ -1827,9 +1877,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         if (!adminLoginBtn) return;
 
-        // NEW: If already logged in, just show tools
-        const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-        if (sessionData && sessionData.valid && sessionData.role === 'admin') {
+        if (activeSession?.authenticated && activeSession.role === 'admin') {
             showAdminTools();
         }
 
@@ -1850,40 +1898,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // loginBtn is adminLoginBtn
             const loginBtn = adminLoginBtn;
 
-            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
-
             loginBtn.disabled = true;
             loginBtn.textContent = STRINGS.auth.verifying;
             errorMsg.classList.add('hidden');
 
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        passkey: password,
-                        deviceId: 'ADMIN_DEVICE'
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success && result.isAdmin) {
-                    // Persist only the role; keep the password in memory for this page load.
-                    currentAdminPassword = password;
-                    localStorage.setItem('jejak_session', JSON.stringify({
-                        valid: true,
-                        role: 'admin'
-                    }));
-                    showAdminTools();
-                } else {
-                    errorMsg.textContent = result.error || STRINGS.auth.invalidAdmin;
-                    errorMsg.classList.remove('hidden');
-                }
+                activeSession = await startAdminSession(password);
+                showAdminTools();
             } catch (error) {
                 console.error('Error in admin login:', error);
-                errorMsg.textContent = STRINGS.auth.networkError;
+                errorMsg.textContent = error.message || STRINGS.auth.invalidAdmin;
                 errorMsg.classList.remove('hidden');
             } finally {
                 loginBtn.disabled = false;
@@ -1918,40 +1942,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const switchToMapBtn = document.getElementById('adminSwitchToMapBtn');
 
         let lastGeneratedCode = "";
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
 
         generateBtn.onclick = async () => {
-            let password = currentAdminPassword || document.getElementById('adminPasswordInput')?.value || '';
-            if (!password) {
-                password = window.prompt('Enter admin password to generate a passkey:')?.trim() || '';
-            }
-
-            if (!password) {
-                alert('Admin password is required to generate a passkey.');
-                return;
-            }
-            currentAdminPassword = password;
-
             generateBtn.disabled = true;
             generateBtn.textContent = "Generating...";
             statusMsg.classList.add('hidden');
 
             try {
-                const genResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                const genResponse = await fetch('/api/admin/generate-passkey', {
                     method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'generate',
-                        passkey: password,
-                        deviceId: 'ADMIN_DEVICE'
-                    })
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 const genResult = await genResponse.json();
-                if (genResult.success) {
-                    lastGeneratedCode = genResult.code;
-                    resultText.textContent = genResult.code;
+                if (genResponse.ok && genResult.success) {
+                    lastGeneratedCode = genResult.passkey || genResult.code;
+                    resultText.textContent = lastGeneratedCode;
                     statusMsg.textContent = STRINGS.auth.adminGenSuccess;
                     statusMsg.classList.remove('hidden');
                     shareBtn.classList.remove('hidden');
@@ -1974,26 +1981,13 @@ document.addEventListener('DOMContentLoaded', () => {
             window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
         };
 
-        logoutBtn.onclick = () => {
-            currentAdminPassword = '';
-            localStorage.removeItem('jejak_session');
+        logoutBtn.onclick = async () => {
+            await endSession();
             window.location.reload();
         };
 
         switchToMapBtn.onclick = () => {
-            // FIX: Explicitly remove landing and gatekeeper once logged in as admin
-            const landing = document.getElementById('landing-page');
-            const gatekeeper = document.getElementById('gatekeeper');
-            if (landing) landing.remove();
-            if (gatekeeper) gatekeeper.remove();
-
-            document.getElementById('staff-screen').classList.add('hidden');
-            document.getElementById('progress-container').classList.remove('hidden');
-            document.getElementById('map').classList.remove('hidden'); // Show map when switching
-            if (!map) {
-                initializeGameAndMap();
-                setupGameUIListeners();
-            }
+            showMapExperience();
             const adminToggle = document.getElementById('btnAdminToggle');
             if (adminToggle) {
                 adminToggle.classList.remove('hidden');
@@ -2031,99 +2025,22 @@ document.addEventListener('DOMContentLoaded', () => {
         await verifyCode(enteredCode);
 
         // If verification failed, reset the button
-        if (!localStorage.getItem('jejak_session')) {
+        if (!activeSession?.authenticated) {
             unlockBtn.disabled = false;
             unlockBtn.textContent = STRINGS.auth.verifyUnlock;
         }
     }
 
-    function isInterviewAccessCode(enteredCode) {
-        const normalizedCode = enteredCode.trim().toUpperCase();
-        return INTERVIEW_ACCESS_CODES.includes(normalizedCode);
-    }
-
-    function unlockInterviewAccess() {
-        localStorage.setItem('jejak_session', JSON.stringify({
-            valid: true,
-            role: 'user',
-            accessType: 'interview'
-        }));
-
-        try {
-            document.documentElement.classList.add('jejak-hide-staff');
-        } catch (e) { /* ignore DOM errors */ }
-
-        const gatekeeper = document.getElementById('gatekeeper');
-        const landingPage = document.getElementById('landing-page');
-        if (gatekeeper) gatekeeper.remove();
-        if (landingPage) landingPage.remove();
-
-        document.getElementById('progress-container').classList.remove('hidden');
-        document.getElementById('map').classList.remove('hidden');
-
-        initializeGameAndMap();
-        setupGameUIListeners();
-    }
     async function verifyCode(enteredCode) {
         const errorMsg = document.getElementById('errorMsg');
         errorMsg.classList.add('hidden');
 
-        if (isInterviewAccessCode(enteredCode)) {
-            unlockInterviewAccess();
-            return;
-        }
-
-        // !!! REPLACE THIS WITH YOUR DEPLOYED WEB APP URL !!!
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxYifp10iZ4FtTAuAnv0R3wCo08m07c5plIcGof9WaHbeuyk_MySDig5JrmNAUBCgptw/exec";
-
         try {
-            // We use text/plain to bypass CORS "preflight" checks in Google Apps Script
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    passkey: enteredCode,
-                    deviceId: deviceId
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // Save session
-                localStorage.setItem('jejak_session', JSON.stringify({
-                    valid: true,
-                    // start: Date.now(), // REMOVED for permanent session
-                    role: result.isAdmin ? 'admin' : 'user'
-                }));
-
-                    // Immediately update UI to hide staff controls for regular users
-                    try {
-                        if (result.isAdmin) {
-                            document.documentElement.classList.remove('jejak-hide-staff');
-                        } else {
-                            document.documentElement.classList.add('jejak-hide-staff');
-                        }
-                    } catch (e) { /* ignore DOM errors */ }
-
-                // UI Transitions - Remove immediately to prevent flash
-                document.getElementById('gatekeeper').remove();
-                document.getElementById('landing-page').remove();
-                document.getElementById('progress-container').classList.remove('hidden');
-                document.getElementById('map').classList.remove('hidden'); // Show map after passkey entry
-
-                // Start the app
-                initializeGameAndMap();
-                setupGameUIListeners();
-
-            } else {
-                errorMsg.textContent = result.error || STRINGS.auth.invalidPasskey;
-                errorMsg.classList.remove('hidden');
-            }
+            activeSession = await startVisitorSession(enteredCode, deviceId);
+            showMapExperience();
         } catch (error) {
             console.error('Verification Error:', error);
-            errorMsg.textContent = STRINGS.auth.networkError;
+            errorMsg.textContent = error.message || STRINGS.auth.networkError;
             errorMsg.classList.remove('hidden');
         }
     }
@@ -2362,6 +2279,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
+        if (resetDemoProgressBtn) {
+            if (activeSession?.role === 'demo') {
+                resetDemoProgressBtn.classList.remove('hidden');
+            } else {
+                resetDemoProgressBtn.classList.add('hidden');
+            }
+
+            resetDemoProgressBtn.addEventListener('click', () => {
+                if (activeSession?.role !== 'demo') return;
+                const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
+                if (!confirmed) return;
+                clearScopedProgress('demo');
+                window.location.reload();
+            });
+        }
+
         closeCongratsModal.addEventListener('click', () => {
             animateCloseModal(congratsModal);
         });
@@ -2426,7 +2360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Mark as solved
             solvedRiddle = { day: dayOfYear, id: todayRiddle.a };
-            localStorage.setItem('jejak_solved_riddle', JSON.stringify(solvedRiddle));
+            saveSolvedRiddle();
 
             // Hide button in site modal
             siteModalSolveChallengeBtn.style.display = 'none';
@@ -2690,8 +2624,7 @@ function setupPWAInstallPrompt() {
     }
 
     // Check if user is logged in
-    const sessionData = JSON.parse(localStorage.getItem('jejak_session'));
-    if (sessionData && sessionData.valid) {
+    if (getCurrentSession()?.authenticated) {
         console.log('User already logged in, skip PWA prompt');
         return;
     }
@@ -2752,8 +2685,10 @@ if (continueBrowser) {
     });
 }
 
-// Initialize PWA prompt when page loads
-setupPWAInstallPrompt();
+// Initialize PWA prompt after session startup has had time to resolve.
+window.addEventListener('load', () => {
+    setTimeout(setupPWAInstallPrompt, 1000);
+});
 
 // --- OPTIMIZATION: DYNAMIC IMPORT FOR TOUR SYSTEM ---
 // Load Tour System on idle (2s delay) or user interaction

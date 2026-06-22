@@ -32,14 +32,14 @@ The backend uses **Vercel Serverless Functions** deployed in the `/api` folder:
    - Primary model: `gemini-2.5-flash-lite` (falls back through 9 model variants)
    - Includes text sanitization and structured XML-based context injection
    
-2. **`/api/check-passkey.js`** - Daily passkey validation
-   - Fetches passkey from published Google Sheet CSV
-   - Timezone-aware validation (Asia/Kuala_Lumpur)
-   - Case-insensitive passkey matching
+2. **`/api/session/*`** - Demo, visitor, admin, current, and logout session endpoints
+   - Issues signed HttpOnly `bwm_session` cookies
+   - Validates visitor passkeys from the server side
+   - Keeps admin passwords and Google Apps Script details out of browser code
    
-3. **`/api/get-admin-code.js`** - Staff dashboard passkey retrieval
-   - Admin password verification
-   - Returns today's passkey for counter staff display
+3. **`/api/admin/generate-passkey.js`** - Project Admin prototype passkey generation
+   - Requires a verified admin cookie
+   - Calls the configured passkey service from the server
 
 ### Data Architecture (SSOT - Single Source of Truth)
 All content is centralized in two files:
@@ -72,11 +72,11 @@ All content is centralized in two files:
 ## 2. Complete Feature List
 
 ### 🔐 Security & Access Control
-- **Dual Landing Page:** Separate "Visitor" (passkey entry) and "Staff Login" buttons
-- **Daily Dynamic Passkeys:** Fetched from BWM-controlled Google Sheet, validated server-side
-- **Persistent Sessions:** Authenticated sessions stored in `localStorage` with `jejak_session` key
-- **Admin Dashboard:** Staff login displays large, high-contrast "Today's Passkey" for counter use
-- **API Quota Monitoring:** Direct link to Google Cloud API Dashboard in staff panel
+- **Three Entry Routes:** Explore Demo, Enter Visitor Passkey, and Project Admin (Prototype)
+- **Visitor Passkeys:** Proposed event workflow validated through server APIs before issuing a session
+- **Signed Sessions:** Demo, visitor, and admin roles are issued through HttpOnly `bwm_session` cookies
+- **Project Admin Prototype:** Demonstrates organiser passkey management and is not currently operated by Badan Warisan Malaysia
+- **Scoped Progress:** Demo and visitor progress use separate localStorage namespaces
 
 ### 🗺️ Interactive Map & Navigation
 - **11 Heritage Sites:** Interactive Leaflet.js map with custom markers
@@ -108,7 +108,7 @@ All content is centralized in two files:
 ### 🤖 AI Tour Guide (Chatbot)
 - **Context-Aware Intelligence:** Knows detailed history of all 11 sites + general KL heritage knowledge
 - **Friendly Persona:** "Tok Waris" character with Malaysian warmth and humor
-- **Message Quota:** Limited to 15 messages per session (configurable via `MAX_MESSAGES_PER_SESSION`)
+- **Message Quota:** Enforced server-side by role (`DEMO_CHAT_LIMIT`, `VISITOR_CHAT_LIMIT`, `ADMIN_CHAT_LIMIT`)
 - **Markdown Support:** Rich text formatting in responses
 - **Multilingual:** Automatically detects and responds in user's language (English/Mandarin)
 - **Cost Control:** Free tier provides 1,000 requests/day (no billing required)
@@ -165,8 +165,10 @@ Set these in **Vercel Dashboard → Project Settings → Environment Variables**
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `GOOGLE_API_KEY` | Google Gemini AI API Key | `AIzaSy...` |
-| `GOOGLE_SHEET_URL` | Published CSV URL for passkeys | `https://docs.google.com/spreadsheets/d/e/.../pub?output=csv` |
-| `ADMIN_PASSWORD` | Secure staff login password | `BWM_Staff_2025!` |
+| `SESSION_SECRET` | Long random value for signing session cookies | `replace_with_random_secret` |
+| `GOOGLE_SCRIPT_URL` | Google Apps Script endpoint for visitor validation/passkey generation | `https://script.google.com/.../exec` |
+| `GOOGLE_SHEET_URL` | Optional legacy CSV fallback for passkeys | `https://docs.google.com/spreadsheets/d/e/.../pub?output=csv` |
+| `ADMIN_PASSWORD` | Secure Project Admin prototype password | `SecurePass123!` |
 
 ### Optional Configuration Variables
 These have defaults in `config.js`:
@@ -174,7 +176,9 @@ These have defaults in `config.js`:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `HISTORY_WINDOW_SIZE` | `30` | AI chat history length |
-| `MAX_MESSAGES_PER_SESSION` | `15` | Chat message quota |
+| `DEMO_CHAT_LIMIT` | `5` | Demo AI messages per signed demo session |
+| `VISITOR_CHAT_LIMIT` | `15` | Visitor AI messages per day |
+| `ADMIN_CHAT_LIMIT` | `30` | Admin AI messages per hour |
 | `DEFAULT_CENTER` | `[3.1495, 101.696]` | Map center (Dataran Merdeka) |
 | `ZOOM` | `16` | Initial map zoom level |
 | `ZOOM_THRESHOLD` | `18` | Zoom level to show site labels |
@@ -258,20 +262,20 @@ Before deploying, add these in **Settings > Environment Variables**:
 
 ---
 
-## 5. Staff User Guide
+## 5. Project Admin Prototype Guide
 
-### Part 1: For Counter Staff (Daily Operations)
+### Part 1: Demonstrating the Organiser Workflow
 
-**Goal:** Provide paying visitors with today's passkey.
+**Goal:** Demonstrate how an organiser could issue visitor passkeys during a future event. This interface is a project prototype and is not currently operated by Badan Warisan Malaysia.
 
 **Steps:**
 1. Open the website: `https://your-site.vercel.app`
-2. Click **"BWM Staff Login"** on the landing page
+2. Click **"Project Admin (Prototype)"** on the landing page
 3. Enter the `ADMIN_PASSWORD` when prompted
-4. The screen displays **"Today's Passkey"** in large, bright purple text
-5. Read this passkey aloud to the visitor
+4. Click **"Generate New Passkey"**
+5. Share the generated visitor passkey using the email action or one-click link
 
-**Note:** The passkey automatically updates daily based on the Google Sheet.
+**Note:** Visitor passkey generation is routed through a protected server endpoint. The admin password is not sent from browser JavaScript to Google Apps Script.
 
 ### Part 2: For Admins (Management & Updates)
 
@@ -348,11 +352,13 @@ Vercel automatically redeploys in 60-90 seconds. Changes appear live immediately
 - **Vercel Serverless:** 100GB bandwidth/month, 100 hours compute/month (free tier)
 
 ### Data Persistence
-- **LocalStorage Keys:**
-  - `jejak_session` - Authentication session data
-  - `jejak_visited` - Array of visited site IDs
-  - `jejak_discovered` - Array of discovered site IDs
-  - `jejak_message_count` - AI chat quota tracker
+- **Session Cookie:**
+  - `bwm_session` - Signed HttpOnly cookie containing the server-issued access role
+- **Scoped LocalStorage Keys:**
+  - `jejak_demo_visited` / `jejak_visitor_visited` - Array of visited site IDs
+  - `jejak_demo_discovered` / `jejak_visitor_discovered` - Array of discovered site IDs
+  - `jejak_demo_message_count` / `jejak_visitor_message_count` - UI chat quota tracker
+  - `jejak_demo_chat_history` / `jejak_visitor_chat_history` - Local AI chat history
   - `jejak_db_version` - Database schema version
   - `userProgress` - Tutorial completion status
 
@@ -458,7 +464,7 @@ A: This requires developer assistance:
 4. Increment site count in UI (progress tracker, completion logic)
 
 **Q: Can I change the maximum chat messages?**  
-A: Yes, set the `MAX_MESSAGES_PER_SESSION` environment variable in Vercel (default: 15)
+A: Yes, set `DEMO_CHAT_LIMIT`, `VISITOR_CHAT_LIMIT`, or `ADMIN_CHAT_LIMIT` in Vercel.
 
 ---
 

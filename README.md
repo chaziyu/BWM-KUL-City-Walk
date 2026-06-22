@@ -46,11 +46,11 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 - **Helpful Context:** Clear info banner explaining how to access full Google Maps details
 
 ### 🔐 **4. Security & Access Control**
-*   **Dual Landing Page:** Separate flows for **Visitors** (Passkey entry) and **Staff** (Admin panel)
-*   **Persistent Sessions:** Admin role stays active across browser sessions without storing the admin password
-*   **Interviewer Access:** Optional normal-user demo codes via `INTERVIEW_ACCESS_CODES`
-*   **Staff Tools:** Generate passkeys on-demand with Google Apps Script integration
-*   **Modern UI:** Clean, gradient-based design with smooth transitions
+*   **Explore Demo:** Recruiters, lecturers, and evaluators can enter the full heritage trail instantly without a code
+*   **Visitor Passkey Access:** Future event participants can use organiser-issued passkeys validated by server APIs
+*   **Project Admin Prototype:** Protected proof-of-concept workflow for organiser passkey management
+*   **Signed Server Sessions:** Access roles are issued through HttpOnly `bwm_session` cookies, not trusted from browser storage
+*   **Transparent Scope:** The admin workflow is a portfolio prototype and is not currently operated by Badan Warisan Malaysia
 
 ### 🎮 **5. Gamification**
 *   **Stamp Collection:** Visit sites to unlock digital stamps
@@ -86,13 +86,13 @@ The project is built to be **zero-cost** to maintain, utilizing free tiers of mo
 ### Backend (Serverless)
 *   **Hosting:** Vercel (Static + Serverless Functions)
 *   **Database:** Google Sheets (CSV export) for passkeys
-*   **Admin Tools:** Google Apps Script for passkey generation
+*   **Admin Tools:** Protected server API for prototype passkey generation
 *   **AI Engine:** Google GenAI SDK with Gemini/Gemma fallback models
 
 ### Performance
 *   **PWA:** Service worker ready, installable on all platforms
 *   **Optimization:** Hardware acceleration, CSS containment, will-change hints
-*   **Caching:** localStorage for session data and tour progress
+*   **Caching:** Scoped localStorage for demo and visitor tour progress; authorization is stored in signed cookies
 *   **Load Time:** Optimized for fast initial paint and interaction
 
 ---
@@ -142,20 +142,34 @@ Configure these in Vercel Dashboard or `.env.local`:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `GOOGLE_API_KEY` | Google Gemini API Key | `AIzaSy...` |
-| `GOOGLE_SHEET_URL` | Published CSV URL for passkeys | `https://docs.google.com/...` |
+| `SESSION_SECRET` | Long random secret for signing `bwm_session` cookies | `openssl-random-value` |
+| `GOOGLE_SCRIPT_URL` | Google Apps Script endpoint for visitor validation/passkey generation | `https://script.google.com/.../exec` |
+| `GOOGLE_SHEET_URL` | Optional legacy published CSV fallback for passkeys | `https://docs.google.com/...` |
 | `ADMIN_PASSWORD` | Secure admin password | `SecurePass123!` |
 | `HISTORY_WINDOW_SIZE` | Chat history length (default: 30) | `30` |
-| `MAX_MESSAGES_PER_SESSION` | Client-side daily chat quota (default: 15) | `15` |
-| `INTERVIEW_ACCESS_CODES` | Comma-separated normal-user demo/interviewer codes | `BWM-INTERVIEW-2026` |
+| `DEMO_CHAT_LIMIT` | Demo AI messages per signed demo session | `5` |
+| `VISITOR_CHAT_LIMIT` | Visitor AI messages per day | `15` |
+| `ADMIN_CHAT_LIMIT` | Admin AI messages per hour | `30` |
+| `DEMO_SESSION_MAX_AGE` | Demo session duration in seconds | `7200` |
+| `VISITOR_SESSION_MAX_AGE` | Visitor session duration in seconds | `86400` |
+| `ADMIN_SESSION_MAX_AGE` | Admin session duration in seconds | `3600` |
 | `CHAT_MAX_QUERY_CHARS` | Server-side max characters per chat question | `1000` |
 | `CHAT_HISTORY_MESSAGES` | Server-side max history messages sent to AI | `10` |
 | `CHAT_HISTORY_TEXT_CHARS` | Server-side max characters per history message | `1500` |
 | `CHAT_RATE_LIMIT_MAX` | Server-side chat requests per device/IP window | `30` |
 | `CHAT_RATE_LIMIT_WINDOW_MS` | Server-side chat rate-limit window in milliseconds | `3600000` |
 
-### Interviewer Access
+### Explore Demo
 
-Use `BWM-INTERVIEW-2026` as a normal visitor/demo code for interviews. It unlocks the map and AI guide as `role: 'user'`, so staff/admin tools and passkey generation remain hidden. To add or rotate codes, set `INTERVIEW_ACCESS_CODES` to a comma-separated list.
+Use **Explore Demo** on the landing page for portfolio evaluation. It creates a short-lived `demo` session with isolated demo progress and a limited AI quota, so evaluators can test the map, quizzes, passport, daily challenge, badge flow, and sharing without needing a passkey.
+
+### Visitor Passkey Access
+
+Visitor passkeys remain available as a proposed real-event workflow. The browser sends passkeys to `/api/session/visitor`; the server validates them through Google Apps Script or the legacy sheet fallback, then issues a signed `visitor` cookie.
+
+### Project Admin Prototype
+
+The **Project Admin (Prototype)** area demonstrates a proposed organiser workflow for issuing visitor passkeys and managing event access. It is retained as a proof of concept and is not currently operated by Badan Warisan Malaysia.
 
 ### Current AI Model Fallback
 
@@ -184,10 +198,15 @@ BWM-KUL-City-Walk/
 ├── tour.js             # Interactive onboarding system
 ├── style.css           # Global styles + animations
 ├── config.js           # Runtime configuration
+├── session.js          # Browser-safe session helper
+├── storage.js          # Demo/visitor scoped localStorage helper
 ├── data.json           # Heritage site data (SSOT)
 ├── localization.js     # Multi-language support
 ├── api/
-│   └── chat.js         # Serverless AI chat endpoint
+│   ├── _session.js     # Signed cookie session utilities
+│   ├── chat.js         # Serverless AI chat endpoint
+│   ├── session/        # Demo, visitor, admin, current, logout session APIs
+│   └── admin/          # Protected admin prototype APIs
 ├── images/             # Site photos + PWA icons
 └── manifest.json       # PWA configuration
 ```
@@ -209,7 +228,7 @@ BWM-KUL-City-Walk/
 - ✅ Standardized all UI transitions to 200ms
 
 ### Features
-- ✅ Persistent admin sessions across browser restarts
+- ✅ Signed server-managed sessions for demo, visitor, and admin access
 - ✅ Dynamic map modal titles with contextual icons
 - ✅ Larger map viewing area (max-w-4xl)
 - ✅ Smart food/hotel search centered on heritage sites
@@ -219,9 +238,10 @@ BWM-KUL-City-Walk/
 ## Recent Maintenance Updates
 
 - Hardened AI chat rendering by sanitizing Markdown before inserting it into the DOM.
-- Added server-side chat input limits, history normalization, same-origin checks, role/device headers, and rate limiting.
-- Stopped storing the admin password in `localStorage`; it is kept only in memory for the current page load.
-- Added `INTERVIEW_ACCESS_CODES` for safe interviewer/demo access without admin permissions.
+- Added server-side chat input limits, history normalization, same-origin checks, signed-session authorization, and rate limiting.
+- Removed public interview codes and replaced them with direct Explore Demo access.
+- Moved admin and visitor authorization to signed HttpOnly session cookies.
+- Split demo and visitor progress into separate localStorage namespaces with Reset Demo Progress.
 - Fixed recommended map sites K, L, and M so they appear in map filters.
 - Removed empty site records from `data.json` and stopped migration from deleting live site IDs `8` and `10`.
 - Improved GPS timeout messaging so users see visible feedback when location fails or falls back.
