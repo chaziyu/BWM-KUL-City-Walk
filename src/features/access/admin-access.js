@@ -65,12 +65,22 @@ export function createAdminAccess({
     if (shareBtn && shareBtn.dataset.bound !== 'true') {
       shareBtn.dataset.bound = 'true';
       shareBtn.addEventListener('click', () => {
-        if (!lastGeneratedCode) return;
-        const shareUrl = `${window.location.origin}${window.location.pathname}?code=${lastGeneratedCode}`;
-        const subject = encodeURIComponent(strings.auth.emailSubject);
-        const body = encodeURIComponent(
-          strings.auth.emailBody.replace('[CODE]', lastGeneratedCode).replace('[LINK]', shareUrl),
-        );
+        if (!lastGeneratedCode) {
+          setMessage(statusMsg, 'Generate a passkey before sharing via email.');
+          return;
+        }
+
+        const subject = encodeURIComponent('BWM KUL City Walk Visitor Passkey');
+        const body = encodeURIComponent(`Hello,
+
+Here is today's BWM KUL City Walk visitor passkey:
+
+${lastGeneratedCode}
+
+Please enter this passkey on the visitor access screen to begin the heritage walk.
+
+Regards,
+Badan Warisan Malaysia`);
         window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
       });
     }

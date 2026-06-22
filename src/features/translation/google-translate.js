@@ -1,16 +1,18 @@
 export function installGoogleTranslateLoader(buttonId = 'loadTranslateBtn') {
-  document.getElementById(buttonId)?.addEventListener('click', (event) => {
-    event.currentTarget.disabled = true;
-    event.currentTarget.textContent = 'Loading translate...';
+  loadGoogleTranslate();
+
+  const button = document.getElementById(buttonId);
+  if (!button || button.dataset.bound === 'true') return;
+  button.dataset.bound = 'true';
+  button.addEventListener('click', () => {
     loadGoogleTranslate();
   });
 }
 
 function loadGoogleTranslate() {
-  if (document.querySelector('script[data-google-translate]')) return;
-
   window.googleTranslateElementInit = () => {
     if (!window.google?.translate || !document.getElementById('google_translate_element')) return;
+    if (document.querySelector('.goog-te-gadget, .goog-te-combo')) return;
 
     new window.google.translate.TranslateElement({
       pageLanguage: 'en',
@@ -18,6 +20,13 @@ function loadGoogleTranslate() {
       layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
     }, 'google_translate_element');
   };
+
+  if (window.google?.translate) {
+    window.googleTranslateElementInit();
+    return;
+  }
+
+  if (document.querySelector('script[data-google-translate]')) return;
 
   const script = document.createElement('script');
   script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';

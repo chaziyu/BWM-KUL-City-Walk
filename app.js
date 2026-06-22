@@ -53,6 +53,8 @@ let userMessageCount = 0;
 let solvedRiddle = {};
 let gameUIBound = false;
 let deviceId = localStorage.getItem('bwm_device_id');
+const UI_TEXT_SIZE_KEY = 'jejak_ui_text_size';
+const LEGACY_UI_TEXT_SIZE_KEY = 'ui_text_size';
 
 if (!deviceId) {
   deviceId = `device-${Math.random().toString(36).slice(2, 11)}`;
@@ -256,30 +258,36 @@ function setupTextSizeControls() {
   const btnTextSizeReset = document.getElementById('btnTextSizeReset');
   const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
   const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
-  let currentTextSize = 100;
+  const btnUIZoomIn = document.getElementById('btnUIZoomIn');
+  const btnUIZoomOut = document.getElementById('btnUIZoomOut');
+  let currentTextSize = Number.parseInt(
+    localStorage.getItem(UI_TEXT_SIZE_KEY) || localStorage.getItem(LEGACY_UI_TEXT_SIZE_KEY) || '100',
+    10,
+  );
+  if (!Number.isFinite(currentTextSize)) currentTextSize = 100;
 
-  if (btnTextSizeSmall && btnTextSizeSmall.dataset.bound !== 'true') {
-    btnTextSizeSmall.dataset.bound = 'true';
-    btnTextSizeSmall.addEventListener('click', () => {
-      if (currentTextSize > 80) currentTextSize -= 10;
-      document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
-    });
+  function applyTextSize(nextSize) {
+    currentTextSize = Math.min(MAX_FONT_SIZE, Math.max(80, nextSize));
+    document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
+    localStorage.setItem(UI_TEXT_SIZE_KEY, String(currentTextSize));
   }
 
-  if (btnTextSizeLarge && btnTextSizeLarge.dataset.bound !== 'true') {
-    btnTextSizeLarge.dataset.bound = 'true';
-    btnTextSizeLarge.addEventListener('click', () => {
-      if (currentTextSize < MAX_FONT_SIZE) currentTextSize += 10;
-      document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
-    });
+  applyTextSize(currentTextSize);
+
+  function bindTextSizeButton(button, delta) {
+    if (!button || button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', () => applyTextSize(currentTextSize + delta));
   }
+
+  bindTextSizeButton(btnTextSizeSmall, -10);
+  bindTextSizeButton(btnTextSizeLarge, 10);
+  bindTextSizeButton(btnUIZoomOut, -10);
+  bindTextSizeButton(btnUIZoomIn, 10);
 
   if (btnTextSizeReset && btnTextSizeReset.dataset.bound !== 'true') {
     btnTextSizeReset.dataset.bound = 'true';
-    btnTextSizeReset.addEventListener('click', () => {
-      currentTextSize = 100;
-      document.documentElement.style.setProperty('--content-font-size', '100%');
-    });
+    btnTextSizeReset.addEventListener('click', () => applyTextSize(100));
   }
 }
 

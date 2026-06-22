@@ -88,8 +88,8 @@ export function createSiteModalController({
       elements.checkIn.disabled = isCompleted;
       elements.checkIn.textContent = isCompleted ? 'Visited' : 'Check In to this Site';
       elements.checkIn.className = isCompleted
-        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-        : 'bg-purple-700 hover:bg-purple-800 text-white';
+        ? 'w-full bg-gray-300 text-gray-600 cursor-not-allowed font-bold py-2 rounded-lg mb-4 text-sm'
+        : 'w-full bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-800 mb-4 text-sm';
       return;
     }
 

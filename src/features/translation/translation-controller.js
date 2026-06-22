@@ -1,4 +1,4 @@
-import { installGoogleTranslateLoader } from '../access/google-translate.js';
+import { installGoogleTranslateLoader } from './google-translate.js';
 import { suppressGoogleTranslatePopups } from './translation-ui.js';
 
 export function createTranslationController() {

@@ -10,7 +10,7 @@ const localStorageMock = (() => {
     clear: vi.fn(() => { store = {}; })
   };
 })();
-Object.defineProperty(global, 'localStorage', { value: localStorageMock });
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 
 describe('Access Control', () => {
   it('handles demo session creation', () => {

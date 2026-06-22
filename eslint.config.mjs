@@ -70,4 +70,13 @@ export default [
       },
     },
   },
+  {
+    files: ['vite.config.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: {
+        process: 'readonly',
+      },
+    },
+  },
 ];

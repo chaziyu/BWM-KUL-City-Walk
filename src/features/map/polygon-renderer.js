@@ -31,11 +31,15 @@ export function createPolygonRenderer({
   }
 
   function render(sites) {
+    polygonsLayer.clearLayers();
+    Object.keys(polygons).forEach((id) => delete polygons[id]);
+
     (sites || []).forEach((site) => {
       if (!site.coordinates?.polygon) return;
       const { markerColor, fillColor } = getSiteColors(site);
       const polygon = L.polygon(site.coordinates.polygon, {
         color: markerColor,
+        className: 'heritage-polygon',
         fillColor,
         fillOpacity: 0.5,
         weight: 2,
