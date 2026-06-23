@@ -102,7 +102,7 @@ describe('map controller', () => {
   }
 
   it('shows filtered markers below the polygon threshold', async () => {
-    const { controller, groups, mapLayers, markers } = setup(16);
+    const { controller, groups, mapLayers, markers } = setup(15);
 
     await controller.initMap();
 
@@ -118,7 +118,7 @@ describe('map controller', () => {
   });
 
   it('shows filtered polygons at the polygon threshold', async () => {
-    const { controller, groups, mapLayers, polygons } = setup(18);
+    const { controller, groups, mapLayers, polygons } = setup(16);
 
     await controller.initMap();
 

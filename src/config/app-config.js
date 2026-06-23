@@ -9,6 +9,6 @@ export const DEFAULT_CENTER = env.DEFAULT_CENTER ? JSON.parse(env.DEFAULT_CENTER
 export const ZOOM = Number(env.ZOOM) || 16;
 
 // Magic Numbers & UI Constants
-export const ZOOM_THRESHOLD = Number(env.ZOOM_THRESHOLD) || 18;
+export const ZOOM_THRESHOLD = Number(env.ZOOM_THRESHOLD) || ZOOM;
 export const POLYGON_OPACITY = Number(env.POLYGON_OPACITY) || 0.2;
 export const MAX_FONT_SIZE = Number(env.MAX_FONT_SIZE) || 130;
