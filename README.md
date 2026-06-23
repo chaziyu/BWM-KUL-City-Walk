@@ -14,7 +14,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 ### Key Highlights
 *   **📱 Installable App Shell:** Manifest-based PWA install metadata with offline support planned for a later phase
 *   **🎓 Interactive Onboarding:** Beautiful guided tour system with spotlight effects to help new users discover features instantly
-*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google Gemini with rich knowledge of all heritage sites
+*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI with rich knowledge of all heritage sites
 *   **🛂 Digital Passport:** Collect stamps, check-in to sites, and track your exploration progress
 *   **📍 Interactive Map:** Rich transit routes, food & hotel search, and beautiful site details
 *   **⚡ Performance Aware:** Hardware-accelerated animations, local build assets, and lazy-loaded optional libraries
@@ -85,9 +85,9 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 
 ### Backend (Serverless)
 *   **Hosting:** Vercel (Static + Serverless Functions)
-*   **Database:** Google Sheets (CSV export) for passkeys
+*   **Passkey Service:** Google Apps Script-backed visitor validation/generation with a legacy sheet fallback
 *   **Admin Tools:** Protected server API for prototype passkey generation
-*   **AI Engine:** Google GenAI SDK with grounded prompts, structured JSON validation, and a two-model Gemini fallback
+*   **AI Engine:** Google GenAI SDK with grounded prompts, structured JSON validation, and multi-model fallback
 
 ### Performance
 *   **PWA:** Installable app shell; full offline behavior is planned for a later phase
@@ -174,7 +174,7 @@ The **Project Admin (Prototype)** area demonstrates a proposed organiser workflo
 
 ### Current AI Chat Contract
 
-The serverless chat endpoint retrieves 1-3 relevant verified sites for general questions, or uses the current site for site-specific chat. Gemini must return structured JSON, and the server validates source IDs against `data/sites.json` before returning:
+The serverless chat endpoint retrieves 1-3 relevant verified sites for general questions, or uses the current site for site-specific chat. The server asks the GenAI SDK to return structured JSON, then validates source IDs against `data/sites.json` before returning:
 
 ```json
 {
@@ -190,6 +190,9 @@ The endpoint uses low-temperature factual calls and tries models in this order:
 
 ```js
 [
+  "gemini-3.5-flash-lite",
+  "gemma-4-26b-a4-b-it",
+  "gemma-4-31b-it",
   "gemini-2.5-flash-lite",
   "gemini-2.5-flash"
 ]
