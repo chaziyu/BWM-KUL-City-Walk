@@ -117,7 +117,10 @@ describe('chat API quota ordering', () => {
   it('does not call Gemini or consume quota for retrieval misses', async () => {
     const cookie = createCookie();
 
-    expect((await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' })).statusCode).toBe(200);
+    const result = await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body.reply).toBe('I’m your AI Tour Guide for the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });

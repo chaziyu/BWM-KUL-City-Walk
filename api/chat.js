@@ -125,7 +125,7 @@ module.exports = async (request, response) => {
     const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
     const remainingQuota = await getQuotaRemaining(quotaKey, limit);
     if (!contextSites.length) {
-        return response.status(200).json({ reply: 'I can only answer questions about the verified BWM KUL City Walk sites.', remainingQuota });
+        return response.status(200).json({ reply: 'I’m your AI Tour Guide for the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.', remainingQuota });
     }
     const cacheKey = buildCacheKey({
         contextType: context?.type === 'site' ? 'site' : 'general',
