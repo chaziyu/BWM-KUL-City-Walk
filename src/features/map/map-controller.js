@@ -155,5 +155,11 @@ export function createMapController({
       mapFilter.setMode(mode);
       updateVisibility();
     },
+    zoomIn() {
+      map?.zoomIn();
+    },
+    zoomOut() {
+      map?.zoomOut();
+    },
   };
 }

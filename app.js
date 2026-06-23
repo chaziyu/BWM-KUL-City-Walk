@@ -274,8 +274,6 @@ function setupTextSizeControls() {
   const btnTextSizeReset = document.getElementById('btnTextSizeReset');
   const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
   const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
-  const btnUIZoomIn = document.getElementById('btnUIZoomIn');
-  const btnUIZoomOut = document.getElementById('btnUIZoomOut');
   let currentTextSize = Number.parseInt(
     localStorage.getItem(UI_TEXT_SIZE_KEY) || localStorage.getItem(LEGACY_UI_TEXT_SIZE_KEY) || '100',
     10,
@@ -298,8 +296,6 @@ function setupTextSizeControls() {
 
   bindTextSizeButton(btnTextSizeSmall, -10);
   bindTextSizeButton(btnTextSizeLarge, 10);
-  bindTextSizeButton(btnUIZoomOut, -10);
-  bindTextSizeButton(btnUIZoomIn, 10);
 
   if (btnTextSizeReset && btnTextSizeReset.dataset.bound !== 'true') {
     btnTextSizeReset.dataset.bound = 'true';

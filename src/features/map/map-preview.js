@@ -16,12 +16,14 @@ export function createMapPreview({ strings, getSites, openSiteDetails }) {
     const card = document.getElementById('previewCard');
     const image = document.getElementById('previewImage');
     const title = document.getElementById('previewTitle');
+    const info = document.getElementById('previewInfo');
     const distance = document.getElementById('previewDist');
     if (!card || !site) return;
 
     currentSiteId = String(site.id);
     card.dataset.siteId = currentSiteId;
     if (title) title.textContent = `${site.id}. ${site.name}`;
+    if (info) info.textContent = site.info || '';
     if (distance) distance.textContent = strings?.preview?.tapForDetails || 'Tap for details';
     if (image) {
       image.classList.add('skeleton-loading');

@@ -1,5 +1,7 @@
 export function bindMapUI({ controller, defaultCenter, defaultZoom }) {
   const recenterButton = document.getElementById('btnRecenter');
+  const zoomInButton = document.getElementById('btnUIZoomIn');
+  const zoomOutButton = document.getElementById('btnUIZoomOut');
   const tabMustVisit = document.getElementById('tabMustVisit');
   const tabRecommended = document.getElementById('tabRecommended');
 
@@ -23,6 +25,16 @@ export function bindMapUI({ controller, defaultCenter, defaultZoom }) {
   if (recenterButton && recenterButton.dataset.bound !== 'true') {
     recenterButton.dataset.bound = 'true';
     recenterButton.addEventListener('click', () => controller.recenter(defaultCenter, defaultZoom));
+  }
+
+  if (zoomInButton && zoomInButton.dataset.bound !== 'true') {
+    zoomInButton.dataset.bound = 'true';
+    zoomInButton.addEventListener('click', () => controller.zoomIn());
+  }
+
+  if (zoomOutButton && zoomOutButton.dataset.bound !== 'true') {
+    zoomOutButton.dataset.bound = 'true';
+    zoomOutButton.addEventListener('click', () => controller.zoomOut());
   }
 
   if (tabMustVisit && tabMustVisit.dataset.bound !== 'true') {

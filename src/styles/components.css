@@ -760,8 +760,7 @@ body {
 
 /* 1. HIDE THE TOP BANNER IFRAME */
 .goog-te-banner-frame.skiptranslate,
-.goog-te-banner-frame,
-iframe[id^=":"] {
+.goog-te-banner-frame {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;

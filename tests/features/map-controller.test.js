@@ -31,6 +31,8 @@ describe('map controller', () => {
       removeLayer: (layer) => mapLayers.delete(layer),
       setView: vi.fn(() => map),
       stopLocate: vi.fn(),
+      zoomIn: vi.fn(),
+      zoomOut: vi.fn(),
     };
     const groups = [];
     const markers = [];
@@ -129,5 +131,16 @@ describe('map controller', () => {
 
     expect(groups[1].layers.size).toBe(1);
     expect(groups[1].layers.has(polygons[1])).toBe(true);
+  });
+
+  it('exposes map zoom controls for custom plus and minus buttons', async () => {
+    const { controller } = setup(16);
+
+    const map = await controller.initMap();
+    controller.zoomIn();
+    controller.zoomOut();
+
+    expect(map.zoomIn).toHaveBeenCalledOnce();
+    expect(map.zoomOut).toHaveBeenCalledOnce();
   });
 });
