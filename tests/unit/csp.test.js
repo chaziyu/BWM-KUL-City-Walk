@@ -14,6 +14,6 @@ describe('production CSP', () => {
     expect(csp).toContain('script-src');
     expect(csp).toContain('https://translate.google.com');
     expect(csp).toContain('connect-src \'self\' https://translate.googleapis.com');
-    expect(csp).toContain('frame-src https://translate.google.com https://maps.google.com');
+    expect(csp).toContain('frame-src https://translate.google.com https://maps.google.com https://www.google.com');
   });
 });
