@@ -6,6 +6,7 @@ export function installGoogleTranslateLoader(buttonId = 'loadTranslateBtn') {
   button.dataset.bound = 'true';
   button.addEventListener('click', () => {
     loadGoogleTranslate();
+    showLanguageSelector();
   });
 }
 
@@ -17,7 +18,6 @@ function loadGoogleTranslate() {
     new window.google.translate.TranslateElement({
       pageLanguage: 'en',
       includedLanguages: 'en,ms,zh-CN,zh-TW,ta,id,ar,ja,ko,th,vi,fr,de,es,ru',
-      layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
     }, 'google_translate_element');
   };
 
@@ -32,4 +32,14 @@ function loadGoogleTranslate() {
   script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
   script.dataset.googleTranslate = 'true';
   document.head.appendChild(script);
+}
+
+function showLanguageSelector() {
+  document.getElementById('translateWidget')?.classList.add('open');
+  const element = document.getElementById('google_translate_element');
+  if (element) element.hidden = false;
+
+  const focusCombo = () => document.querySelector('.goog-te-combo')?.focus();
+  focusCombo();
+  setTimeout(focusCombo, 300);
 }
