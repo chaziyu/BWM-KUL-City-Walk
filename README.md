@@ -59,12 +59,12 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **Challenge System:** Daily riddles to discover mystery locations
 
 ### 🤖 **6. AI Tour Guide**
-*   **Context-Aware:** Knows detailed history of all 11 heritage sites
+*   **Grounded Answers:** Retrieves matching verified site facts from `data/sites.json` before calling Gemini
 *   **Friendly Persona:** Helpful local guide character
-*   **Smart Limits:** Client-side quota plus server-side request limits to control API costs
+*   **Smart Limits:** Server-side quotas, hourly rate limits, and in-memory answer caching help control API costs
 *   **Safe Rendering:** AI Markdown is sanitized before display to reduce XSS risk
-*   **Model Fallbacks:** Uses Gemini and Gemma fallback models for resilience and capacity
-*   **Rich Responses:** Detailed, informative answers about sites
+*   **Structured Responses:** Validates Gemini JSON, source site IDs, confidence, and unsupported-question fallbacks
+*   **Source Chips:** Answers can show verified trail source labels below the chat message
 
 ### 🎨 **7. Premium UI/UX**
 - **Consistent Transitions:** All buttons have smooth 200ms hover effects
@@ -87,7 +87,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **Hosting:** Vercel (Static + Serverless Functions)
 *   **Database:** Google Sheets (CSV export) for passkeys
 *   **Admin Tools:** Protected server API for prototype passkey generation
-*   **AI Engine:** Google GenAI SDK with Gemini/Gemma fallback models
+*   **AI Engine:** Google GenAI SDK with grounded prompts, structured JSON validation, and a two-model Gemini fallback
 
 ### Performance
 *   **PWA:** Installable app shell; full offline behavior is planned for a later phase
@@ -172,21 +172,30 @@ Visitor passkeys remain available as a proposed real-event workflow. The browser
 
 The **Project Admin (Prototype)** area demonstrates a proposed organiser workflow for issuing visitor passkeys and managing event access. It is retained as a proof of concept and is not currently operated by Badan Warisan Malaysia.
 
-### Current AI Model Fallback
+### Current AI Chat Contract
 
-The serverless chat endpoint tries models in this order:
+The serverless chat endpoint retrieves 1-3 relevant verified sites for general questions, or uses the current site for site-specific chat. Gemini must return structured JSON, and the server validates source IDs against `data/sites.json` before returning:
+
+```json
+{
+  "reply": "Answer text",
+  "sourceSiteIds": ["1"],
+  "confidence": "high",
+  "notFound": false,
+  "remainingQuota": 14
+}
+```
+
+The endpoint uses low-temperature factual calls and tries models in this order:
 
 ```js
 [
-  "gemini-3.1-flash-lite",
-  "gemma-4-31b-it",
-  "gemma-4-26b-a4b-it",
   "gemini-2.5-flash-lite",
-  "gemini-3-flash",
-  "gemini-3.5-flash",
   "gemini-2.5-flash"
 ]
 ```
+
+Repeated cacheable questions are stored in an in-memory per-instance cache keyed by knowledge version, context, language, and normalized question.
 
 ---
 
@@ -254,6 +263,10 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 - The admin workflow is a portfolio prototype.
 - Recommended sites do not all have quiz content yet.
 - Google Translate is a third-party widget loaded only when requested.
+- AI answer caching is in-memory only; Vercel cold starts or multiple instances do not share cache.
+- AI retrieval is lexical and depends on curated `search_terms`; add verified aliases from real visitor questions before considering heavier retrieval.
+- Invalid Gemini JSON fails safely without consuming quota, but may show fallback/error responses more often if the model ignores the response contract.
+- Source chips depend on local client site data, so labels may not render if frontend site data fails to load.
 
 ---
 
@@ -281,6 +294,7 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 
 ## Recent Maintenance Updates
 
+- Completed Phase 7 grounded AI chat: site-scoped prompts, lexical retrieval, structured Gemini JSON validation, source chips, and answer caching.
 - Hardened AI chat rendering by sanitizing Markdown before inserting it into the DOM.
 - Added server-side chat input limits, history normalization, same-origin checks, signed-session authorization, and rate limiting.
 - Removed public interview codes and replaced them with direct Explore Demo access.
