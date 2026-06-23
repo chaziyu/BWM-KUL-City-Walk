@@ -120,7 +120,28 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' });
 
     expect(result.statusCode).toBe(200);
+    expect(result.body.reply).toBe('I can help with the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.');
+    expect(gemini.sendMessage).not.toHaveBeenCalled();
+    expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
+  });
+
+  it('uses a guide-introduction reply for identity questions outside the verified notes', async () => {
+    const cookie = createCookie();
+
+    const result = await postChat(cookie, { userQuery: 'siapa awak?' });
+
+    expect(result.statusCode).toBe(200);
     expect(result.body.reply).toBe('I’m your AI Tour Guide for the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.');
+    expect(gemini.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('uses a route prompt for broad navigation questions outside the verified notes', async () => {
+    const cookie = createCookie();
+
+    const result = await postChat(cookie, { userQuery: 'where can i go?' });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body.reply).toBe('I can help you explore the verified BMW KUL City Walk stops. Ask about a place on the route, or tap a stop on the map to begin.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });

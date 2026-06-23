@@ -1,5 +1,5 @@
 const SAFE_FALLBACK = Object.freeze({
-    answer: 'I do not have verified trail information for that question yet.',
+    answer: 'I couldn’t find that in the verified BMW KUL City Walk notes yet. Ask me about a stop, route, or story along the walk.',
     sourceSiteIds: [],
     confidence: 'low',
     notFound: true,

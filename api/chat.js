@@ -100,6 +100,20 @@ function buildSiteFallback(site, remainingQuota) {
     };
 }
 
+function buildNoMatchReply(query) {
+    const text = String(query || '').toLowerCase();
+
+    if (/(who are you|what are you|siapa awak|siapa anda|awak siapa|anda siapa)/.test(text)) {
+        return 'I’m your AI Tour Guide for the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.';
+    }
+
+    if (/(where can i go|where should i go|what can i visit|what should i visit|nearby|route|directions|mana boleh pergi|ke mana|nak pergi mana|boleh pergi mana)/.test(text)) {
+        return 'I can help you explore the verified BMW KUL City Walk stops. Ask about a place on the route, or tap a stop on the map to begin.';
+    }
+
+    return 'I can help with the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.';
+}
+
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
@@ -125,7 +139,7 @@ module.exports = async (request, response) => {
     const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
     const remainingQuota = await getQuotaRemaining(quotaKey, limit);
     if (!contextSites.length) {
-        return response.status(200).json({ reply: 'I’m your AI Tour Guide for the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.', remainingQuota });
+        return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
     }
     const cacheKey = buildCacheKey({
         contextType: context?.type === 'site' ? 'site' : 'general',

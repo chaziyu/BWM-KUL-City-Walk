@@ -12,6 +12,7 @@ describe('buildPrompt', () => {
 
     expect(prompt.match(/<site /g)).toHaveLength(1);
     expect(prompt).toContain('Bangunan Sultan Abdul Samad');
+    expect(prompt).toContain('Be warm, direct, and concise.');
     expect(prompt).not.toContain('Old Post Office');
   });
 
