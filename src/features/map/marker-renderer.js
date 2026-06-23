@@ -1,6 +1,19 @@
 export function createMarkerRenderer({ L, markersLayer, onSiteSelected, getIsCompleted }) {
   const markers = {};
 
+  function createPopupContent(site) {
+    if (!globalThis.document) return [site.name, site.info].filter(Boolean).join('\n');
+
+    const content = document.createElement('div');
+    const title = document.createElement('strong');
+    const info = document.createElement('p');
+
+    title.textContent = site.name;
+    info.textContent = site.info || '';
+    content.append(title, info);
+    return content;
+  }
+
   function updateVisitedState(marker, isVisited) {
     if (!marker) return;
     marker.options.isVisited = isVisited;
@@ -12,11 +25,13 @@ export function createMarkerRenderer({ L, markersLayer, onSiteSelected, getIsCom
       const latlng = Array.isArray(site.coordinates) ? site.coordinates : site.coordinates?.marker;
       if (!latlng) return;
 
-      const marker = L.marker(latlng).bindTooltip(site.name, {
-        permanent: false,
-        direction: 'top',
-        sticky: true,
-      });
+      const marker = L.marker(latlng)
+        .bindTooltip(site.name, {
+          permanent: false,
+          direction: 'top',
+          sticky: true,
+        })
+        .bindPopup(createPopupContent(site));
 
       marker.options.isVisited = getIsCompleted(site.id);
       marker.on('add', (event) => {

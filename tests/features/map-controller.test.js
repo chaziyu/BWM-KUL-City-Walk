@@ -50,6 +50,9 @@ describe('map controller', () => {
       divIcon: vi.fn((options) => options),
       marker: vi.fn(() => ({
         addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+        bindPopup() {
+          return this;
+        },
         bindTooltip() {
           return this;
         },
@@ -57,7 +60,7 @@ describe('map controller', () => {
         options: {},
       })),
       polygon: vi.fn(() => {
-        const polygon = { on: vi.fn(), setStyle: vi.fn() };
+        const polygon = { bindPopup: vi.fn(), on: vi.fn(), setStyle: vi.fn() };
         polygons.push(polygon);
         return polygon;
       }),
@@ -66,6 +69,9 @@ describe('map controller', () => {
     L.marker.mockImplementation(() => {
       const marker = {
         addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+        bindPopup() {
+          return this;
+        },
         bindTooltip() {
           return this;
         },

@@ -22,6 +22,7 @@ describe('polygon renderer', () => {
         polygon: vi.fn((coords, options) => ({
           coords,
           options,
+          bindPopup: vi.fn(),
           on: vi.fn(),
           setStyle: vi.fn(),
         })),
@@ -47,6 +48,7 @@ describe('polygon renderer', () => {
     const onSiteSelected = vi.fn();
     const polygon = {
       handlers: {},
+      bindPopup: vi.fn(),
       on(event, handler) {
         this.handlers[event] = handler;
       },
@@ -67,5 +69,38 @@ describe('polygon renderer', () => {
     polygon.handlers.click();
 
     expect(onSiteSelected).toHaveBeenCalledWith(site);
+  });
+
+  it('binds site info as polygon popup text', () => {
+    const layer = createLayer();
+    const polygon = {
+      bindPopup: vi.fn(function (content) {
+        this.popupContent = content;
+        return this;
+      }),
+      on: vi.fn(),
+      setStyle: vi.fn(),
+    };
+    const renderer = createPolygonRenderer({
+      L: { polygon: vi.fn(() => polygon) },
+      polygonsLayer: layer,
+      onSiteSelected: vi.fn(),
+      getIsCompleted: () => false,
+      getSiteColors: () => ({ markerColor: '#111', fillColor: '#eee' }),
+      visitedColor: '#007bff',
+      polygonOpacity: 0.2,
+    });
+    const site = {
+      id: '1',
+      name: 'Site',
+      info: 'Brief info',
+      coordinates: { polygon: [[3, 101], [3, 102], [4, 102]] },
+    };
+
+    renderer.render([site]);
+
+    expect(polygon.bindPopup).toHaveBeenCalledOnce();
+    expect(String(polygon.popupContent.textContent || polygon.popupContent)).toContain('Site');
+    expect(String(polygon.popupContent.textContent || polygon.popupContent)).toContain('Brief info');
   });
 });

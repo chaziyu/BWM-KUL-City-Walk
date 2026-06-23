@@ -9,6 +9,19 @@ export function createPolygonRenderer({
 }) {
   const polygons = {};
 
+  function createPopupContent(site) {
+    if (!globalThis.document) return [site.name, site.info].filter(Boolean).join('\n');
+
+    const content = document.createElement('div');
+    const title = document.createElement('strong');
+    const info = document.createElement('p');
+
+    title.textContent = site.name;
+    info.textContent = site.info || '';
+    content.append(title, info);
+    return content;
+  }
+
   function updateVisitedState(site, isVisited) {
     const polygon = polygons[site.id];
     if (!polygon) return;
@@ -44,6 +57,7 @@ export function createPolygonRenderer({
         fillOpacity: 0.5,
         weight: 2,
       });
+      polygon.bindPopup(createPopupContent(site));
       polygon.on('click', () => onSiteSelected(site));
       polygonsLayer.addLayer(polygon);
       polygons[site.id] = polygon;
