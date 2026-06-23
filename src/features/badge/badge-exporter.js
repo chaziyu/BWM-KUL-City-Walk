@@ -6,6 +6,7 @@ export async function captureAndDownloadBadge({ progressService, strings }) {
 
   badgeElement.style.opacity = '1';
   badgeElement.style.zIndex = '-50';
+  let restoreDocumentColors = () => {};
 
   try {
     const state = progressService.getCompletionState();
@@ -19,6 +20,7 @@ export async function captureAndDownloadBadge({ progressService, strings }) {
       strings,
     });
     applyCanvasSafeBadgeStyles(badgeElement);
+    restoreDocumentColors = neutraliseOklchCustomProperties(document.documentElement, true);
 
     const canvas = await html2canvas(badgeElement, { scale: 2, backgroundColor: null });
     const filename = `Heritage-Explorer-${Date.now()}.png`;
@@ -41,6 +43,7 @@ export async function captureAndDownloadBadge({ progressService, strings }) {
 
     triggerDownload(canvas.toDataURL('image/png'));
   } finally {
+    restoreDocumentColors();
     badgeElement.style.opacity = '0';
   }
 }
@@ -54,6 +57,8 @@ const COLOR_PROPERTIES = [
   'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
   'outlineColor', 'textDecorationColor',
 ];
+
+const MODERN_COLOR_PATTERN = /oklch|oklab|color\(/;
 
 /**
  * Convert any CSS color (including oklch) to an rgba() string by
@@ -88,14 +93,38 @@ function resolveToRgba(cssColor) {
 function neutraliseOklchColors(root) {
   const elements = [root, ...root.querySelectorAll('*')];
   for (const el of elements) {
-    const computed = getComputedStyle(el);
+    const computed = window.getComputedStyle(el);
     for (const prop of COLOR_PROPERTIES) {
       const value = computed[prop];
-      if (value && (value.includes('oklch') || value.includes('oklab') || value.includes('color('))) {
+      if (value && MODERN_COLOR_PATTERN.test(value)) {
         el.style[prop] = resolveToRgba(value);
       }
     }
+    neutraliseOklchCustomProperties(el);
   }
+}
+
+function neutraliseOklchCustomProperties(el, shouldRestore = false) {
+  const computed = window.getComputedStyle(el);
+  const changed = [];
+  for (let i = 0; i < computed.length; i += 1) {
+    const prop = computed.item(i);
+    if (!prop.startsWith('--')) continue;
+    const value = computed.getPropertyValue(prop);
+    if (!value || !MODERN_COLOR_PATTERN.test(value)) continue;
+
+    if (shouldRestore) {
+      changed.push([prop, el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)]);
+    }
+    el.style.setProperty(prop, resolveToRgba(value));
+  }
+
+  return () => {
+    for (const [prop, value, priority] of changed) {
+      if (value) el.style.setProperty(prop, value, priority);
+      else el.style.removeProperty(prop);
+    }
+  };
 }
 
 export function applyCanvasSafeBadgeStyles(badgeElement) {
