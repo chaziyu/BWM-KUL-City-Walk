@@ -1,3 +1,5 @@
+const EMPTY_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
+
 export function buildMoreInfoHtml(site) {
   const bwImageHtml = site.flyer_image?.trim()
     ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">`
@@ -42,5 +44,5 @@ export function renderSiteBasics({ elements, site }) {
   elements.label.textContent = site.id ? `${site.id}.` : '';
   elements.title.textContent = site.name;
   elements.info.textContent = site.info;
-  elements.image.src = site.image || 'https://placehold.co/600x400/eee/ccc?text=Site+Image';
+  elements.image.src = site.image || EMPTY_IMAGE;
 }

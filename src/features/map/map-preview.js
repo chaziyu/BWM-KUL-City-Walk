@@ -1,5 +1,6 @@
 export function createMapPreview({ strings, getSites, openSiteDetails }) {
   let currentSiteId = null;
+  const emptyImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
 
   function close() {
     const card = document.getElementById('previewCard');
@@ -27,7 +28,7 @@ export function createMapPreview({ strings, getSites, openSiteDetails }) {
     if (distance) distance.textContent = strings?.preview?.tapForDetails || 'Tap for details';
     if (image) {
       image.classList.add('skeleton-loading');
-      image.src = site.image || 'https://placehold.co/100x100/eee/ccc?text=Site';
+      image.src = site.image || emptyImage;
       image.onload = () => image.classList.remove('skeleton-loading');
     }
 

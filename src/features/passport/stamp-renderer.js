@@ -2,7 +2,7 @@ export function renderPassportStamps({
   container,
   sites,
   completedIds,
-  placeholderImage = 'https://placehold.co/100x100/eee/ccc?text=?',
+  placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E',
 }) {
   if (!container) return;
 

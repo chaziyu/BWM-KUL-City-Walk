@@ -13,6 +13,8 @@ describe('production CSP', () => {
   it('allows only the configured Google Translate and Maps frame origins', () => {
     expect(csp).toContain('script-src');
     expect(csp).toContain('https://translate.google.com');
+    expect(csp).toContain('https://translate.googleapis.com');
+    expect(csp).toContain('https://www.gstatic.com');
     expect(csp).toContain('connect-src \'self\' https://translate.googleapis.com');
     expect(csp).toContain('frame-src https://translate.google.com https://maps.google.com https://www.google.com');
   });
