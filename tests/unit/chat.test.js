@@ -132,6 +132,20 @@ describe('chat API quota ordering', () => {
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
+  it('falls back to verified site notes for site chat when Gemini fails', async () => {
+    const cookie = createCookie();
+    gemini.sendMessage.mockRejectedValue(new Error('provider down'));
+
+    const result = await postChat(cookie, {
+      userQuery: 'Tell me more about this site.',
+      context: { type: 'site', siteId: '1' },
+    });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body.reply).toContain('Bangunan Sultan Abdul Samad');
+    expect(result.body.sourceSiteIds).toEqual(['1']);
+  });
+
   it('does not consume quota for invalid source IDs', async () => {
     const cookie = createCookie();
     gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Wrong source', sourceSiteIds: ['999'], confidence: 'high', notFound: false }) });

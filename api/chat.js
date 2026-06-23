@@ -85,6 +85,21 @@ function getContextSites(context, cleanQuery) {
     return retrieveSites(cleanQuery);
 }
 
+function buildSiteFallback(site, remainingQuota) {
+    const answer = [
+        `**${site.name}**`,
+        site.aiContext || site.infoMore || site.info,
+    ].filter(Boolean).join('\n\n');
+
+    return {
+        reply: sanitizeText(answer, 5000),
+        sourceSiteIds: [site.id],
+        confidence: 'low',
+        notFound: false,
+        remainingQuota,
+    };
+}
+
 module.exports = async (request, response) => {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
@@ -205,6 +220,10 @@ module.exports = async (request, response) => {
 
     } catch (error) {
         console.error('Google GenAI SDK Error:', error);
+        if (context?.type === 'site' && contextSites[0]) {
+            return response.status(200).json(buildSiteFallback(contextSites[0], remainingQuota));
+        }
+
         return response.status(500).json({ reply: "I'm having trouble connecting to the history books right now." });
     }
 };
