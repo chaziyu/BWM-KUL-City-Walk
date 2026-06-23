@@ -120,7 +120,7 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' });
 
     expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I can help with the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.');
+    expect(result.body.reply).toBe('I’m here to help with the BMW KUL City Walk. You can ask about places to visit, route ideas, or the story behind a stop.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
@@ -131,7 +131,7 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'siapa awak?' });
 
     expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I’m your AI Tour Guide for the verified BMW KUL City Walk stops. Ask me about a place, route, or story along the walk.');
+    expect(result.body.reply).toBe('I’m your AI Tour Guide. I can help with places to visit, route ideas, and stories from the BMW KUL City Walk.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
   });
 
@@ -141,7 +141,18 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'where can i go?' });
 
     expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I can help you explore the verified BMW KUL City Walk stops. Ask about a place on the route, or tap a stop on the map to begin.');
+    expect(result.body.reply).toBe('A good place to start is Bangunan Sultan Abdul Samad, Masjid Jamek, or Central Market. If you want, I can also suggest a quick route.');
+    expect(gemini.sendMessage).not.toHaveBeenCalled();
+    expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
+  });
+
+  it('answers combined identity and visit questions in one normal reply', async () => {
+    const cookie = createCookie();
+
+    const result = await postChat(cookie, { userQuery: 'who are you, suggest where to visit' });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body.reply).toBe('I’m your AI Tour Guide. A good place to start is Bangunan Sultan Abdul Samad, Masjid Jamek, or Central Market if you want a shorter wander.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
