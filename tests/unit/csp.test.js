@@ -6,7 +6,7 @@ const csp = vercelConfig.headers[0].headers.find((header) => header.key === 'Con
 
 describe('production CSP', () => {
   it('allows CARTO map tiles without broad img-src wildcards', () => {
-    expect(csp).toContain("img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com");
+    expect(csp).toContain("img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://fonts.gstatic.com https://www.gstatic.com");
     expect(csp).not.toContain('img-src *');
   });
 
@@ -14,6 +14,7 @@ describe('production CSP', () => {
     expect(csp).toContain('script-src');
     expect(csp).toContain('https://translate.google.com');
     expect(csp).toContain('https://translate.googleapis.com');
+    expect(csp).toContain('https://translate-pa.googleapis.com');
     expect(csp).toContain('https://www.gstatic.com');
     expect(csp).toContain('connect-src \'self\' https://translate.googleapis.com');
     expect(csp).toContain('frame-src https://translate.google.com https://maps.google.com https://www.google.com');
