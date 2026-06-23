@@ -45,9 +45,67 @@ export async function captureAndDownloadBadge({ progressService, strings }) {
   }
 }
 
+/**
+ * Color properties that html2canvas reads from computed styles.
+ * Tailwind CSS v4 outputs oklch() for these, which html2canvas v1 cannot parse.
+ */
+const COLOR_PROPERTIES = [
+  'color', 'backgroundColor', 'borderColor',
+  'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+  'outlineColor', 'textDecorationColor',
+];
+
+/**
+ * Convert any CSS color (including oklch) to an rgba() string by
+ * drawing it on an offscreen canvas and reading the pixel back.
+ */
+function resolveToRgba(cssColor) {
+  if (!cssColor || cssColor === 'transparent' || cssColor === 'rgba(0, 0, 0, 0)') {
+    return cssColor;
+  }
+  // Already safe – skip the canvas round-trip
+  if (!cssColor.includes('oklch') && !cssColor.includes('oklab') && !cssColor.includes('color(')) {
+    return cssColor;
+  }
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (!ctx) return cssColor;
+  ctx.canvas.width = 1;
+  ctx.canvas.height = 1;
+  ctx.clearRect(0, 0, 1, 1);
+  ctx.fillStyle = cssColor;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+  return a === 255
+    ? `rgb(${r}, ${g}, ${b})`
+    : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
+}
+
+/**
+ * Walk every element inside the badge template and replace any oklch()
+ * computed color values with their rgb/rgba equivalents so that
+ * html2canvas v1 can parse them.
+ */
+function neutraliseOklchColors(root) {
+  const elements = [root, ...root.querySelectorAll('*')];
+  for (const el of elements) {
+    const computed = getComputedStyle(el);
+    for (const prop of COLOR_PROPERTIES) {
+      const value = computed[prop];
+      if (value && (value.includes('oklch') || value.includes('oklab') || value.includes('color('))) {
+        el.style[prop] = resolveToRgba(value);
+      }
+    }
+  }
+}
+
 export function applyCanvasSafeBadgeStyles(badgeElement) {
   badgeElement.classList.add('notranslate');
   badgeElement.setAttribute('translate', 'no');
+
+  // First, neutralise all oklch / modern color functions that html2canvas cannot parse
+  neutraliseOklchColors(badgeElement);
+
+  // Then apply explicit overrides for the badge design tokens
   badgeElement.style.backgroundColor = '#fdfaf5';
   badgeElement.style.borderColor = '#1a3c5e';
   badgeElement.style.color = '#1a3c5e';
