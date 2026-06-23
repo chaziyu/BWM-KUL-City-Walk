@@ -56,6 +56,7 @@ export function createBadgeController({ modalManager, progressService, strings }
       await captureAndDownloadBadge({ progressService, strings });
       document.getElementById('chaChingSound')?.play?.();
     } catch (error) {
+      console.error('Badge generation failed', error);
       window.alert(error instanceof BadgeUploadError ? error.message : strings.game.badgeError);
     } finally {
       button.textContent = originalText;
