@@ -1,3 +1,4 @@
+/* @vitest-environment jsdom */
 import { describe, expect, it, vi } from 'vitest';
 import { createPolygonRenderer } from '../../src/features/map/polygon-renderer.js';
 
@@ -28,6 +29,7 @@ describe('polygon renderer', () => {
         })),
       },
       polygonsLayer: layer,
+      onSiteDetails: vi.fn(),
       onSiteSelected: vi.fn(),
       getIsCompleted: () => false,
       getSiteColors: () => ({ markerColor: '#111', fillColor: '#eee' }),
@@ -57,6 +59,7 @@ describe('polygon renderer', () => {
     const renderer = createPolygonRenderer({
       L: { polygon: vi.fn(() => polygon) },
       polygonsLayer: layer,
+      onSiteDetails: vi.fn(),
       onSiteSelected,
       getIsCompleted: () => false,
       getSiteColors: () => ({ markerColor: '#111', fillColor: '#eee' }),
@@ -84,6 +87,7 @@ describe('polygon renderer', () => {
     const renderer = createPolygonRenderer({
       L: { polygon: vi.fn(() => polygon) },
       polygonsLayer: layer,
+      onSiteDetails: vi.fn(),
       onSiteSelected: vi.fn(),
       getIsCompleted: () => false,
       getSiteColors: () => ({ markerColor: '#111', fillColor: '#eee' }),
@@ -102,5 +106,39 @@ describe('polygon renderer', () => {
     expect(polygon.bindPopup).toHaveBeenCalledOnce();
     expect(String(polygon.popupContent.textContent || polygon.popupContent)).toContain('Site');
     expect(String(polygon.popupContent.textContent || polygon.popupContent)).toContain('Brief info');
+  });
+
+  it('opens site details from popup button', () => {
+    const layer = createLayer();
+    const onSiteDetails = vi.fn();
+    const polygon = {
+      bindPopup: vi.fn(function (content) {
+        this.popupContent = content;
+        return this;
+      }),
+      on: vi.fn(),
+      setStyle: vi.fn(),
+    };
+    const renderer = createPolygonRenderer({
+      L: { polygon: vi.fn(() => polygon) },
+      polygonsLayer: layer,
+      onSiteDetails,
+      onSiteSelected: vi.fn(),
+      getIsCompleted: () => false,
+      getSiteColors: () => ({ markerColor: '#111', fillColor: '#eee' }),
+      visitedColor: '#007bff',
+      polygonOpacity: 0.2,
+    });
+    const site = {
+      id: '1',
+      name: 'Site',
+      info: 'Brief info',
+      coordinates: { polygon: [[3, 101], [3, 102], [4, 102]] },
+    };
+
+    renderer.render([site]);
+    polygon.popupContent.querySelector('button').click();
+
+    expect(onSiteDetails).toHaveBeenCalledWith(site);
   });
 });

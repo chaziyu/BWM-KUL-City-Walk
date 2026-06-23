@@ -85,6 +85,7 @@ export function createMapController({
     markerRenderer = createMarkerRenderer({
       L,
       markersLayer,
+      onSiteDetails: onSiteSelected,
       onSiteSelected: (site) => {
         if (briefPopupSiteId === String(site.id)) {
           onSiteSelected(site);
@@ -100,6 +101,7 @@ export function createMapController({
     polygonRenderer = createPolygonRenderer({
       L,
       polygonsLayer,
+      onSiteDetails: onSiteSelected,
       onSiteSelected: (site) => {
         if (briefPopupSiteId === String(site.id)) {
           onSiteSelected(site);

@@ -1,4 +1,11 @@
-export function createMarkerRenderer({ L, markersLayer, onSiteSelected, onSiteUnselected, getIsCompleted }) {
+export function createMarkerRenderer({
+  L,
+  markersLayer,
+  onSiteDetails,
+  onSiteSelected,
+  onSiteUnselected,
+  getIsCompleted,
+}) {
   const markers = {};
 
   function createPopupContent(site) {
@@ -7,10 +14,18 @@ export function createMarkerRenderer({ L, markersLayer, onSiteSelected, onSiteUn
     const content = document.createElement('div');
     const title = document.createElement('strong');
     const info = document.createElement('p');
+    const button = document.createElement('button');
 
     title.textContent = site.name;
     info.textContent = site.info || '';
-    content.append(title, info);
+    button.type = 'button';
+    button.textContent = 'Read full history';
+    button.className = 'mt-2 rounded bg-blue-600 px-3 py-1.5 text-sm font-bold text-white';
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      onSiteDetails(site);
+    });
+    content.append(title, info, button);
     return content;
   }
 
