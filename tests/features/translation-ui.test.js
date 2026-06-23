@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { suppressGoogleTranslatePopups } from '../../src/features/translation/translation-ui.js';
 
 describe('Google Translate popup suppression', () => {
-  it('keeps Google Translate helper nodes while removing the banner', async () => {
+  it('keeps Google Translate helper and banner nodes', async () => {
     const cleanup = suppressGoogleTranslatePopups();
 
     const helper = document.createElement('iframe');
@@ -17,7 +17,7 @@ describe('Google Translate popup suppression', () => {
     await Promise.resolve();
 
     expect(document.getElementById('goog-gt-helper')).toBe(helper);
-    expect(document.querySelector('.goog-te-banner-frame')).toBeNull();
+    expect(document.querySelector('.goog-te-banner-frame')).toBe(banner);
 
     cleanup();
   });

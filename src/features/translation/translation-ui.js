@@ -1,6 +1,6 @@
 export function suppressGoogleTranslatePopups() {
   const removePopups = () => {
-    document.querySelectorAll('.goog-te-balloon-frame, .goog-te-banner-frame, .goog-tooltip').forEach((el) => el.remove());
+    document.querySelectorAll('.goog-te-balloon-frame, .goog-tooltip').forEach((el) => el.remove());
     if (document.body.style.top !== '0px') document.body.style.top = '0px';
   };
 
@@ -9,7 +9,6 @@ export function suppressGoogleTranslatePopups() {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType !== 1) return;
         if (
-          node.classList?.contains('goog-te-banner-frame') ||
           node.classList?.contains('goog-te-balloon-frame') ||
           node.classList?.contains('goog-tooltip')
         ) {
