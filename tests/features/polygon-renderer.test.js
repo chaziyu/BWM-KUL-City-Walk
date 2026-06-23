@@ -41,4 +41,31 @@ describe('polygon renderer', () => {
     expect(layer.layers).toHaveLength(1);
     expect(renderer.getPolygons()['1'].options.className).toBe('heritage-polygon');
   });
+
+  it('routes polygon clicks through site selection', () => {
+    const layer = createLayer();
+    const onSiteSelected = vi.fn();
+    const polygon = {
+      handlers: {},
+      on(event, handler) {
+        this.handlers[event] = handler;
+      },
+      setStyle: vi.fn(),
+    };
+    const renderer = createPolygonRenderer({
+      L: { polygon: vi.fn(() => polygon) },
+      polygonsLayer: layer,
+      onSiteSelected,
+      getIsCompleted: () => false,
+      getSiteColors: () => ({ markerColor: '#111', fillColor: '#eee' }),
+      visitedColor: '#007bff',
+      polygonOpacity: 0.2,
+    });
+    const site = { id: '1', coordinates: { polygon: [[3, 101], [3, 102], [4, 102]] } };
+
+    renderer.render([site]);
+    polygon.handlers.click();
+
+    expect(onSiteSelected).toHaveBeenCalledWith(site);
+  });
 });

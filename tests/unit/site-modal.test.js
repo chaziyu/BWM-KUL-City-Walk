@@ -145,4 +145,74 @@ describe('Site Modal Logic', () => {
     expect(document.getElementById('checkIn').className).toContain('w-full');
     expect(document.getElementById('checkIn').className).toContain('rounded-lg');
   });
+
+  it('wires directions food and hotel popup actions', () => {
+    document.body.innerHTML = `
+      <div id="modal"></div>
+      <img id="image">
+      <span id="label"></span>
+      <h2 id="title"></h2>
+      <p id="info"></p>
+      <div id="quizArea"></div>
+      <p id="quizQuestion"></p>
+      <div id="quizOptions"></div>
+      <p id="quizResult"></p>
+      <button id="close"></button>
+      <button id="askAI"></button>
+      <button id="directions"></button>
+      <button id="checkIn"></button>
+      <button id="solveChallenge"></button>
+      <div id="more"></div>
+      <button id="moreButton"></button>
+      <div id="moreContent"></div>
+      <a id="food"></a>
+      <a id="hotel"></a>
+      <p id="hintText"></p>
+    `;
+    const actions = {
+      askAI: vi.fn(),
+      checkIn: vi.fn(),
+      openDirections: vi.fn(),
+      openFood: vi.fn(),
+      openHotels: vi.fn(),
+    };
+    const controller = createSiteModalController({
+      actions,
+      progressService: { getDiscoveredSites: () => [] },
+      modalManager: { close: vi.fn(), open: vi.fn() },
+    });
+    const site = { id: 'A', name: 'Site', info: 'Info', coordinates: { marker: [3, 101] } };
+
+    controller.bind({
+      modal: document.getElementById('modal'),
+      image: document.getElementById('image'),
+      label: document.getElementById('label'),
+      title: document.getElementById('title'),
+      info: document.getElementById('info'),
+      quizArea: document.getElementById('quizArea'),
+      quizQuestion: document.getElementById('quizQuestion'),
+      quizOptions: document.getElementById('quizOptions'),
+      quizResult: document.getElementById('quizResult'),
+      closeButton: document.getElementById('close'),
+      askAI: document.getElementById('askAI'),
+      directions: document.getElementById('directions'),
+      checkIn: document.getElementById('checkIn'),
+      solveChallenge: document.getElementById('solveChallenge'),
+      more: document.getElementById('more'),
+      moreButton: document.getElementById('moreButton'),
+      moreContent: document.getElementById('moreContent'),
+      food: document.getElementById('food'),
+      hotel: document.getElementById('hotel'),
+      hintText: document.getElementById('hintText'),
+    });
+    controller.open(site);
+
+    document.getElementById('directions').click();
+    document.getElementById('food').click();
+    document.getElementById('hotel').click();
+
+    expect(actions.openDirections).toHaveBeenCalledWith(site);
+    expect(actions.openFood).toHaveBeenCalledWith(site);
+    expect(actions.openHotels).toHaveBeenCalledWith(site);
+  });
 });

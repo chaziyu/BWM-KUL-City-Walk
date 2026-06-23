@@ -129,6 +129,16 @@
 - Chat history and message count are persisted in scoped localStorage.
 - Daily reset: message count resets when `last_active_day` changes.
 
+### 8.1 Chat Baseline Before Refactor
+
+Captured 2026-06-23 against `api/chat.js`.
+
+- Prompt size: 20,643 characters / 20,723 UTF-8 bytes, approximately 5,161 tokens by chars / 4 estimate.
+- Prompt content: `GENERAL_KNOWLEDGE`, all 24 records from `data/sites.json`, and the existing Markdown/short-paragraph formatting instructions.
+- Answer format: `POST /api/chat` returns JSON `{ "reply": "..." }`; successful replies are sanitized to 5,000 characters and rendered by the frontend as sanitized Markdown.
+- Latency baseline: mocked `tests/unit/chat.test.js` provider path completed 4 chat quota tests in 17ms test time, 284ms Vitest run duration. Live Gemini latency is network/model dependent and was not fixed here.
+- Quota behaviour: empty or invalid requests return 400 without consuming quota; answered requests consume quota; demo quota allows 5 answered requests, then returns 429; provider failure returns 500 and refunds quota.
+
 ---
 
 ## 9. GPS Fallback

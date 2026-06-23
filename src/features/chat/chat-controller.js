@@ -7,7 +7,9 @@ export function createChatController({
   getHistory,
   getMessageCount,
   historyWindowSize,
+  getSiteName,
   modalManager,
+  onSourceClick,
   saveHistory,
   saveMessageCount,
   setHistory,
@@ -15,7 +17,17 @@ export function createChatController({
   strings,
 }) {
   const service = createChatService({ deviceId });
-  const ui = createChatUI({ strings });
+  const ui = createChatUI({ strings, getSiteName, onSourceClick });
+  let activeContext = { type: 'general' };
+
+  function getScopeKey(context = activeContext) {
+    return context.type === 'site' && context.siteId ? `site:${context.siteId}` : 'general';
+  }
+
+  function getScopedHistory() {
+    const scopeKey = getScopeKey();
+    return getHistory().filter((message) => (message.meta?.scopeKey || 'general') === scopeKey);
+  }
 
   function bind() {
     const button = document.getElementById('btnChat');
@@ -47,12 +59,15 @@ export function createChatController({
 
   function open(context = {}) {
     bind();
+    activeContext = context.siteId ? { type: 'site', siteId: String(context.siteId) } : { type: 'general' };
     modalManager.open('chatModal');
-    if (context.site) {
+    loadHistory();
+    if (context.siteId) {
       const input = document.getElementById('chatInput');
-      if (input) input.value = `Tell me more about ${context.site.name}.`;
+      if (input) input.value = 'Tell me more about this site.';
       void sendMessage();
     } else if (typeof context === 'string') {
+      activeContext = { type: 'general' };
       const input = document.getElementById('chatInput');
       if (input) input.value = context;
       void sendMessage();
@@ -60,7 +75,7 @@ export function createChatController({
   }
 
   function loadHistory() {
-    ui.loadHistory(getHistory());
+    ui.loadHistory(getScopedHistory());
   }
 
   function updateCount() {
@@ -90,14 +105,17 @@ export function createChatController({
     const thinkingEl = ui.addMessage('model', 'Loading...', { loading: true });
 
     try {
-      const reply = await service.send({
+      const result = await service.send({
         userQuery,
-        history: getHistory().slice(-historyWindowSize),
+        context: activeContext,
+        history: getScopedHistory().slice(-Math.min(historyWindowSize, 6)),
       });
+      const reply = result.reply || '';
+      const scopeKey = getScopeKey();
       const nextHistory = [
         ...getHistory(),
-        { role: 'user', parts: [{ text: userQuery }] },
-        { role: 'model', parts: [{ text: reply }] },
+        { role: 'user', parts: [{ text: userQuery }], meta: { scopeKey } },
+        { role: 'model', parts: [{ text: reply }], meta: { scopeKey, sourceSiteIds: result.sourceSiteIds || [], notFound: result.notFound === true } },
       ];
       setHistory(nextHistory);
       saveHistory();
@@ -107,6 +125,7 @@ export function createChatController({
       updateCount();
 
       await ui.renderSafeMarkdown(thinkingEl?.querySelector('.chat-content'), reply);
+      ui.renderSourceChips(thinkingEl, result.sourceSiteIds, result.notFound);
       thinkingEl?.classList.add('chat-bubble');
     } catch (error) {
       const content = thinkingEl?.querySelector('.chat-content');

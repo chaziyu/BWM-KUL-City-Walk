@@ -1,11 +1,13 @@
 // File: /api/chat.js
 const { GoogleGenAI } = require("@google/genai");
-const path = require('path');
-const fs = require('fs');
 
-const { GENERAL_KNOWLEDGE } = require('../general_knowledge.js');
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
-const { isRateLimited, isQuotaExceeded, refundQuota } = require('./_shared/rate-limit');
+const { consumeQuota, getQuotaRemaining, isRateLimited } = require('./_shared/rate-limit');
+const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
+const { buildPrompt } = require('./_shared/ai/build-prompt');
+const { retrieveSites } = require('./_shared/ai/retrieve-sites');
+const { parseModelResponse, validateResponse } = require('./_shared/ai/response-contract');
+const { getSiteById } = require('./_shared/ai/site-catalog');
 
 const MAX_QUERY_CHARS = Number(process.env.CHAT_MAX_QUERY_CHARS) || 1000;
 const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
@@ -22,14 +24,6 @@ function sanitizeText(str, maxLength = 4000) {
         .replace(/\n{3,}/g, '\n\n')
         .trim()
         .slice(0, maxLength);
-}
-
-function escapeAttr(str) {
-    return sanitizeText(str, 200)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
 }
 
 function normalizeHistory(history) {
@@ -82,48 +76,13 @@ function getQuotaWindow(session) {
     return session.sessionId;
 }
 
-// --- OPTIMIZATION: GLOBAL CONTEXT CACHING ---
-let FINAL_SYSTEM_PROMPT = "";
-try {
-    const jsonPath = path.join(process.cwd(), 'data', 'sites.json');
-    const sites = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-
-    let siteContext = "\n<knowledge_base_sites>";
-
-    for (const site of sites) {
-        if (!site?.id || !site?.name) continue;
-
-        const rawContext = site.ai_context || site.info;
-        const cleanContext = sanitizeText(rawContext);
-
-        if (cleanContext) {
-            siteContext += `\n<site id="${escapeAttr(site.id)}" name="${escapeAttr(site.name)}">\n${cleanContext}\n</site>`;
-        }
+function getContextSites(context, cleanQuery) {
+    if (context?.type === 'site') {
+        const site = getSiteById(context.siteId);
+        return site ? [site] : [];
     }
-    siteContext += "\n</knowledge_base_sites>";
 
-    FINAL_SYSTEM_PROMPT = `
-<system_identity>
-${sanitizeText(GENERAL_KNOWLEDGE, 12000)}
-</system_identity>
-
-${siteContext}
-
-<instructions>
-You are an expert heritage guide. Answer based strictly on the <knowledge_base_sites>.
-Tone: Engaging, professional, and knowledgeable.
-Formatting:
-1. Use clear Markdown formatting.
-2. Use multiple short paragraphs for readability. Do NOT send one long block of text.
-3. Use bullet points for lists (e.g., features, tips, or facts).
-4. Use **bold** for emphasis on names or key facts.
-5. If the user asks in Chinese, respond in Chinese but keep the structure clear and spaced out.
-</instructions>
-`;
-
-} catch (error) {
-    console.error('Error preloading data/sites.json (Cold Start):', error);
-    FINAL_SYSTEM_PROMPT = "Error: Could not load site data. Please contact admin.";
+    return retrieveSites(cleanQuery);
 }
 
 module.exports = async (request, response) => {
@@ -140,10 +99,35 @@ module.exports = async (request, response) => {
         return response.status(401).json({ reply: 'Please unlock the app before using the AI guide.' });
     }
 
-    const { userQuery, history } = request.body || {};
+    const { userQuery, context, history } = request.body || {};
     const cleanQuery = sanitizeText(userQuery, MAX_QUERY_CHARS);
     if (!cleanQuery) {
         return response.status(400).json({ reply: 'Please enter a question.' });
+    }
+
+    const contextSites = getContextSites(context, cleanQuery);
+    const limit = ROLE_LIMITS[session.role] || 0;
+    const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+    const remainingQuota = await getQuotaRemaining(quotaKey, limit);
+    if (!contextSites.length) {
+        return response.status(200).json({ reply: 'I can only answer questions about the verified BWM KUL City Walk sites.', remainingQuota });
+    }
+    const cacheKey = buildCacheKey({
+        contextType: context?.type === 'site' ? 'site' : 'general',
+        siteIds: contextSites.map(site => site.id),
+        language: getLanguage(cleanQuery),
+        question: cleanQuery,
+    });
+    const canCache = isCacheableQuestion(cleanQuery);
+    const cached = canCache ? getCachedAnswer(cacheKey) : null;
+    if (cached) {
+        return response.status(200).json({
+            reply: cached.answer,
+            sourceSiteIds: cached.sourceSiteIds,
+            confidence: cached.confidence,
+            notFound: cached.notFound,
+            remainingQuota,
+        });
     }
 
     const clientKey = getClientKey(request);
@@ -152,8 +136,6 @@ module.exports = async (request, response) => {
     }
 
     const cleanHistory = normalizeHistory(history);
-    let quotaKey = null;
-    let quotaReserved = false;
 
     try {
         const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
@@ -161,27 +143,14 @@ module.exports = async (request, response) => {
             return response.status(500).json({ reply: "Server configuration error: API key is missing." });
         }
 
-        const limit = ROLE_LIMITS[session.role] || 0;
-        quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
-        if (await isQuotaExceeded(quotaKey, limit)) {
-            quotaReserved = false;
-            return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.' });
-        }
-        quotaReserved = true;
-
         const client = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
 
         const MODELS = [
-            "gemini-3.1-flash-lite",
-            "gemma-4-31b-it",
-            "gemma-4-26b-a4b-it",
             "gemini-2.5-flash-lite",
-            "gemini-3-flash",
-            "gemini-3.5-flash",
-            "gemini-2.5-flash"
+            "gemini-2.5-flash",
         ];
 
-        let text = null;
+        let contract = null;
         let lastError = null;
 
         for (const modelName of MODELS) {
@@ -189,8 +158,8 @@ module.exports = async (request, response) => {
                 const chat = client.chats.create({
                     model: modelName,
                     config: {
-                        systemInstruction: FINAL_SYSTEM_PROMPT,
-                        temperature: 0.7,
+                        systemInstruction: buildPrompt(contextSites),
+                        temperature: 0.2,
                     },
                     history: cleanHistory
                 });
@@ -199,7 +168,8 @@ module.exports = async (request, response) => {
                     message: cleanQuery
                 });
 
-                text = (typeof result.text === 'function') ? result.text() : result.text;
+                const text = (typeof result.text === 'function') ? result.text() : result.text;
+                contract = validateResponse(parseModelResponse(text), contextSites);
                 break;
 
             } catch (error) {
@@ -208,15 +178,32 @@ module.exports = async (request, response) => {
             }
         }
 
-        if (!text) {
+        if (!contract) {
             console.error('All models failed. Last error:', lastError);
             throw lastError || new Error("All models failed to respond.");
         }
 
-        return response.status(200).json({ reply: sanitizeText(text, 5000) });
+        if (!contract.notFound) {
+            const quota = await consumeQuota(quotaKey, limit);
+            if (quota.exceeded) {
+                return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.', remainingQuota: quota.remaining });
+            }
+            contract.remainingQuota = quota.remaining;
+        } else {
+            contract.remainingQuota = remainingQuota;
+        }
+
+        if (canCache) setCachedAnswer(cacheKey, contract);
+
+        return response.status(200).json({
+            reply: sanitizeText(contract.answer, 5000),
+            sourceSiteIds: contract.sourceSiteIds,
+            confidence: contract.confidence,
+            notFound: contract.notFound,
+            remainingQuota: contract.remainingQuota,
+        });
 
     } catch (error) {
-        if (quotaReserved && quotaKey) await refundQuota(quotaKey);
         console.error('Google GenAI SDK Error:', error);
         return response.status(500).json({ reply: "I'm having trouble connecting to the history books right now." });
     }

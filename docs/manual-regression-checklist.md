@@ -11,6 +11,9 @@ Use this checklist before and after larger Phase 2 refactors.
 - [ ] Quiz stamp updates passport
 - [ ] Chat responds
 - [ ] Chat limit blocks correctly
+- [ ] Chat site-specific question: "What should I know about Bangunan Sultan Abdul Samad?"
+- [ ] Chat general trail question: "Which must-visit sites should I start with on this walk?"
+- [ ] Chat unsupported question: "Can you recommend stock investments for this week?"
 - [ ] Demo reset clears only demo data
 - [ ] Logout returns to landing page
 

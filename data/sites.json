@@ -2,6 +2,10 @@
   {
     "id": "1",
     "name": "Bangunan Sultan Abdul Samad",
+    "search_terms": [
+      "Sultan Abdul Samad Building",
+      "Sultan Abdul Samad"
+    ],
     "coordinates": {
       "marker": [
         3.1484469124825694,
@@ -289,6 +293,10 @@
   {
     "id": "2",
     "name": "Old Post Office",
+    "search_terms": [
+      "General Post Office",
+      "KL General Post Office"
+    ],
     "coordinates": {
       "marker": [
         3.1475719939314644,
@@ -383,6 +391,12 @@
   {
     "id": "3",
     "name": "Wisma Straits Trading & Loke Yew Building",
+    "search_terms": [
+      "Wisma Straits Trading",
+      "Loke Yew Building",
+      "Chow Kit Building",
+      "Chow Kit & Co. Building"
+    ],
     "coordinates": {
       "marker": [
         3.1474713939345094,
@@ -445,6 +459,10 @@
   {
     "id": "4",
     "name": "Masjid Jamek",
+    "search_terms": [
+      "Masjid Jamek Sultan Abdul Samad",
+      "Jamek Mosque"
+    ],
     "coordinates": {
       "marker": [
         3.148930340846036,
@@ -500,6 +518,11 @@
   {
     "id": "5",
     "name": "Medan Pasar (Old Market Square)",
+    "search_terms": [
+      "Old Market Square",
+      "Market Square",
+      "Medan Pasar"
+    ],
     "coordinates": {
       "marker": [
         3.147270158178955,
@@ -628,6 +651,10 @@
   {
     "id": "7",
     "name": "The Triangle (Old Federal Stores)",
+    "search_terms": [
+      "Old Federal Stores",
+      "The Triangle"
+    ],
     "coordinates": {
       "marker": [
         3.1462334371198324,
@@ -765,6 +792,9 @@
   {
     "id": "9",
     "name": "Masjid India",
+    "search_terms": [
+      "India Mosque"
+    ],
     "coordinates": {
       "marker": [
         3.151676207223744,
@@ -843,6 +873,11 @@
   {
     "id": "10",
     "name": "P.H. Hendry Royal Jewellers",
+    "search_terms": [
+      "P.H. Hendry Jewellers",
+      "PH Hendry Jewellers",
+      "PH Hendry Royal Jewellers"
+    ],
     "coordinates": {
       "marker": [
         3.150875108847643,
@@ -897,6 +932,10 @@
   {
     "id": "11",
     "name": "Panggong Bandaraya (Old City Hall)",
+    "search_terms": [
+      "Old City Hall",
+      "Panggong Bandaraya"
+    ],
     "coordinates": {
       "marker": [
         3.150412705057221,
@@ -975,6 +1014,10 @@
   {
     "id": "A",
     "name": "Dataran Merdeka",
+    "search_terms": [
+      "Merdeka Square",
+      "Padang"
+    ],
     "coordinates": {
       "marker": [
         3.148799294993296,
@@ -1039,6 +1082,11 @@
   {
     "id": "B",
     "name": "National Textile Museum",
+    "search_terms": [
+      "Textile Museum",
+      "FMS Railway Offices",
+      "Railway Offices"
+    ],
     "coordinates": {
       "marker": [
         3.146745375545848,
@@ -1199,6 +1247,10 @@
   {
     "id": "C",
     "name": "OCBC Building",
+    "search_terms": [
+      "OCBC Bank",
+      "OCBC Bank headquarters"
+    ],
     "coordinates": {
       "marker": [
         3.146684462885375,
@@ -1251,6 +1303,10 @@
   {
     "id": "D",
     "name": "Central Market (Pasar Seni)",
+    "search_terms": [
+      "Pasar Seni",
+      "Central Market"
+    ],
     "coordinates": {
       "marker": [
         3.14570055652176,
@@ -1595,6 +1651,11 @@
   {
     "id": "K",
     "name": "Batu Road (Jalan TAR)",
+    "search_terms": [
+      "Jalan TAR",
+      "Jalan Tuanku Abdul Rahman",
+      "Batu Road"
+    ],
     "coordinates": {
       "marker": [
         3.1512994081626573,
@@ -1639,6 +1700,10 @@
   {
     "id": "L",
     "name": "Old Survey Office",
+    "search_terms": [
+      "Survey Office",
+      "Survey Department"
+    ],
     "coordinates": {
       "marker": [
         3.1501130149126766,
@@ -1755,6 +1820,9 @@
   {
     "id": "M",
     "name": "Old High Court",
+    "search_terms": [
+      "High Court"
+    ],
     "coordinates": {
       "marker": [
         3.1497092757228415,

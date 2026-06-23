@@ -37,7 +37,7 @@ function sanitizeRenderedHtml(html) {
   return cleanFragment;
 }
 
-export function createChatUI({ strings }) {
+export function createChatUI({ strings, getSiteName, onSourceClick }) {
   async function renderSafeMarkdown(container, text) {
     if (!container) return;
     container.replaceChildren();
@@ -48,6 +48,30 @@ export function createChatUI({ strings }) {
 
     const rawHtml = await marked.parse(text || '');
     container.appendChild(sanitizeRenderedHtml(rawHtml));
+  }
+
+  function renderSourceChips(messageEl, sourceSiteIds = [], notFound = false) {
+    if (!messageEl || notFound || !sourceSiteIds.length) return;
+
+    const sourceEl = document.createElement('div');
+    sourceEl.className = 'mt-2 pt-2 border-t border-blue-200 text-xs';
+    const labelEl = document.createElement('p');
+    labelEl.className = 'font-semibold mb-1';
+    labelEl.textContent = 'Verified trail source:';
+    sourceEl.appendChild(labelEl);
+
+    sourceSiteIds.forEach((siteId) => {
+      const name = getSiteName?.(siteId);
+      if (!name) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'source-chip inline-block mr-1 mb-1 px-2 py-1 rounded-full bg-white text-blue-900 border border-blue-200';
+      button.textContent = name;
+      button.addEventListener('click', () => onSourceClick?.(siteId));
+      sourceEl.appendChild(button);
+    });
+
+    if (sourceEl.querySelector('button')) messageEl.appendChild(sourceEl);
   }
 
   function addMessage(role, text, options = {}) {
@@ -76,6 +100,7 @@ export function createChatUI({ strings }) {
     }
 
     messageEl.append(nameEl, contentEl);
+    if (role === 'model') renderSourceChips(messageEl, options.sourceSiteIds, options.notFound);
     chatHistoryEl.appendChild(messageEl);
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
     return messageEl;
@@ -87,7 +112,7 @@ export function createChatUI({ strings }) {
     chatHistoryEl.innerHTML = '';
     chatHistory.forEach((msg) => {
       const text = msg.parts ? msg.parts[0].text : msg.text;
-      addMessage(msg.role, text);
+      addMessage(msg.role, text, msg.meta || {});
     });
   }
 
@@ -110,5 +135,5 @@ export function createChatUI({ strings }) {
     if (remaining <= 0) setDisabled(true);
   }
 
-  return { addMessage, loadHistory, renderSafeMarkdown, setDisabled, updateCount };
+  return { addMessage, loadHistory, renderSafeMarkdown, renderSourceChips, setDisabled, updateCount };
 }

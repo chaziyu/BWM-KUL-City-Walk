@@ -18,7 +18,7 @@ export function createSiteActions({
 
   return {
     askAI(site) {
-      openChat?.(site);
+      openChat?.(site.id);
     },
     checkIn(site) {
       return afterProgressChange(site.id, 'recordCheckIn');
