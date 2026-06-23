@@ -760,10 +760,13 @@ body {
 
 /* 1. HIDE THE TOP BANNER IFRAME */
 .goog-te-banner-frame.skiptranslate,
-.goog-te-banner-frame {
+.goog-te-banner-frame,
+iframe.skiptranslate,
+body > .skiptranslate {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
+    pointer-events: none !important;
 }
 
 /* 2. PREVENT BODY SHIFT */

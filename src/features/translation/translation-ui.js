@@ -11,8 +11,7 @@ export function suppressGoogleTranslatePopups() {
         if (
           node.classList?.contains('goog-te-banner-frame') ||
           node.classList?.contains('goog-te-balloon-frame') ||
-          node.classList?.contains('goog-tooltip') ||
-          node.id?.includes('goog-gt-')
+          node.classList?.contains('goog-tooltip')
         ) {
           node.remove();
           document.body.style.top = '0px';
