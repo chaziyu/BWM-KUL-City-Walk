@@ -29,6 +29,6 @@ export function applyBadgeStatus({ statusDisplay, captionDisplay, statusStamp, c
     : `"${strings.game.badgeCaptions.partial(count)}"`;
 
   statusStamp.innerHTML = isComplete
-    ? '<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>COMPLETED</div>'
-    : `<div class="text-red-900/80 text-[9px] font-bold text-center uppercase leading-tight">BWM<br>Kuala Lumpur<br>${count}/${total} VISITED</div>`;
+    ? '<div class="text-red-900/80 text-[10px] font-sans font-bold text-center uppercase leading-tight">BWM KL<br>DONE</div>'
+    : `<div class="text-red-900/80 text-[10px] font-sans font-bold text-center uppercase leading-tight">BWM KL<br>${count}/${total}</div>`;
 }
