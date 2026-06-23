@@ -174,7 +174,7 @@ The **Project Admin (Prototype)** area demonstrates a proposed organiser workflo
 
 ### Current AI Chat Contract
 
-The serverless chat endpoint retrieves 1-3 relevant verified sites for general questions, or uses the current site for site-specific chat. The server asks the GenAI SDK to return structured JSON, then validates source IDs against `data/sites.json` before returning:
+The serverless chat endpoint retrieves 1-3 relevant verified sites for general questions, or uses the current site for site-specific chat. Ask AI from a heritage site opens the same chat box and records the exchange in the shared AI history, while the request still keeps the site context for grounding. The server asks the GenAI SDK to return structured JSON, then validates source IDs against `data/sites.json` before returning:
 
 ```json
 {
@@ -298,6 +298,7 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 ## Recent Maintenance Updates
 
 - Completed Phase 7 grounded AI chat: site-scoped prompts, lexical retrieval, structured Gemini JSON validation, source chips, and answer caching.
+- Ask AI now stores site-triggered questions in the shared AI chat history so reopening the chat does not hide earlier site prompts.
 - Hardened AI chat rendering by sanitizing Markdown before inserting it into the DOM.
 - Added server-side chat input limits, history normalization, same-origin checks, signed-session authorization, and rate limiting.
 - Removed public interview codes and replaced them with direct Explore Demo access.

@@ -75,7 +75,7 @@ export function createChatController({
   }
 
   function loadHistory() {
-    ui.loadHistory(getScopedHistory());
+    ui.loadHistory(getHistory());
   }
 
   function updateCount() {
