@@ -2,6 +2,7 @@ export function createPolygonRenderer({
   L,
   polygonsLayer,
   onSiteSelected,
+  onSiteUnselected,
   getIsCompleted,
   getSiteColors,
   visitedColor,
@@ -59,6 +60,7 @@ export function createPolygonRenderer({
       });
       polygon.bindPopup(createPopupContent(site));
       polygon.on('click', () => onSiteSelected(site));
+      polygon.on('popupclose', () => onSiteUnselected?.(site));
       polygonsLayer.addLayer(polygon);
       polygons[site.id] = polygon;
       updateVisitedState(site, getIsCompleted(site.id));

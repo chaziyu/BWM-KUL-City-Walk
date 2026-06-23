@@ -29,6 +29,7 @@ export function createMapController({
   let geolocation = null;
   let allSites = [];
   let destroyed = false;
+  let briefPopupSiteId = null;
   const mapFilter = createMapFilter();
 
   function getVisibleSiteIds() {
@@ -84,13 +85,31 @@ export function createMapController({
     markerRenderer = createMarkerRenderer({
       L,
       markersLayer,
-      onSiteSelected,
+      onSiteSelected: (site) => {
+        if (briefPopupSiteId === String(site.id)) {
+          onSiteSelected(site);
+          return;
+        }
+        briefPopupSiteId = String(site.id);
+      },
+      onSiteUnselected: (site) => {
+        if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
+      },
       getIsCompleted,
     });
     polygonRenderer = createPolygonRenderer({
       L,
       polygonsLayer,
-      onSiteSelected,
+      onSiteSelected: (site) => {
+        if (briefPopupSiteId === String(site.id)) {
+          onSiteSelected(site);
+          return;
+        }
+        briefPopupSiteId = String(site.id);
+      },
+      onSiteUnselected: (site) => {
+        if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
+      },
       getIsCompleted,
       getSiteColors,
       polygonOpacity: POLYGON_OPACITY,
@@ -139,6 +158,7 @@ export function createMapController({
     markersLayer = null;
     polygonsLayer = null;
     allSites = [];
+    briefPopupSiteId = null;
   }
 
   return {

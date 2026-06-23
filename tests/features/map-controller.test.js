@@ -97,14 +97,15 @@ describe('map controller', () => {
       },
     }];
 
+    const onSiteSelected = vi.fn();
     const controller = createMapController({
       L,
       loadSites: () => Promise.resolve(sites),
       getIsCompleted: () => false,
-      onSiteSelected: vi.fn(),
+      onSiteSelected,
     });
 
-    return { controller, groups, mapLayers, markers, polygons };
+    return { controller, groups, mapLayers, markers, onSiteSelected, polygons };
   }
 
   it('shows filtered markers below the polygon threshold', async () => {
@@ -148,5 +149,26 @@ describe('map controller', () => {
 
     expect(map.zoomIn).toHaveBeenCalledOnce();
     expect(map.zoomOut).toHaveBeenCalledOnce();
+  });
+
+  it('opens brief popup first, then details on repeat site click', async () => {
+    const { controller, markers, onSiteSelected } = setup(15);
+
+    await controller.initMap();
+    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
+    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
+
+    expect(onSiteSelected).toHaveBeenCalledOnce();
+  });
+
+  it('shows brief again after the popup closes', async () => {
+    const { controller, markers, onSiteSelected } = setup(15);
+
+    await controller.initMap();
+    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
+    markers[0].on.mock.calls.find(([event]) => event === 'popupclose')[1]();
+    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
+
+    expect(onSiteSelected).not.toHaveBeenCalled();
   });
 });

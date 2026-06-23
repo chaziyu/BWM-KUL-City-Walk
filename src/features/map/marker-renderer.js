@@ -1,4 +1,4 @@
-export function createMarkerRenderer({ L, markersLayer, onSiteSelected, getIsCompleted }) {
+export function createMarkerRenderer({ L, markersLayer, onSiteSelected, onSiteUnselected, getIsCompleted }) {
   const markers = {};
 
   function createPopupContent(site) {
@@ -46,6 +46,7 @@ export function createMarkerRenderer({ L, markersLayer, onSiteSelected, getIsCom
         updateVisitedState(event.target, event.target.options.isVisited);
       });
       marker.on('click', () => onSiteSelected(site));
+      marker.on('popupclose', () => onSiteUnselected?.(site));
       markersLayer.addLayer(marker);
       markers[site.id] = marker;
     });

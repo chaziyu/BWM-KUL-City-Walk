@@ -78,7 +78,7 @@ const mapController = createMapController({
   L: window.L,
   loadSites: loadSiteData,
   getIsCompleted: (siteId) => progressService.isCompleted(siteId),
-  onSiteSelected: (site) => mapPreview.open(site),
+  onSiteSelected: (site) => siteModalController.open(site),
   onSitesLoaded: (sites) => {
     allSiteData = sites;
     mainSites = sites.filter((site) => /^\d+$/.test(String(site.id)));
