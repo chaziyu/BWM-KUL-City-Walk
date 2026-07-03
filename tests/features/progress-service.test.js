@@ -11,10 +11,10 @@ describe('progress service', () => {
       getNamespace: () => 'visitor',
     });
     service.setMainSites([
-      { id: '1' },
-      { id: 2 },
-      { id: '3' },
-      { id: 'A' },
+      { id: '1', category: 'must_visit' },
+      { id: 2, category: 'must_visit' },
+      { id: '3', category: 'must_visit' },
+      { id: 'A', category: 'recommended' },
     ]);
   });
 

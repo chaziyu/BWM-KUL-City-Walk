@@ -1,3 +1,4 @@
+import { isMainSite } from './site-classification.js';
 import { buildMoreInfoHtml, renderQuizOptions, renderSiteBasics } from './site-renderer.js';
 
 function shuffle(items) {
@@ -80,7 +81,7 @@ export function createSiteModalController({
   }
 
   function renderQuiz(site) {
-    if (!site.quiz || !/^\d+$/.test(String(site.id))) {
+    if (!site.quiz || !isMainSite(site)) {
       elements.quizArea.style.display = 'none';
       elements.checkIn.style.display = 'block';
 
@@ -160,7 +161,6 @@ export function createSiteModalController({
 
   return {
     bind,
-    getCurrentSite: () => currentSite,
     open,
     render,
   };

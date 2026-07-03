@@ -21,6 +21,7 @@ import { createOnboardingController } from './src/features/onboarding/onboarding
 import { createPassportController } from './src/features/passport/passport-controller.js';
 import { createProgressService } from './src/features/passport/progress-service.js';
 import { createSiteActions } from './src/features/sites/site-actions.js';
+import { isMainSite } from './src/features/sites/site-classification.js';
 import { loadSiteData } from './src/features/sites/site-data.js';
 import { createSiteModalController } from './src/features/sites/site-modal.js';
 import { createTranslationController } from './src/features/translation/translation-controller.js';
@@ -81,7 +82,7 @@ const mapController = createMapController({
   onSiteSelected: (site) => siteModalController.open(site),
   onSitesLoaded: (sites) => {
     allSiteData = sites;
-    mainSites = sites.filter((site) => /^\d+$/.test(String(site.id)));
+    mainSites = sites.filter(isMainSite);
     progressService.setMainSites(mainSites);
     passportController.refreshProgress();
   },

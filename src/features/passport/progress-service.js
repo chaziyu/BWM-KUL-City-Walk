@@ -1,3 +1,4 @@
+import { isMainSite } from '../sites/site-classification.js';
 import {
   readScopedJSON,
   writeScopedJSON,
@@ -29,7 +30,7 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
   function setMainSites(sites) {
     mainSiteIds = uniqueIds(
       (sites || [])
-        .filter((site) => /^\d+$/.test(String(site.id)))
+        .filter(isMainSite)
         .map((site) => site.id),
     );
     return emitChanged();
@@ -91,8 +92,6 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
   return {
     getCompletionState,
     getDiscoveredSites: () => [...discoveredSites],
-    getMainSiteIds: () => [...mainSiteIds],
-    getVisitedSites: () => [...visitedSites],
     isCompleted,
     load,
     recordCheckIn,

@@ -11,8 +11,8 @@ describe('Passport Logic', () => {
     const visitor = createProgressService({ getNamespace: () => 'visitor' });
     const demo = createProgressService({ getNamespace: () => 'demo' });
 
-    visitor.setMainSites([{ id: '1' }]);
-    demo.setMainSites([{ id: '1' }]);
+    visitor.setMainSites([{ id: '1', category: 'must_visit' }]);
+    demo.setMainSites([{ id: '1', category: 'must_visit' }]);
     visitor.recordCheckIn('1');
     demo.load();
 

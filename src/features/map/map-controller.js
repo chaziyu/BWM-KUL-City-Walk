@@ -1,4 +1,5 @@
 import { DEFAULT_CENTER, POLYGON_OPACITY, ZOOM_THRESHOLD } from '../../config/app-config.js';
+import { isMainSite } from '../sites/site-classification.js';
 import { createGeolocationController } from './geolocation.js';
 import { createMapFilter } from './map-filter.js';
 import { createMarkerRenderer } from './marker-renderer.js';
@@ -7,7 +8,7 @@ import { createPolygonRenderer } from './polygon-renderer.js';
 const VISITED_POLYGON_COLOR = '#007bff';
 
 export function getSiteColors(site) {
-  if (/^\d+$/.test(String(site.id))) {
+  if (isMainSite(site)) {
     return { markerColor: '#A0522D', fillColor: '#DEB887', className: 'main-marker-pin' };
   }
 
@@ -145,7 +146,7 @@ export function createMapController({
       geolocation = createGeolocationController({
         L,
         map,
-        getMainSites: () => allSites.filter((site) => /^\d+$/.test(String(site.id))),
+        getMainSites: () => allSites.filter(isMainSite),
         isCompleted: getIsCompleted,
       });
 
