@@ -8,20 +8,34 @@ function normalizeSite(site) {
   };
 }
 
+async function fetchAndValidateSites() {
+  const response = await fetch(new URL('../../../data/sites.json', import.meta.url));
+  if (!response.ok) {
+    throw new Error(`Failed to load sites: ${response.status} ${response.statusText}`);
+  }
+  const sites = await response.json();
+  if (!Array.isArray(sites)) {
+    throw new Error('Fetched sites data must be an array');
+  }
+  return sites.map(normalizeSite);
+}
+
 export async function loadSiteData() {
   if (siteCache) return siteCache;
   if (loadPromise) return loadPromise;
 
-  loadPromise = fetch(new URL('../../../data/sites.json', import.meta.url))
-    .then((response) => response.json())
-    .then((sites) => {
-      siteCache = (sites || []).map(normalizeSite);
-      return siteCache;
-    });
+  loadPromise = fetchAndValidateSites();
 
-  return loadPromise;
+  try {
+    siteCache = await loadPromise;
+    return siteCache;
+  } finally {
+    loadPromise = null;
+  }
 }
 
-export function getCachedSiteData() {
-  return siteCache || [];
+export function resetSiteCache() {
+  siteCache = null;
+  loadPromise = null;
 }
+
