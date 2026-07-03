@@ -171,4 +171,95 @@ describe('map controller', () => {
 
     expect(onSiteSelected).not.toHaveBeenCalled();
   });
+
+  it('cleans up and leaves getMap() as null when map startup fails during data loading', async () => {
+    const mapLayers = new Set();
+    const mapObj = {
+      addLayer: (layer) => mapLayers.add(layer),
+      getZoom: () => 16,
+      hasLayer: (layer) => mapLayers.has(layer),
+      locate: vi.fn(),
+      off: vi.fn(),
+      on: vi.fn(),
+      remove: vi.fn(),
+      removeLayer: (layer) => mapLayers.delete(layer),
+      setView: vi.fn(() => mapObj),
+      stopLocate: vi.fn(),
+    };
+    const L = {
+      layerGroup: vi.fn(() => createLayer()),
+      map: vi.fn(() => mapObj),
+      circle: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+      })),
+      divIcon: vi.fn((options) => options),
+      marker: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+        bindPopup() { return this; },
+        bindTooltip() { return this; },
+        on: vi.fn(),
+        options: {},
+      })),
+      polygon: vi.fn(() => ({ bindPopup: vi.fn(), on: vi.fn(), setStyle: vi.fn() })),
+      tileLayer: vi.fn(() => ({ addTo: vi.fn() })),
+    };
+
+    const controller = createMapController({
+      L,
+      loadSites: () => Promise.reject(new Error('Network error')),
+      getIsCompleted: () => false,
+      onSiteSelected: vi.fn(),
+    });
+
+    await expect(controller.initMap()).rejects.toThrow('Network error');
+    expect(controller.getMap()).toBeNull();
+    expect(mapObj.remove).not.toHaveBeenCalled();
+  });
+
+  it('cleans up and removes map when setup fails after map is created', async () => {
+    const mapLayers = new Set();
+    const mapObj = {
+      addLayer: (layer) => mapLayers.add(layer),
+      getZoom: () => 16,
+      hasLayer: (layer) => mapLayers.has(layer),
+      locate: vi.fn(),
+      off: vi.fn(),
+      on: vi.fn(),
+      remove: vi.fn(),
+      removeLayer: (layer) => mapLayers.delete(layer),
+      setView: vi.fn(() => mapObj),
+      stopLocate: vi.fn(),
+    };
+    const L = {
+      layerGroup: vi.fn(() => createLayer()),
+      map: vi.fn(() => mapObj),
+      circle: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+      })),
+      divIcon: vi.fn((options) => options),
+      marker: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+        bindPopup() { return this; },
+        bindTooltip() { return this; },
+        on: vi.fn(),
+        options: {},
+      })),
+      polygon: vi.fn(() => ({ bindPopup: vi.fn(), on: vi.fn(), setStyle: vi.fn() })),
+      tileLayer: vi.fn(() => ({ addTo: vi.fn() })),
+    };
+
+    const controller = createMapController({
+      L,
+      loadSites: () => Promise.resolve([]),
+      getIsCompleted: () => false,
+      onSiteSelected: vi.fn(),
+      onSitesLoaded: () => {
+        throw new Error('Render error');
+      },
+    });
+
+    await expect(controller.initMap()).rejects.toThrow('Render error');
+    expect(controller.getMap()).toBeNull();
+    expect(mapObj.remove).toHaveBeenCalledOnce();
+  });
 });
