@@ -18,56 +18,107 @@ const rateBuckets = new Map();
 const quotaBuckets = new Map();
 
 /**
- * Validates against a sliding window rate limit.
- * @param {string} key Identifier (e.g., IP address)
- * @param {number} maxRequests Max requests allowed in the window
- * @param {number} windowMs Window length in milliseconds
- * @returns {Promise<boolean>} True if rate limited (exceeded max)
+ * Atomic sliding window rate limiter backed by Upstash Redis (production) or memory (dev/test).
+ * @param {string} key Identifier
+ * @param {number} maxRequests Limit of requests in the window
+ * @param {number} windowMs Window duration in milliseconds
+ * @returns {Promise<{allowed: boolean, remaining: number, resetAt: number}>} Limiter state
  */
-async function isRateLimited(key, maxRequests, windowMs) {
+async function rateLimit(key, maxRequests, windowMs) {
     const now = Date.now();
-    
+
     if (redis) {
         try {
-            // Redis sorted set approach for sliding window
             const redisKey = `ratelimit:${key}`;
-            const windowStart = now - windowMs;
-            
-            const pipeline = redis.pipeline();
-            pipeline.zremrangebyscore(redisKey, 0, windowStart);
-            pipeline.zcard(redisKey);
-            pipeline.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` });
-            pipeline.pexpire(redisKey, windowMs);
-            
-            const results = await pipeline.exec();
-            const count = results[1]; // The zcard result
-            
-            return count >= maxRequests;
+            const result = await redis.eval(
+                `
+                local key = KEYS[1]
+                local now = tonumber(ARGV[1])
+                local windowMs = tonumber(ARGV[2])
+                local maxRequests = tonumber(ARGV[3])
+                local clearBefore = now - windowMs
+
+                redis.call('ZREMRANGEBYSCORE', key, 0, clearBefore)
+                local count = redis.call('ZCARD', key)
+
+                local allowed = 0
+                local remaining = 0
+
+                if count < maxRequests then
+                    allowed = 1
+                    local member = tostring(now) .. '-' .. tostring(math.random())
+                    redis.call('ZADD', key, now, member)
+                    redis.call('PEXPIRE', key, windowMs)
+                    remaining = maxRequests - count - 1
+                else
+                    allowed = 0
+                    remaining = 0
+                end
+
+                local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+                local resetAt = now + windowMs
+                if oldest and oldest[2] then
+                    resetAt = tonumber(oldest[2]) + windowMs
+                end
+
+                return { allowed, remaining, resetAt }
+                `,
+                [redisKey],
+                [now, windowMs, maxRequests]
+            );
+
+            return {
+                allowed: result[0] === 1,
+                remaining: result[1],
+                resetAt: result[2]
+            };
         } catch (error) {
-            console.error('Redis rate limiting error, falling back to memory:', error);
+            console.error('Redis rate limiting error:', error);
+            const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+            if (!isDevOrTest) {
+                throw error;
+            }
+        }
+    } else {
+        const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+        if (!isDevOrTest) {
+            throw new Error('Redis rate limit backend is unavailable in production.');
         }
     }
 
-    // In-memory fallback
+    // In-memory sliding window fallback (only permitted in dev/test)
     const bucket = rateBuckets.get(key) || [];
     const recent = bucket.filter(timestamp => now - timestamp < windowMs);
+    const allowed = recent.length < maxRequests;
+    let remaining = 0;
 
-    if (recent.length >= maxRequests) {
+    if (allowed) {
+        recent.push(now);
         rateBuckets.set(key, recent);
-        return true;
+        remaining = maxRequests - recent.length;
     }
 
-    recent.push(now);
-    rateBuckets.set(key, recent);
-    return false;
+    const oldestTimestamp = recent[0] || now;
+    const resetAt = oldestTimestamp + windowMs;
+
+    return {
+        allowed,
+        remaining,
+        resetAt
+    };
+}
+
+/**
+ * Backward-compatible rate limiter checking function.
+ * @returns {Promise<boolean>} True if rate limited
+ */
+async function isRateLimited(key, maxRequests, windowMs) {
+    const result = await rateLimit(key, maxRequests, windowMs);
+    return !result.allowed;
 }
 
 /**
  * Validates against a quota limit for a given key over a fixed duration.
- * @param {string} key Unique identifier for the quota bucket (e.g., session + date)
- * @param {number} maxQuota Max items allowed in the quota
- * @param {number} expireMs Optional expiration for the quota bucket
- * @returns {Promise<boolean>} True if quota exceeded
  */
 async function isQuotaExceeded(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
     if (maxQuota <= 0) return true;
@@ -142,6 +193,7 @@ function resetMemoryBucketsForTests() {
 module.exports = {
     consumeQuota,
     getQuotaRemaining,
+    rateLimit,
     isRateLimited,
     isQuotaExceeded,
     refundQuota,

@@ -3,7 +3,7 @@ const {
     getSafeSessionDetails,
     setSessionCookie
 } = require('../_shared/session');
-const { isRateLimited } = require('../_shared/rate-limit');
+const { rateLimit } = require('../_shared/rate-limit');
 
 function getTodayString() {
     return new Date().toLocaleDateString('en-GB', {
@@ -53,8 +53,17 @@ module.exports = async (request, response) => {
         const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
         
         // Rate limit: Max 10 attempts per IP per 10 minutes
-        const isLimited = await isRateLimited(`login:visitor:${ip}`, 10, 10 * 60 * 1000);
-        if (isLimited) {
+        let limitResult;
+        try {
+            limitResult = await rateLimit(`login:visitor:${ip}`, 10, 10 * 60 * 1000);
+        } catch (error) {
+            console.error('Rate limiting backend failure:', error);
+            return response.status(503).json({ error: 'The access service is temporarily unavailable. Please try again shortly.' });
+        }
+
+        if (!limitResult.allowed) {
+            const retryAfter = Math.max(1, Math.ceil((limitResult.resetAt - Date.now()) / 1000));
+            response.setHeader('Retry-After', String(retryAfter));
             return response.status(429).json({ error: 'Too many attempts. Please try again later.' });
         }
 

@@ -2,7 +2,7 @@
 const { GoogleGenAI } = require("@google/genai");
 
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
-const { consumeQuota, getQuotaRemaining, isRateLimited } = require('./_shared/rate-limit');
+const { consumeQuota, getQuotaRemaining, rateLimit } = require('./_shared/rate-limit');
 const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
 const { buildPrompt } = require('./_shared/ai/build-prompt');
 const { retrieveSites } = require('./_shared/ai/retrieve-sites');
@@ -60,7 +60,7 @@ function getClientKey(request) {
 }
 
 async function checkRateLimit(key) {
-    return await isRateLimited(`chat:${key}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
+    return await rateLimit(`chat:${key}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
 }
 
 function getQuotaWindow(session) {
@@ -147,6 +147,22 @@ module.exports = async (request, response) => {
     if (!contextSites.length) {
         return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
     }
+
+    const clientKey = getClientKey(request);
+    let limitResult;
+    try {
+        limitResult = await checkRateLimit(clientKey);
+    } catch (error) {
+        console.error('Rate limiting backend failure:', error);
+        return response.status(503).json({ reply: 'The access service is temporarily unavailable. Please try again shortly.' });
+    }
+
+    if (!limitResult.allowed) {
+        const retryAfter = Math.max(1, Math.ceil((limitResult.resetAt - Date.now()) / 1000));
+        response.setHeader('Retry-After', String(retryAfter));
+        return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
+    }
+
     const cacheKey = buildCacheKey({
         contextType: context?.type === 'site' ? 'site' : 'general',
         siteIds: contextSites.map(site => site.id),
@@ -163,11 +179,6 @@ module.exports = async (request, response) => {
             notFound: cached.notFound,
             remainingQuota,
         });
-    }
-
-    const clientKey = getClientKey(request);
-    if (await checkRateLimit(clientKey)) {
-        return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
     }
 
     const cleanHistory = normalizeHistory(history);
