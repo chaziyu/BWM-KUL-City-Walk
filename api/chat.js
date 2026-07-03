@@ -3,6 +3,8 @@ const { GoogleGenAI } = require("@google/genai");
 
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
 const { consumeQuota, getQuotaRemaining, rateLimit } = require('./_shared/rate-limit');
+const { enforceSameOrigin } = require('./_shared/request-security');
+const { withTimeout } = require('./_shared/http');
 const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
 const { buildPrompt } = require('./_shared/ai/build-prompt');
 const { retrieveSites } = require('./_shared/ai/retrieve-sites');
@@ -37,20 +39,7 @@ function normalizeHistory(history) {
     }).filter(Boolean);
 }
 
-function isSameOrigin(request) {
-    const host = request.headers.host;
-    const origin = request.headers.origin;
-    const referer = request.headers.referer;
 
-    try {
-        if (origin && new URL(origin).host === host) return true;
-        if (referer && new URL(referer).host === host) return true;
-    } catch (e) {
-        return false;
-    }
-
-    return false;
-}
 
 function getClientKey(request) {
     const forwardedFor = request.headers['x-forwarded-for'];
@@ -125,9 +114,7 @@ module.exports = async (request, response) => {
         return response.status(405).json({ error: 'Method not allowed' });
     }
 
-    if (!isSameOrigin(request)) {
-        return response.status(403).json({ reply: 'Chat access is only available from the app.' });
-    }
+    if (!enforceSameOrigin(request, response)) return;
 
     const session = getSessionFromRequest(request);
     if (!session || !['demo', 'visitor', 'admin'].includes(session.role)) {
@@ -199,10 +186,21 @@ module.exports = async (request, response) => {
             "gemini-2.5-flash"
         ];
 
+        const startTime = Date.now();
+        const TOTAL_TIMEOUT_MS = 18000;
+        const deadline = startTime + TOTAL_TIMEOUT_MS;
+
         let contract = null;
         let lastError = null;
 
         for (const modelName of MODELS) {
+            const remainingTime = deadline - Date.now();
+            if (remainingTime <= 0) {
+                const err = new Error('Service took too long; please retry');
+                err.status = 504;
+                throw err;
+            }
+
             try {
                 const chat = client.chats.create({
                     model: modelName,
@@ -213,22 +211,26 @@ module.exports = async (request, response) => {
                     history: cleanHistory
                 });
 
-                const result = await chat.sendMessage({
-                    message: cleanQuery
-                });
+                const result = await withTimeout(
+                    chat.sendMessage({ message: cleanQuery }),
+                    remainingTime
+                );
 
                 const text = (typeof result.text === 'function') ? result.text() : result.text;
                 contract = validateResponse(parseModelResponse(text), contextSites);
                 break;
 
             } catch (error) {
-                console.warn(`Fallback: Model ${modelName} failed.`, error.message);
+                console.warn(`Fallback: Model ${modelName} failed.`, error.message || error);
                 lastError = error;
+                if (error.status === 504 || error.name === 'TimeoutError') {
+                    throw error;
+                }
             }
         }
 
         if (!contract) {
-            console.error('All models failed. Last error:', lastError);
+            console.error('All models failed. Last error:', lastError?.message || lastError);
             throw lastError || new Error("All models failed to respond.");
         }
 
@@ -253,7 +255,10 @@ module.exports = async (request, response) => {
         });
 
     } catch (error) {
-        console.error('Google GenAI SDK Error:', error);
+        console.error('Google GenAI SDK Error:', error.message || error);
+        if (error.status === 504 || error.name === 'TimeoutError') {
+            return response.status(504).json({ reply: "Service took too long; please retry" });
+        }
         if (context?.type === 'site' && contextSites[0]) {
             return response.status(200).json(buildSiteFallback(contextSites[0], remainingQuota));
         }

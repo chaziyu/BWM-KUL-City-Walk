@@ -213,4 +213,17 @@ describe('chat API quota ordering', () => {
     expect(gemini.create.mock.calls[0][0].config.temperature).toBe(0.2);
     expect(gemini.create.mock.calls[0][0].config.systemInstruction).toContain('Return only JSON');
   });
+
+  it('returns 504 when Gemini model calls time out', async () => {
+    const cookie = createCookie();
+    
+    const timeoutError = new Error('Service took too long; please retry');
+    timeoutError.name = 'TimeoutError';
+    timeoutError.status = 504;
+    gemini.sendMessage.mockRejectedValue(timeoutError);
+
+    const result = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+    expect(result.statusCode).toBe(504);
+    expect(result.body.reply).toBe('Service took too long; please retry');
+  });
 });

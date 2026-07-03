@@ -4,6 +4,7 @@ const {
     setSessionCookie
 } = require('../_shared/session');
 const { rateLimit } = require('../_shared/rate-limit');
+const { fetchJsonWithTimeout } = require('../_shared/http');
 
 function getTodayString() {
     return new Date().toLocaleDateString('en-GB', {
@@ -19,20 +20,17 @@ async function validateWithAppsScript(passkey, deviceId) {
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
     if (!scriptUrl) return null;
 
-    const scriptResponse = await fetch(scriptUrl, {
+    return await fetchJsonWithTimeout(scriptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ passkey, deviceId })
-    });
-
-    if (!scriptResponse.ok) {
-        return { success: false, error: 'Could not validate passkey.' };
-    }
-
-    return scriptResponse.json();
+    }, 8000);
 }
 
+const { enforceSameOrigin } = require('../_shared/request-security');
+
 module.exports = async (request, response) => {
+    if (!enforceSameOrigin(request, response)) return;
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
     }
@@ -82,7 +80,13 @@ module.exports = async (request, response) => {
         setSessionCookie(response, session, maxAge);
         return response.status(200).json(getSafeSessionDetails(session));
     } catch (error) {
-        console.error('Error creating visitor session:', error);
+        console.error('Error creating visitor session:', error.message || error);
+        if (error.status === 504) {
+            return response.status(504).json({ error: 'Service took too long; please retry' });
+        }
+        if (error.status === 502) {
+            return response.status(502).json({ error: 'Service could not complete the request' });
+        }
         return response.status(500).json({ error: 'Server error during passkey validation.' });
     }
 };

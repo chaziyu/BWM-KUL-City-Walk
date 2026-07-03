@@ -1,4 +1,5 @@
 const { requireRole } = require('../_shared/session');
+const { fetchJsonWithTimeout } = require('../_shared/http');
 
 function getTodayString() {
     return new Date().toLocaleDateString('en-GB', {
@@ -6,7 +7,10 @@ function getTodayString() {
     });
 }
 
+const { enforceSameOrigin } = require('../_shared/request-security');
+
 module.exports = async (request, response) => {
+    if (!enforceSameOrigin(request, response)) return;
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
     }
@@ -22,7 +26,7 @@ module.exports = async (request, response) => {
         let generatedCode = null;
 
         if (scriptUrl && adminPassword) {
-            const genResponse = await fetch(scriptUrl, {
+            const genResult = await fetchJsonWithTimeout(scriptUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
@@ -30,15 +34,10 @@ module.exports = async (request, response) => {
                     passkey: adminPassword,
                     deviceId: 'ADMIN_DEVICE'
                 })
-            });
+            }, 8000);
 
-            if (!genResponse.ok) {
-                return response.status(502).json({ error: 'Passkey service did not respond.' });
-            }
-
-            const genResult = await genResponse.json();
-            if (!genResult.success) {
-                return response.status(502).json({ error: genResult.error || 'Passkey generation failed.' });
+            if (!genResult?.success) {
+                return response.status(502).json({ error: genResult?.error || 'Passkey generation failed.' });
             }
             generatedCode = genResult.code || genResult.passkey;
         }
@@ -55,7 +54,13 @@ module.exports = async (request, response) => {
             date: getTodayString()
         });
     } catch (error) {
-        console.error('Error generating passkey:', error);
+        console.error('Error generating passkey:', error.message || error);
+        if (error.status === 504) {
+            return response.status(504).json({ error: 'Service took too long; please retry' });
+        }
+        if (error.status === 502) {
+            return response.status(502).json({ error: 'Service could not complete the request' });
+        }
         return response.status(500).json({ error: 'Server error during passkey generation.' });
     }
 };
