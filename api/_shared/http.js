@@ -2,9 +2,9 @@
 
 /**
  * Executes a fetch request with a bounded timeout.
- * @param {string} url 
- * @param {object} options 
- * @param {number} timeoutMs 
+ * @param {string} url
+ * @param {object} options
+ * @param {number} timeoutMs
  * @returns {Promise<Response>}
  */
 async function fetchWithTimeout(url, options = {}, timeoutMs) {
@@ -31,9 +31,9 @@ async function fetchWithTimeout(url, options = {}, timeoutMs) {
 
 /**
  * Executes a fetch request, parses JSON, and enforces timeouts and upstream error handling.
- * @param {string} url 
- * @param {object} options 
- * @param {number} timeoutMs 
+ * @param {string} url
+ * @param {object} options
+ * @param {number} timeoutMs
  * @returns {Promise<any>}
  */
 async function fetchJsonWithTimeout(url, options = {}, timeoutMs) {
@@ -68,8 +68,8 @@ async function fetchJsonWithTimeout(url, options = {}, timeoutMs) {
 
 /**
  * Wraps a promise with a timeout.
- * @param {Promise<any>} promise 
- * @param {number} timeoutMs 
+ * @param {Promise<any>} promise
+ * @param {number} timeoutMs
  * @returns {Promise<any>}
  */
 function withTimeout(promise, timeoutMs) {

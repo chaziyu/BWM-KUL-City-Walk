@@ -31,7 +31,7 @@ describe('site data loader', () => {
       });
 
     await expect(loadSiteData()).rejects.toThrow('Failed to load sites');
-    
+
     const sites = await loadSiteData();
     expect(sites).toEqual([{ id: '100', category: 'must_visit', name: 'Site A' }]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -49,7 +49,7 @@ describe('site data loader', () => {
       });
 
     await expect(loadSiteData()).rejects.toThrow('Fetched sites data must be an array');
-    
+
     const sites = await loadSiteData();
     expect(sites).toEqual([{ id: '200', category: 'recommended', name: 'Site B' }]);
     expect(fetchMock).toHaveBeenCalledTimes(2);

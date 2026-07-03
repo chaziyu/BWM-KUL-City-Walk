@@ -49,7 +49,9 @@ function getClientKey(request) {
 }
 
 async function checkRateLimit(key) {
-    return await rateLimit(`chat:${key}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
+    const max = process.env.CHAT_RATE_LIMIT_MAX !== undefined ? Number(process.env.CHAT_RATE_LIMIT_MAX) : RATE_LIMIT_MAX;
+    const windowMs = process.env.CHAT_RATE_LIMIT_WINDOW_MS !== undefined ? Number(process.env.CHAT_RATE_LIMIT_WINDOW_MS) : RATE_LIMIT_WINDOW_MS;
+    return await rateLimit(`chat:${key}`, max, windowMs);
 }
 
 function getQuotaWindow(session) {
@@ -127,20 +129,12 @@ module.exports = async (request, response) => {
         return response.status(400).json({ reply: 'Please enter a question.' });
     }
 
-    const contextSites = getContextSites(context, cleanQuery);
-    const limit = ROLE_LIMITS[session.role] || 0;
-    const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
-    const remainingQuota = await getQuotaRemaining(quotaKey, limit);
-    if (!contextSites.length) {
-        return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
-    }
-
     const clientKey = getClientKey(request);
     let limitResult;
     try {
         limitResult = await checkRateLimit(clientKey);
     } catch (error) {
-        console.error('Rate limiting backend failure:', error);
+        console.error('Rate limiting backend failure:', error?.message || 'Unknown error');
         return response.status(503).json({ reply: 'The access service is temporarily unavailable. Please try again shortly.' });
     }
 
@@ -148,6 +142,22 @@ module.exports = async (request, response) => {
         const retryAfter = Math.max(1, Math.ceil((limitResult.resetAt - Date.now()) / 1000));
         response.setHeader('Retry-After', String(retryAfter));
         return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
+    }
+
+    const contextSites = getContextSites(context, cleanQuery);
+    const limit = ROLE_LIMITS[session.role] || 0;
+    const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+
+    let remainingQuota;
+    try {
+        remainingQuota = await getQuotaRemaining(quotaKey, limit);
+    } catch (error) {
+        console.error('Quota backend failure:', error?.message || 'Unknown error');
+        return response.status(503).json({ reply: 'The access service is temporarily unavailable. Please try again shortly.' });
+    }
+
+    if (!contextSites.length) {
+        return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
     }
 
     const cacheKey = buildCacheKey({
@@ -221,7 +231,7 @@ module.exports = async (request, response) => {
                 break;
 
             } catch (error) {
-                console.warn(`Fallback: Model ${modelName} failed.`, error.message || error);
+                console.warn(`Fallback: Model ${modelName} failed.`, error?.message || 'Unknown error');
                 lastError = error;
                 if (error.status === 504 || error.name === 'TimeoutError') {
                     throw error;
@@ -230,12 +240,18 @@ module.exports = async (request, response) => {
         }
 
         if (!contract) {
-            console.error('All models failed. Last error:', lastError?.message || lastError);
+            console.error('All models failed. Last error:', lastError?.message || 'Unknown error');
             throw lastError || new Error("All models failed to respond.");
         }
 
         if (!contract.notFound) {
-            const quota = await consumeQuota(quotaKey, limit);
+            let quota;
+            try {
+                quota = await consumeQuota(quotaKey, limit);
+            } catch (error) {
+                console.error('Quota backend failure during consumption:', error?.message || 'Unknown error');
+                return response.status(503).json({ reply: 'The access service is temporarily unavailable. Please try again shortly.' });
+            }
             if (quota.exceeded) {
                 return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.', remainingQuota: quota.remaining });
             }
@@ -255,7 +271,7 @@ module.exports = async (request, response) => {
         });
 
     } catch (error) {
-        console.error('Google GenAI SDK Error:', error.message || error);
+        console.error('Google GenAI SDK Error:', error?.message || 'Unknown error');
         if (error.status === 504 || error.name === 'TimeoutError') {
             return response.status(504).json({ reply: "Service took too long; please retry" });
         }

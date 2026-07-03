@@ -38,4 +38,3 @@ export function resetSiteCache() {
   siteCache = null;
   loadPromise = null;
 }
-

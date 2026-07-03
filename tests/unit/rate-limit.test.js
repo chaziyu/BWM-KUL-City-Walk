@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { rateLimit, resetMemoryBucketsForTests } from '../../api/_shared/rate-limit.js';
+import { rateLimit, isQuotaExceeded, getQuotaRemaining, refundQuota, resetMemoryBucketsForTests } from '../../api/_shared/rate-limit.js';
 
 describe('rateLimiter service', () => {
     beforeEach(() => {
@@ -56,7 +56,35 @@ describe('rateLimiter service', () => {
     it('fails-fast and throws an error when Redis is missing or fails in production', async () => {
         process.env.NODE_ENV = 'production';
         const key = 'test-ip-prod-fail';
-        
+
         await expect(rateLimit(key, 5, 1000)).rejects.toThrow();
+    });
+
+    it('fails-fast for quota functions in production', async () => {
+        process.env.NODE_ENV = 'production';
+        const key = 'test-quota-prod';
+
+        await expect(isQuotaExceeded(key, 5)).rejects.toThrow('Redis quota backend is unavailable in production.');
+        await expect(getQuotaRemaining(key, 5)).rejects.toThrow('Redis quota backend is unavailable in production.');
+        await expect(refundQuota(key)).rejects.toThrow('Redis quota backend is unavailable in production.');
+    });
+
+    it('uses memory fallback for quota functions in development and test environments', async () => {
+        process.env.NODE_ENV = 'test';
+        const key = 'test-quota-fallback';
+
+        // isQuotaExceeded returns false first (consumes 1)
+        expect(await isQuotaExceeded(key, 2)).toBe(false); // count = 1
+        expect(await getQuotaRemaining(key, 2)).toBe(1);
+
+        expect(await isQuotaExceeded(key, 2)).toBe(false); // count = 2
+        expect(await getQuotaRemaining(key, 2)).toBe(0);
+
+        expect(await isQuotaExceeded(key, 2)).toBe(true); // exceeds
+
+        // refund quota
+        await refundQuota(key); // count = 1
+        expect(await getQuotaRemaining(key, 2)).toBe(1);
+        expect(await isQuotaExceeded(key, 2)).toBe(false); // count = 2
     });
 });

@@ -262,4 +262,62 @@ describe('map controller', () => {
     expect(controller.getMap()).toBeNull();
     expect(mapObj.remove).toHaveBeenCalledOnce();
   });
+
+  it('collapses concurrent initMap calls into a single flight (one L.map call)', async () => {
+    const mapLayers = new Set();
+    const mapObj = {
+      addLayer: (layer) => mapLayers.add(layer),
+      getZoom: () => 16,
+      hasLayer: (layer) => mapLayers.has(layer),
+      locate: vi.fn(),
+      off: vi.fn(),
+      on: vi.fn(),
+      remove: vi.fn(),
+      removeLayer: (layer) => mapLayers.delete(layer),
+      setView: vi.fn(() => mapObj),
+      stopLocate: vi.fn(),
+      invalidateSize: vi.fn(),
+    };
+    const L = {
+      layerGroup: vi.fn(() => createLayer()),
+      map: vi.fn(() => mapObj),
+      circle: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+      })),
+      divIcon: vi.fn((options) => options),
+      marker: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
+        bindPopup() { return this; },
+        bindTooltip() { return this; },
+        on: vi.fn(),
+        options: {},
+      })),
+      polygon: vi.fn(() => ({ bindPopup: vi.fn(), on: vi.fn(), setStyle: vi.fn() })),
+      tileLayer: vi.fn(() => ({ addTo: vi.fn() })),
+    };
+
+    let resolveLoad;
+    const delayedLoad = new Promise((resolve) => {
+      resolveLoad = () => resolve([]);
+    });
+
+    const controller = createMapController({
+      L,
+      loadSites: () => delayedLoad,
+      getIsCompleted: () => false,
+      onSiteSelected: vi.fn(),
+    });
+
+    const initPromise1 = controller.initMap();
+    const initPromise2 = controller.initMap();
+
+    expect(initPromise1).toBe(initPromise2);
+
+    resolveLoad();
+    const [m1, m2] = await Promise.all([initPromise1, initPromise2]);
+
+    expect(m1).toBe(mapObj);
+    expect(m2).toBe(mapObj);
+    expect(L.map).toHaveBeenCalledOnce();
+  });
 });

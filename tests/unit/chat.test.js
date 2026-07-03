@@ -39,6 +39,10 @@ function createResponse() {
   return {
     body: null,
     statusCode: null,
+    headers: {},
+    setHeader(key, value) {
+      this.headers[key] = value;
+    },
     status(code) {
       this.statusCode = code;
       return this;
@@ -50,7 +54,7 @@ function createResponse() {
   };
 }
 
-async function postChat(cookie, body) {
+async function postChat(cookie, body, deviceId = randomUUID()) {
   const response = createResponse();
   await chatHandler({
     method: 'POST',
@@ -58,7 +62,7 @@ async function postChat(cookie, body) {
       cookie,
       host: 'app.test',
       origin: 'https://app.test',
-      'x-jejak-device': randomUUID(),
+      'x-jejak-device': deviceId,
     },
     body,
   }, response);
@@ -216,7 +220,7 @@ describe('chat API quota ordering', () => {
 
   it('returns 504 when Gemini model calls time out', async () => {
     const cookie = createCookie();
-    
+
     const timeoutError = new Error('Service took too long; please retry');
     timeoutError.name = 'TimeoutError';
     timeoutError.status = 504;
@@ -225,5 +229,53 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
     expect(result.statusCode).toBe(504);
     expect(result.body.reply).toBe('Service took too long; please retry');
+  });
+
+  it('returns 503 when quota backend fails in production', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    const originalSecret = process.env.SESSION_SECRET;
+    process.env.NODE_ENV = 'production';
+    process.env.SESSION_SECRET = 'test-secret-prod-12345678901234567890';
+    try {
+      const cookie = createCookie();
+      const result = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+      expect(result.statusCode).toBe(503);
+      expect(result.body.reply).toBe('The access service is temporarily unavailable. Please try again shortly.');
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      process.env.SESSION_SECRET = originalSecret;
+    }
+  });
+
+  it('consumes rate limit capacity even for no-match queries', async () => {
+    const cookie = createCookie();
+    const originalMax = process.env.CHAT_RATE_LIMIT_MAX;
+    process.env.CHAT_RATE_LIMIT_MAX = '1';
+    const deviceId = randomUUID();
+    try {
+      const first = await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' }, deviceId);
+      expect(first.statusCode).toBe(200);
+
+      const second = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' }, deviceId);
+      expect(second.statusCode).toBe(429);
+    } finally {
+      process.env.CHAT_RATE_LIMIT_MAX = originalMax;
+    }
+  });
+
+  it('consumes rate limit capacity even for cached queries', async () => {
+    const cookie = createCookie();
+    const originalMax = process.env.CHAT_RATE_LIMIT_MAX;
+    process.env.CHAT_RATE_LIMIT_MAX = '1';
+    const deviceId = randomUUID();
+    try {
+      const first = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' }, deviceId);
+      expect(first.statusCode).toBe(200);
+
+      const second = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' }, deviceId);
+      expect(second.statusCode).toBe(429);
+    } finally {
+      process.env.CHAT_RATE_LIMIT_MAX = originalMax;
+    }
   });
 });

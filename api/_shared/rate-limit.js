@@ -10,7 +10,7 @@ try {
         });
     }
 } catch (error) {
-    console.warn('Failed to initialize Upstash Redis. Falling back to memory.', error);
+    console.warn('Failed to initialize Upstash Redis. Falling back to memory.', error?.message || 'Unknown error');
 }
 
 // In-memory fallbacks for development/missing KV
@@ -73,7 +73,7 @@ async function rateLimit(key, maxRequests, windowMs) {
                 resetAt: result[2]
             };
         } catch (error) {
-            console.error('Redis rate limiting error:', error);
+            console.error('Redis rate limiting error:', error?.message || 'Unknown error');
             const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
             if (!isDevOrTest) {
                 throw error;
@@ -134,7 +134,16 @@ async function isQuotaExceeded(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
             
             return count > maxQuota;
         } catch (error) {
-            console.error('Redis quota error, falling back to memory:', error);
+            console.error('Redis quota error:', error?.message || 'Unknown error');
+            const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+            if (!isDevOrTest) {
+                throw error;
+            }
+        }
+    } else {
+        const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+        if (!isDevOrTest) {
+            throw new Error('Redis quota backend is unavailable in production.');
         }
     }
 
@@ -154,7 +163,16 @@ async function getQuotaRemaining(key, maxQuota) {
             const count = Number(await redis.get(`quota:${key}`)) || 0;
             return Math.max(0, maxQuota - count);
         } catch (error) {
-            console.error('Redis quota read error, falling back to memory:', error);
+            console.error('Redis quota read error:', error?.message || 'Unknown error');
+            const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+            if (!isDevOrTest) {
+                throw error;
+            }
+        }
+    } else {
+        const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+        if (!isDevOrTest) {
+            throw new Error('Redis quota backend is unavailable in production.');
         }
     }
 
@@ -177,7 +195,16 @@ async function refundQuota(key) {
             if (count < 0) await redis.set(redisKey, 0);
             return;
         } catch (error) {
-            console.error('Redis quota refund error, falling back to memory:', error);
+            console.error('Redis quota refund error:', error?.message || 'Unknown error');
+            const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+            if (!isDevOrTest) {
+                throw error;
+            }
+        }
+    } else {
+        const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+        if (!isDevOrTest) {
+            throw new Error('Redis quota backend is unavailable in production.');
         }
     }
 

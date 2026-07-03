@@ -5,7 +5,11 @@ test.describe('Visitor flow', () => {
     await page.context().grantPermissions(['geolocation']);
     await page.context().setGeolocation({ latitude: 3.1484, longitude: 101.6947 });
     await page.addInitScript(() => {
-      localStorage.setItem('pwa_prompt_dismissed', String(Date.now() + 604800000));
+      try {
+        localStorage.setItem('pwa_prompt_dismissed', String(Date.now() + 604800000));
+      } catch (e) {
+        // Safe to ignore in sandboxed iframes
+      }
     });
 
     await page.route('**/api/session/current', async (route) => {

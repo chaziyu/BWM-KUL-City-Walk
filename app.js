@@ -544,7 +544,12 @@ async function checkForURLPasskey() {
   await showPlatformWarning();
 }
 
+let isInitializingMap = false;
+
 async function showMapExperience() {
+  if (isInitializingMap) return;
+  isInitializingMap = true;
+
   notifyLifecycle({ activeView: 'map' });
   applySessionChrome();
   loadScopedState();
@@ -552,31 +557,34 @@ async function showMapExperience() {
 
   showOnly([]);
 
-  let loadingOverlay = document.getElementById('map-loading-overlay');
-  if (!loadingOverlay) {
-    loadingOverlay = document.createElement('div');
-    loadingOverlay.id = 'map-loading-overlay';
-    loadingOverlay.className = 'fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white';
-    loadingOverlay.innerHTML = `
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-      <p class="text-gray-600 font-medium">Loading heritage trail...</p>
-    `;
-    document.body.appendChild(loadingOverlay);
-  }
-  loadingOverlay.classList.remove('hidden');
+  // Ensure map container and page chrome (like progress container) are visible
+  document.getElementById('map-container')?.classList.remove('hidden');
+  document.getElementById('progress-container')?.classList.remove('hidden');
 
-  const oldErrorOverlay = document.getElementById('map-error-overlay');
-  if (oldErrorOverlay) {
-    oldErrorOverlay.classList.add('hidden');
+  const statePanel = document.getElementById('map-state-panel');
+  if (statePanel) {
+    statePanel.setAttribute('role', 'status');
+    statePanel.setAttribute('aria-live', 'polite');
+    statePanel.innerHTML = `
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3 mx-auto"></div>
+      <p class="text-gray-700 font-medium text-sm">Loading heritage trail...</p>
+    `;
+    statePanel.classList.remove('hidden');
+  }
+
+  // Disable any existing retry button during init
+  const existingRetryBtn = document.getElementById('btnMapRetry');
+  if (existingRetryBtn) {
+    existingRetryBtn.disabled = true;
+    existingRetryBtn.classList.add('opacity-50', 'cursor-not-allowed');
   }
 
   try {
     setupGameUIListeners();
     await mapController.initMap();
 
-    loadingOverlay.classList.add('hidden');
-    document.getElementById('progress-container')?.classList.remove('hidden');
-    document.getElementById('map')?.classList.remove('hidden');
+    // Success: hide the state panel
+    statePanel?.classList.add('hidden');
 
     bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
     passportController.refreshProgress();
@@ -590,30 +598,31 @@ async function showMapExperience() {
 
     onboardingController.openWelcomeOnce();
   } catch (error) {
-    console.error('Failed to load map experience:', error);
-    loadingOverlay.classList.add('hidden');
-    document.getElementById('progress-container')?.classList.add('hidden');
-    document.getElementById('map')?.classList.add('hidden');
+    console.error('Failed to load map experience:', error?.message || 'Unknown error');
 
-    let errorOverlay = document.getElementById('map-error-overlay');
-    if (!errorOverlay) {
-      errorOverlay = document.createElement('div');
-      errorOverlay.id = 'map-error-overlay';
-      errorOverlay.className = 'fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white px-6 text-center';
-      errorOverlay.innerHTML = `
-        <div class="text-red-500 text-5xl mb-4">⚠️</div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">Unable to load the heritage trail.</h3>
-        <p class="text-gray-600 mb-6 max-w-xs">Check your connection and try again.</p>
-        <button id="btnMapRetry" class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 active:scale-95 transition-all">
+    if (statePanel) {
+      statePanel.setAttribute('role', 'alert');
+      statePanel.removeAttribute('aria-live');
+      statePanel.innerHTML = `
+        <div class="text-red-500 text-3xl mb-2 mx-auto">⚠️</div>
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Unable to load the heritage trail.</h3>
+        <p class="text-gray-600 text-xs mb-4">Check your connection and try again.</p>
+        <button id="btnMapRetry" class="px-4 py-2 bg-indigo-600 text-white font-bold text-sm rounded-lg shadow hover:bg-indigo-700 active:scale-95 transition-all">
           Retry
         </button>
       `;
-      document.body.appendChild(errorOverlay);
-      document.getElementById('btnMapRetry').addEventListener('click', () => {
+      statePanel.classList.remove('hidden');
+
+      const retryBtn = document.getElementById('btnMapRetry');
+      retryBtn?.addEventListener('click', () => {
+        if (retryBtn.disabled) return;
+        retryBtn.disabled = true;
+        retryBtn.classList.add('opacity-50', 'cursor-not-allowed');
         showMapExperience();
       });
     }
-    errorOverlay.classList.remove('hidden');
+  } finally {
+    isInitializingMap = false;
   }
 }
 

@@ -23,6 +23,7 @@ export function createMapController({
   onSitesLoaded,
 }) {
   let map = null;
+  let initPromise = null;
   let markersLayer = null;
   let polygonsLayer = null;
   let markerRenderer = null;
@@ -77,87 +78,94 @@ export function createMapController({
     briefPopupSiteId = null;
   }
 
-  async function initMap() {
-    if (map) return map;
+  function initMap() {
+    if (map) return Promise.resolve(map);
+    if (initPromise) return initPromise;
 
-    try {
-      const sites = await loadSites();
+    initPromise = (async () => {
+      try {
+        const sites = await loadSites();
 
-      map = L.map('map', {
-        zoomControl: false,
-        minZoom: 14,
-        maxBounds: [
-          [3.13, 101.67],
-          [3.17, 101.72],
-        ],
-        maxBoundsViscosity: 1.0,
-      }).setView(DEFAULT_CENTER, 16);
+        map = L.map('map', {
+          zoomControl: false,
+          minZoom: 14,
+          maxBounds: [
+            [3.13, 101.67],
+            [3.17, 101.72],
+          ],
+          maxBoundsViscosity: 1.0,
+        }).setView(DEFAULT_CENTER, 16);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors © CARTO',
-        maxZoom: 20,
-      }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap contributors © CARTO',
+          maxZoom: 20,
+        }).addTo(map);
 
-      markersLayer = L.layerGroup().addTo(map);
-      polygonsLayer = L.layerGroup();
+        markersLayer = L.layerGroup().addTo(map);
+        polygonsLayer = L.layerGroup();
 
-      markerRenderer = createMarkerRenderer({
-        L,
-        markersLayer,
-        onSiteDetails: onSiteSelected,
-        onSiteSelected: (site) => {
-          if (briefPopupSiteId === String(site.id)) {
-            onSiteSelected(site);
-            return;
-          }
-          briefPopupSiteId = String(site.id);
-        },
-        onSiteUnselected: (site) => {
-          if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
-        },
-        getIsCompleted,
-      });
-      polygonRenderer = createPolygonRenderer({
-        L,
-        polygonsLayer,
-        onSiteDetails: onSiteSelected,
-        onSiteSelected: (site) => {
-          if (briefPopupSiteId === String(site.id)) {
-            onSiteSelected(site);
-            return;
-          }
-          briefPopupSiteId = String(site.id);
-        },
-        onSiteUnselected: (site) => {
-          if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
-        },
-        getIsCompleted,
-        getSiteColors,
-        polygonOpacity: POLYGON_OPACITY,
-        visitedColor: VISITED_POLYGON_COLOR,
-      });
+        markerRenderer = createMarkerRenderer({
+          L,
+          markersLayer,
+          onSiteDetails: onSiteSelected,
+          onSiteSelected: (site) => {
+            if (briefPopupSiteId === String(site.id)) {
+              onSiteSelected(site);
+              return;
+            }
+            briefPopupSiteId = String(site.id);
+          },
+          onSiteUnselected: (site) => {
+            if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
+          },
+          getIsCompleted,
+        });
+        polygonRenderer = createPolygonRenderer({
+          L,
+          polygonsLayer,
+          onSiteDetails: onSiteSelected,
+          onSiteSelected: (site) => {
+            if (briefPopupSiteId === String(site.id)) {
+              onSiteSelected(site);
+              return;
+            }
+            briefPopupSiteId = String(site.id);
+          },
+          onSiteUnselected: (site) => {
+            if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
+          },
+          getIsCompleted,
+          getSiteColors,
+          polygonOpacity: POLYGON_OPACITY,
+          visitedColor: VISITED_POLYGON_COLOR,
+        });
 
-      map.on('zoomend', updateVisibility);
-      window.addEventListener('resize', updateVisibility);
+        map.on('zoomend', updateVisibility);
+        window.addEventListener('resize', updateVisibility);
 
-      allSites = sites;
-      markerRenderer.render(sites);
-      polygonRenderer.render(sites);
-      geolocation = createGeolocationController({
-        L,
-        map,
-        getMainSites: () => allSites.filter(isMainSite),
-        isCompleted: getIsCompleted,
-      });
+        allSites = sites;
+        markerRenderer.render(sites);
+        polygonRenderer.render(sites);
+        geolocation = createGeolocationController({
+          L,
+          map,
+          getMainSites: () => allSites.filter(isMainSite),
+          isCompleted: getIsCompleted,
+        });
 
-      onSitesLoaded?.(sites);
-      updateVisibility();
-      setTimeout(() => map?.invalidateSize(), 100);
-      return map;
-    } catch (error) {
-      destroyMap();
-      throw error;
-    }
+        onSitesLoaded?.(sites);
+        updateVisibility();
+        setTimeout(() => map?.invalidateSize(), 100);
+        return map;
+      } catch (error) {
+        destroyMap();
+        throw error;
+      } finally {
+        initPromise = null;
+      }
+    })();
+
+    return initPromise;
   }
 
   function refreshVisitedState(siteId) {

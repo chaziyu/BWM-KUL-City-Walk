@@ -16,7 +16,7 @@ function mockRequestResponse({ headers = {}, body = {}, method = 'POST', url = '
         url,
         socket: { remoteAddress: '127.0.0.1' }
     };
-    
+
     let statusVal = 200;
     let jsonVal = null;
     const resHeaders = {};

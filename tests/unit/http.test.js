@@ -44,7 +44,7 @@ describe('HTTP and Timeout Helpers', () => {
                 return new Promise((_, reject) => {
                     const abortError = new Error('The user aborted a request.');
                     abortError.name = 'AbortError';
-                    
+
                     if (init?.signal?.aborted) {
                         reject(abortError);
                     } else if (init?.signal) {
