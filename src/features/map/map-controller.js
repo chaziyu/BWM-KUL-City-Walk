@@ -28,7 +28,6 @@ export function createMapController({
   let polygonRenderer = null;
   let geolocation = null;
   let allSites = [];
-  let destroyed = false;
   let briefPopupSiteId = null;
   const mapFilter = createMapFilter();
 
@@ -60,84 +59,104 @@ export function createMapController({
     });
   }
 
+  function destroyMap() {
+    window.removeEventListener('resize', updateVisibility);
+    if (map) {
+      map.off('zoomend', updateVisibility);
+      geolocation?.destroy();
+      geolocation = null;
+      map.remove();
+    }
+    map = null;
+    markersLayer = null;
+    polygonsLayer = null;
+    markerRenderer = null;
+    polygonRenderer = null;
+    allSites = [];
+    briefPopupSiteId = null;
+  }
+
   async function initMap() {
     if (map) return map;
-    destroyed = false;
 
-    map = L.map('map', {
-      zoomControl: false,
-      minZoom: 14,
-      maxBounds: [
-        [3.13, 101.67],
-        [3.17, 101.72],
-      ],
-      maxBoundsViscosity: 1.0,
-    }).setView(DEFAULT_CENTER, 16);
+    try {
+      const sites = await loadSites();
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap contributors © CARTO',
-      maxZoom: 20,
-    }).addTo(map);
+      map = L.map('map', {
+        zoomControl: false,
+        minZoom: 14,
+        maxBounds: [
+          [3.13, 101.67],
+          [3.17, 101.72],
+        ],
+        maxBoundsViscosity: 1.0,
+      }).setView(DEFAULT_CENTER, 16);
 
-    markersLayer = L.layerGroup().addTo(map);
-    polygonsLayer = L.layerGroup();
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors © CARTO',
+        maxZoom: 20,
+      }).addTo(map);
 
-    markerRenderer = createMarkerRenderer({
-      L,
-      markersLayer,
-      onSiteDetails: onSiteSelected,
-      onSiteSelected: (site) => {
-        if (briefPopupSiteId === String(site.id)) {
-          onSiteSelected(site);
-          return;
-        }
-        briefPopupSiteId = String(site.id);
-      },
-      onSiteUnselected: (site) => {
-        if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
-      },
-      getIsCompleted,
-    });
-    polygonRenderer = createPolygonRenderer({
-      L,
-      polygonsLayer,
-      onSiteDetails: onSiteSelected,
-      onSiteSelected: (site) => {
-        if (briefPopupSiteId === String(site.id)) {
-          onSiteSelected(site);
-          return;
-        }
-        briefPopupSiteId = String(site.id);
-      },
-      onSiteUnselected: (site) => {
-        if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
-      },
-      getIsCompleted,
-      getSiteColors,
-      polygonOpacity: POLYGON_OPACITY,
-      visitedColor: VISITED_POLYGON_COLOR,
-    });
+      markersLayer = L.layerGroup().addTo(map);
+      polygonsLayer = L.layerGroup();
 
-    map.on('zoomend', updateVisibility);
-    window.addEventListener('resize', updateVisibility);
+      markerRenderer = createMarkerRenderer({
+        L,
+        markersLayer,
+        onSiteDetails: onSiteSelected,
+        onSiteSelected: (site) => {
+          if (briefPopupSiteId === String(site.id)) {
+            onSiteSelected(site);
+            return;
+          }
+          briefPopupSiteId = String(site.id);
+        },
+        onSiteUnselected: (site) => {
+          if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
+        },
+        getIsCompleted,
+      });
+      polygonRenderer = createPolygonRenderer({
+        L,
+        polygonsLayer,
+        onSiteDetails: onSiteSelected,
+        onSiteSelected: (site) => {
+          if (briefPopupSiteId === String(site.id)) {
+            onSiteSelected(site);
+            return;
+          }
+          briefPopupSiteId = String(site.id);
+        },
+        onSiteUnselected: (site) => {
+          if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
+        },
+        getIsCompleted,
+        getSiteColors,
+        polygonOpacity: POLYGON_OPACITY,
+        visitedColor: VISITED_POLYGON_COLOR,
+      });
 
-    const sites = await loadSites();
-    if (destroyed) return null;
+      map.on('zoomend', updateVisibility);
+      window.addEventListener('resize', updateVisibility);
 
-    allSites = sites;
-    markerRenderer.render(sites);
-    polygonRenderer.render(sites);
-    geolocation = createGeolocationController({
-      L,
-      map,
-      getMainSites: () => allSites.filter((site) => /^\d+$/.test(String(site.id))),
-      isCompleted: getIsCompleted,
-    });
+      allSites = sites;
+      markerRenderer.render(sites);
+      polygonRenderer.render(sites);
+      geolocation = createGeolocationController({
+        L,
+        map,
+        getMainSites: () => allSites.filter((site) => /^\d+$/.test(String(site.id))),
+        isCompleted: getIsCompleted,
+      });
 
-    onSitesLoaded?.(sites);
-    updateVisibility();
-    setTimeout(() => map?.invalidateSize(), 100);
-    return map;
+      onSitesLoaded?.(sites);
+      updateVisibility();
+      setTimeout(() => map?.invalidateSize(), 100);
+      return map;
+    } catch (error) {
+      destroyMap();
+      throw error;
+    }
   }
 
   function refreshVisitedState(siteId) {
@@ -147,20 +166,6 @@ export function createMapController({
     markerRenderer.updateVisitedState(markerRenderer.getMarkers()[site.id], completed);
     polygonRenderer.updateVisitedState(site, completed);
     updateVisibility();
-  }
-
-  function destroyMap() {
-    destroyed = true;
-    window.removeEventListener('resize', updateVisibility);
-    if (map) map.off('zoomend', updateVisibility);
-    geolocation?.destroy();
-    geolocation = null;
-    map?.remove();
-    map = null;
-    markersLayer = null;
-    polygonsLayer = null;
-    allSites = [];
-    briefPopupSiteId = null;
   }
 
   return {

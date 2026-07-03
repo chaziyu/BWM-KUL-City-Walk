@@ -550,22 +550,70 @@ async function showMapExperience() {
   resetDailyChatIfNeeded();
 
   showOnly([]);
-  document.getElementById('progress-container')?.classList.remove('hidden');
-  document.getElementById('map')?.classList.remove('hidden');
 
-  setupGameUIListeners();
-  await mapController.initMap();
-  bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
-  passportController.refreshProgress();
-  chatController.updateCount();
-  chatController.setDisabled(userMessageCount >= getChatLimit());
+  let loadingOverlay = document.getElementById('map-loading-overlay');
+  if (!loadingOverlay) {
+    loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'map-loading-overlay';
+    loadingOverlay.className = 'fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white';
+    loadingOverlay.innerHTML = `
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+      <p class="text-gray-600 font-medium">Loading heritage trail...</p>
+    `;
+    document.body.appendChild(loadingOverlay);
+  }
+  loadingOverlay.classList.remove('hidden');
 
-  const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
-  if (resetDemoProgressBtn) {
-    resetDemoProgressBtn.classList.toggle('hidden', activeSession?.role !== 'demo');
+  const oldErrorOverlay = document.getElementById('map-error-overlay');
+  if (oldErrorOverlay) {
+    oldErrorOverlay.classList.add('hidden');
   }
 
-  onboardingController.openWelcomeOnce();
+  try {
+    setupGameUIListeners();
+    await mapController.initMap();
+
+    loadingOverlay.classList.add('hidden');
+    document.getElementById('progress-container')?.classList.remove('hidden');
+    document.getElementById('map')?.classList.remove('hidden');
+
+    bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
+    passportController.refreshProgress();
+    chatController.updateCount();
+    chatController.setDisabled(userMessageCount >= getChatLimit());
+
+    const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
+    if (resetDemoProgressBtn) {
+      resetDemoProgressBtn.classList.toggle('hidden', activeSession?.role !== 'demo');
+    }
+
+    onboardingController.openWelcomeOnce();
+  } catch (error) {
+    console.error('Failed to load map experience:', error);
+    loadingOverlay.classList.add('hidden');
+    document.getElementById('progress-container')?.classList.add('hidden');
+    document.getElementById('map')?.classList.add('hidden');
+
+    let errorOverlay = document.getElementById('map-error-overlay');
+    if (!errorOverlay) {
+      errorOverlay = document.createElement('div');
+      errorOverlay.id = 'map-error-overlay';
+      errorOverlay.className = 'fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white px-6 text-center';
+      errorOverlay.innerHTML = `
+        <div class="text-red-500 text-5xl mb-4">⚠️</div>
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Unable to load the heritage trail.</h3>
+        <p class="text-gray-600 mb-6 max-w-xs">Check your connection and try again.</p>
+        <button id="btnMapRetry" class="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 active:scale-95 transition-all">
+          Retry
+        </button>
+      `;
+      document.body.appendChild(errorOverlay);
+      document.getElementById('btnMapRetry').addEventListener('click', () => {
+        showMapExperience();
+      });
+    }
+    errorOverlay.classList.remove('hidden');
+  }
 }
 
 function showAdminExperience() {
