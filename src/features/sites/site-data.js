@@ -9,7 +9,7 @@ function normalizeSite(site) {
 }
 
 async function fetchAndValidateSites() {
-  const response = await fetch(new URL('../../../data/sites.json', import.meta.url));
+  const response = await fetch('/data/sites.json');
   if (!response.ok) {
     throw new Error(`Failed to load sites: ${response.status} ${response.statusText}`);
   }
