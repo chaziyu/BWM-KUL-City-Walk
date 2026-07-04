@@ -45,7 +45,7 @@ function buildSite(site) {
     });
 }
 
-const rawSites = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'sites.json'), 'utf8'));
+const rawSites = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'data', 'sites.json'), 'utf8'));
 const sites = Object.freeze(rawSites.filter(site => site?.id && site?.name).map(buildSite));
 const siteById = Object.freeze(Object.fromEntries(sites.map(site => [site.id, site])));
 const knowledgeVersion = crypto.createHash('sha256').update(JSON.stringify(sites)).digest('hex').slice(0, 12);

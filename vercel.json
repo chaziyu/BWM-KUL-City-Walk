@@ -1,11 +1,47 @@
 {
     "headers": [
         {
+            "source": "/sw.js",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache"
+                }
+            ]
+        },
+        {
+            "source": "/manifest.webmanifest",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache"
+                }
+            ]
+        },
+        {
+            "source": "/api/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-store"
+                }
+            ]
+        },
+        {
+            "source": "/data/sites.json",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache"
+                }
+            ]
+        },
+        {
             "source": "/(.*)",
             "headers": [
                 {
                     "key": "Content-Security-Policy",
-                    "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://www.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://fonts.gstatic.com https://www.gstatic.com; connect-src 'self' https://translate.googleapis.com https://translate-pa.googleapis.com; frame-src https://translate.google.com https://maps.google.com https://www.google.com;"
+                    "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://www.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://fonts.gstatic.com https://www.gstatic.com; connect-src 'self' https://translate.googleapis.com https://translate-pa.googleapis.com; frame-src https://translate.google.com https://maps.google.com https://www.google.com; worker-src 'self';"
                 },
                 {
                     "key": "X-Content-Type-Options",

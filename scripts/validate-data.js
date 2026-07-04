@@ -63,7 +63,7 @@ function validateImage(site, errors) {
 }
 
 function validateSites(options = {}) {
-  const dataPath = options.dataPath || path.join(ROOT, 'data', 'sites.json');
+  const dataPath = options.dataPath || path.join(ROOT, 'public', 'data', 'sites.json');
   const schemaPath = options.schemaPath || path.join(ROOT, 'data', 'sites.schema.json');
   const expectedMainSiteCount = options.expectedMainSiteCount || DEFAULT_MAIN_SITE_COUNT;
   const sites = loadJson(dataPath);
