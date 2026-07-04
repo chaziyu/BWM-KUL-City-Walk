@@ -10,6 +10,17 @@ test.describe('Visitor flow', () => {
       } catch (e) {
         // Safe to ignore in sandboxed iframes
       }
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (const registration of registrations) {
+              registration.unregister().catch(() => {});
+            }
+          }).catch(() => {});
+        }
+      } catch (err) {
+        // Safe to ignore in sandboxed iframes
+      }
     });
 
     await page.route('**/api/session/current', async (route) => {
