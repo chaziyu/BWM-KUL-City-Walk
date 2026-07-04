@@ -166,3 +166,86 @@ test.describe('Map recovery flow', () => {
     expect(errors).toEqual([]);
   });
 });
+
+test.describe('Map happy-path load', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.context().grantPermissions(['geolocation']);
+    await page.context().setGeolocation({ latitude: 3.1484, longitude: 101.6947 });
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('pwa_prompt_dismissed', String(Date.now() + 604800000));
+        sessionStorage.setItem('jejak_welcome_shown', 'true');
+      } catch (e) {
+        // Safe to ignore in sandboxed iframes
+      }
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (const registration of registrations) {
+              registration.unregister().catch(() => {});
+            }
+          }).catch(() => {});
+        }
+      } catch (err) {
+        // Safe to ignore in sandboxed iframes
+      }
+    });
+
+    await page.route('**/api/session/current', async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ authenticated: false }),
+      });
+    });
+
+    await page.route('**/api/session/demo', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          authenticated: true,
+          role: 'demo',
+          progressNamespace: 'demo',
+          chatLimit: 15,
+          allowedUI: ['map', 'passport', 'chat', 'challenges'],
+        }),
+      });
+    });
+  });
+
+  test('demo session renders polygons then markers after zoom-out with no page errors', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (err) => {
+      errors.push(err);
+    });
+
+    // Observe the real /data/sites.json request (no mock/stub)
+    const sitesResponse = page.waitForResponse(
+      (resp) => resp.url().includes('/data/sites.json') && resp.status() === 200,
+    );
+
+    await page.goto('/');
+    await page.locator('#btnExploreDemo').click();
+
+    // Wait for the actual sites.json response
+    await sitesResponse;
+
+    // Assert leaflet container is visible
+    await expect(page.locator('#map.leaflet-container')).toBeVisible();
+
+    // Assert at least one polygon (path) is visible at default zoom
+    await expect(page.locator('#map path.leaflet-interactive').first()).toBeVisible();
+
+    // Zoom out to switch from polygons to markers
+    await page.locator('#btnUIZoomOut').click();
+    // Allow the zoom transition to settle
+    await page.waitForTimeout(500);
+
+    // Assert at least one marker icon is visible
+    await expect(page.locator('#map .leaflet-marker-icon').first()).toBeVisible();
+
+    // Assert no uncaught page errors
+    expect(errors).toEqual([]);
+  });
+});

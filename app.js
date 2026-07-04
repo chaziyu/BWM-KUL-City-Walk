@@ -1,3 +1,5 @@
+import L from 'leaflet';
+import 'leaflet-defaulticon-compatibility';
 import {
   DEFAULT_CENTER,
   HISTORY_WINDOW_SIZE,
@@ -76,7 +78,7 @@ const progressService = createProgressService({
 let mapPreview = null;
 
 const mapController = createMapController({
-  L: window.L,
+  L,
   loadSites: loadSiteData,
   getIsCompleted: (siteId) => progressService.isCompleted(siteId),
   onSiteSelected: (site) => siteModalController.open(site),

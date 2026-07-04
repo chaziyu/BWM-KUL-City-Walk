@@ -84,6 +84,10 @@ export function createMapController({
 
     initPromise = (async () => {
       try {
+        if (!L || typeof L.map !== 'function') {
+          throw new Error('Leaflet is unavailable; the heritage map cannot initialise.');
+        }
+
         const sites = await loadSites();
 
         map = L.map('map', {

@@ -320,4 +320,37 @@ describe('map controller', () => {
     expect(m2).toBe(mapObj);
     expect(L.map).toHaveBeenCalledOnce();
   });
+
+  it('rejects with a Leaflet error and skips loadSites when L is null', async () => {
+    const loadSites = vi.fn();
+    const controller = createMapController({
+      L: null,
+      loadSites,
+      getIsCompleted: () => false,
+      onSiteSelected: vi.fn(),
+    });
+
+    await expect(controller.initMap()).rejects.toThrow(
+      'Leaflet is unavailable; the heritage map cannot initialise.',
+    );
+    expect(loadSites).not.toHaveBeenCalled();
+    expect(controller.getMap()).toBeNull();
+  });
+
+  it('rejects with a Leaflet error and skips loadSites when L has no map function', async () => {
+    const loadSites = vi.fn();
+    const L = {};
+    const controller = createMapController({
+      L,
+      loadSites,
+      getIsCompleted: () => false,
+      onSiteSelected: vi.fn(),
+    });
+
+    await expect(controller.initMap()).rejects.toThrow(
+      'Leaflet is unavailable; the heritage map cannot initialise.',
+    );
+    expect(loadSites).not.toHaveBeenCalled();
+    expect(controller.getMap()).toBeNull();
+  });
 });
