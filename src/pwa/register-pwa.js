@@ -50,20 +50,17 @@ const isAutomation = typeof navigator !== 'undefined' && navigator.webdriver;
 const pwaEnabled = typeof window !== 'undefined' && window.__pwa_enabled__;
 
 if ('serviceWorker' in navigator && (!isAutomation || pwaEnabled)) {
-  registerSW({
+  // Capture the update function so "Refresh now" can both activate the waiting
+  // worker AND reload the page in a single call.
+  let updateServiceWorker = () => {};
+
+  updateServiceWorker = registerSW({
     immediate: true,
     onNeedRefresh() {
-      showUpdatePrompt(() => {
-        // Send skip waiting message to service worker
-        navigator.serviceWorker.getRegistration().then((reg) => {
-          if (reg && reg.waiting) {
-            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-          }
-        });
-      });
+      showUpdatePrompt(() => updateServiceWorker(true));
     },
     onOfflineReady() {
       console.log('App ready to work offline.');
-    }
+    },
   });
 }

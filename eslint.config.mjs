@@ -42,6 +42,8 @@ export default [
         confetti: 'readonly',
         html2canvas: 'readonly',
         marked: 'readonly',
+        caches: 'readonly',
+        confirm: 'readonly',
       },
     },
     rules: {

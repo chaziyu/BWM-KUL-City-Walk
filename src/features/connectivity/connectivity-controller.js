@@ -7,20 +7,41 @@ async function handleClearOfflineData() {
   if (!confirmed) return;
 
   try {
-    // Delete all browser cache storage
+    // Delete only BWM runtime caches beginning with bwm-
     if ('caches' in window) {
       const keys = await window.caches.keys();
-      await Promise.all(keys.map(key => window.caches.delete(key)));
+      await Promise.all(
+        keys
+          .filter(key => key.startsWith('bwm-'))
+          .map(key => window.caches.delete(key))
+      );
     }
     // Logout from Vercel session
     await endSession().catch(() => {});
-    // Clear localStorage
-    localStorage.clear();
-    // Reload page
-    window.location.reload();
+    
+    // Clear only documented BWM local storage keys/namespaces
+    const keysToDelete = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('jejak_') || key.startsWith('pwa_'))) {
+        keysToDelete.push(key);
+      }
+    }
+    keysToDelete.forEach(key => localStorage.removeItem(key));
+
+    // When offline, do not reload immediately. Show message instead.
+    if (!navigator.onLine) {
+      alert('Offline data cleared. Reconnect to restart the City Walk.');
+    } else {
+      window.location.reload();
+    }
   } catch (err) {
-    console.error('Failed to clear offline data:', err);
-    window.location.reload();
+    console.error('Failed to clear offline data:', err?.message || 'Unknown error');
+    if (!navigator.onLine) {
+      alert('Offline data cleared. Reconnect to restart the City Walk.');
+    } else {
+      window.location.reload();
+    }
   }
 }
 

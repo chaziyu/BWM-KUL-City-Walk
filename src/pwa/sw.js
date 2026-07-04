@@ -1,12 +1,15 @@
-/* global self, caches */
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+/* global self */
+import {
+  cleanupOutdatedCaches,
+  matchPrecache,
+  precacheAndRoute,
+} from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
 import { CacheFirst, NetworkFirst, NetworkOnly } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
-// Self-claim and skip waiting
-self.addEventListener('install', () => self.skipWaiting());
+// Claim clients on activation (no automatic skipWaiting — user must confirm)
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
@@ -29,13 +32,8 @@ const offlineFallbackHandler = async (params) => {
       ],
     });
     return await networkStrategy.handle(params);
-  } catch (error) {
-    const cache = await caches.open('workbox-precache');
-    const cachedResponse = await cache.match('/offline.html');
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    return Response.error();
+  } catch {
+    return (await matchPrecache('/offline.html')) || Response.error();
   }
 };
 registerRoute(new NavigationRoute(offlineFallbackHandler));
@@ -119,20 +117,7 @@ registerRoute(
   new NetworkOnly()
 );
 
-// Global check: Enforce fetch logic to never cache API or non-GET requests
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  if (request.method !== 'GET') {
-    return;
-  }
-  if (url.pathname.startsWith('/api/')) {
-    return;
-  }
-});
-
-// Update listener for prompt-based updates
+// Update listener for prompt-based updates (explicit user approval only)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
