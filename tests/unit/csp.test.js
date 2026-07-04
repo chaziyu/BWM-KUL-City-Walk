@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 
 const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
-const csp = vercelConfig.headers[0].headers.find((header) => header.key === 'Content-Security-Policy').value;
+const catchAllRule = vercelConfig.headers.find((h) => h.source === '/(.*)');
+const csp = catchAllRule.headers.find((header) => header.key === 'Content-Security-Policy').value;
 
 describe('production CSP', () => {
   it('allows CARTO map tiles without broad img-src wildcards', () => {
