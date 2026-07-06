@@ -8,6 +8,7 @@ const csp = catchAllRule.headers.find((header) => header.key === 'Content-Securi
 describe('production CSP', () => {
   it('allows CARTO map tiles without broad img-src wildcards', () => {
     expect(csp).toContain("img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://fonts.gstatic.com https://www.gstatic.com");
+    expect(csp).toContain("connect-src 'self' https://translate.googleapis.com https://translate-pa.googleapis.com https://*.basemaps.cartocdn.com");
     expect(csp).not.toContain('img-src *');
   });
 
