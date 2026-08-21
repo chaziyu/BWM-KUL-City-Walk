@@ -6,6 +6,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "validate:data": "node scripts/validate-data.js",
     "serve": "vite preview",
     "check:quality": "npm run lint && npm run validate:data && npm run test && npm run build",

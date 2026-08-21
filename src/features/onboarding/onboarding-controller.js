@@ -1,4 +1,4 @@
-export function createOnboardingController({ getCurrentSession, modalManager }) {
+export function createOnboardingController({ modalManager }) {
   let bound = false;
 
   function bind() {

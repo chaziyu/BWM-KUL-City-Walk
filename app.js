@@ -7,11 +7,6 @@ import {
   MAX_MESSAGES_PER_SESSION,
   ZOOM,
 } from './src/config/app-config.js';
-import { createAdminAccess } from './src/features/access/admin-access.js';
-import { createDemoAccess } from './src/features/access/demo-access.js';
-import { createLandingScreen } from './src/features/access/landing-screen.js';
-import { showOnly } from './src/features/access/access-ui.js';
-import { createVisitorAccess } from './src/features/access/visitor-access.js';
 import { createMapController } from './src/features/map/map-controller.js';
 import { createMapPreview } from './src/features/map/map-preview.js';
 import { bindMapUI } from './src/features/map/map-ui.js';
@@ -30,15 +25,6 @@ import { createTranslationController } from './src/features/translation/translat
 import { STRINGS } from './localization.js';
 import { migrateData } from './src/services/storage-migration.js';
 import {
-  endSession,
-  getCurrentSession,
-  refreshSession,
-  startAdminSession,
-  startDemoSession,
-  startVisitorSession,
-} from './src/services/session-client.js';
-import {
-  clearScopedProgress,
   readScopedJSON,
   readScopedNumber,
   readScopedString,
@@ -49,7 +35,6 @@ import {
 import { createModalManager } from './src/ui/modal-manager.js';
 
 let legacyStartPromise = null;
-let activeSession = getCurrentSession();
 let allSiteData = [];
 let mainSites = [];
 let chatHistory = [];
@@ -72,7 +57,7 @@ const modalManager = createModalManager({
 });
 
 const progressService = createProgressService({
-  getNamespace: () => activeSession.progressNamespace || 'visitor',
+  getNamespace: () => 'visitor',
 });
 
 let mapPreview = null;
@@ -134,7 +119,7 @@ const chatController = createChatController({
 
 const directionsController = createDirectionsController({ modalManager });
 const badgeController = createBadgeController({ modalManager, progressService, strings: STRINGS });
-const onboardingController = createOnboardingController({ getCurrentSession, modalManager });
+const onboardingController = createOnboardingController({ modalManager });
 const translationController = createTranslationController();
 
 const challengeController = createChallengeController({
@@ -188,37 +173,6 @@ mapPreview = createMapPreview({
   openSiteDetails: (site) => siteModalController.open(site),
 });
 
-const demoAccess = createDemoAccess({
-  startDemoSession,
-  onSession(session) {
-    activeSession = session;
-    notifyLifecycle({ session: activeSession });
-  },
-});
-
-const visitorAccess = createVisitorAccess({
-  strings: STRINGS,
-  startVisitorSession,
-  deviceId,
-  onSession(session) {
-    activeSession = session;
-    notifyLifecycle({ session: activeSession });
-  },
-});
-
-const adminAccess = createAdminAccess({
-  strings: STRINGS,
-  startAdminSession,
-  endSession,
-  onSession(session) {
-    activeSession = session;
-    notifyLifecycle({ session: activeSession });
-  },
-  onShowMap() {
-    showMapExperience();
-  },
-});
-
 let lifecycleHandler = null;
 
 function notifyLifecycle(patch) {
@@ -235,11 +189,11 @@ function onDomReady(callback) {
 }
 
 function getProgressNamespace() {
-  return activeSession.progressNamespace || 'visitor';
+  return 'visitor';
 }
 
 function getChatLimit() {
-  return Number(activeSession.chatLimit) || Number(MAX_MESSAGES_PER_SESSION) || 15;
+  return Number(MAX_MESSAGES_PER_SESSION) || 30;
 }
 
 function loadScopedState() {
@@ -255,10 +209,6 @@ function saveChatHistory() {
 
 function saveMessageCount() {
   writeScopedNumber('message_count', userMessageCount, getProgressNamespace());
-}
-
-function applySessionChrome() {
-  document.documentElement.classList.toggle('jejak-hide-staff', activeSession?.role !== 'admin');
 }
 
 function resetDailyChatIfNeeded() {
@@ -305,7 +255,6 @@ function setupTextSizeControls() {
     btnTextSizeReset.addEventListener('click', () => applyTextSize(100));
   }
 }
-
 
 function setupGameUIListeners() {
   if (gameUIBound) return;
@@ -381,24 +330,12 @@ function setupGameUIListeners() {
   if (shareWhatsAppBtn && shareWhatsAppBtn.dataset.bound !== 'true') {
     shareWhatsAppBtn.dataset.bound = 'true';
     shareWhatsAppBtn.addEventListener('click', () => {
-    const payload = passportController.buildSharePayload();
-    if (navigator.share) {
-      navigator.share({ title: 'Mission Accomplished!', text: payload.text, url: payload.url }).catch(console.error);
-      return;
-    }
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nDiscover KL's history and start your own adventure here: ${payload.url}`)}`, '_blank');
-    });
-  }
-
-  const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
-  if (resetDemoProgressBtn && resetDemoProgressBtn.dataset.bound !== 'true') {
-    resetDemoProgressBtn.dataset.bound = 'true';
-    resetDemoProgressBtn.addEventListener('click', () => {
-      if (activeSession?.role !== 'demo') return;
-      const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
-      if (!confirmed) return;
-      clearScopedProgress('demo');
-      window.location.reload();
+      const payload = passportController.buildSharePayload();
+      if (navigator.share) {
+        navigator.share({ title: 'Mission Accomplished!', text: payload.text, url: payload.url }).catch(console.error);
+        return;
+      }
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nDiscover KL's history and start your own adventure here: ${payload.url}`)}`, '_blank');
     });
   }
 
@@ -411,58 +348,6 @@ function setupGameUIListeners() {
   chatController.loadHistory();
 }
 
-function bindAdminUI() {
-  adminAccess.bindLogin({
-    button: document.getElementById('adminLoginBtn'),
-    input: document.getElementById('adminPasswordInput'),
-    errorElement: document.getElementById('adminErrorMsg'),
-    onSuccess: showAdminTools,
-  });
-
-  adminAccess.bindTools({
-    generateBtn: document.getElementById('adminGenerateBtn'),
-    shareBtn: document.getElementById('adminShareBtn'),
-    statusMsg: document.getElementById('adminStatusMsg'),
-    resultText: document.getElementById('passkeyResult'),
-    logoutBtn: document.getElementById('adminLogoutBtn'),
-    switchToMapBtn: document.getElementById('adminSwitchToMapBtn'),
-  });
-}
-
-function showAdminTools() {
-  document.documentElement.classList.remove('jejak-hide-staff');
-  document.getElementById('adminLoginForm')?.classList.add('hidden');
-  document.getElementById('adminResult')?.classList.remove('hidden');
-  document.getElementById('passkeyDate')?.replaceChildren(document.createTextNode(STRINGS.auth.adminDate));
-  document.getElementById('closeStaffScreen')?.classList.add('hidden');
-  document.getElementById('btnAdminToggle')?.classList.remove('hidden');
-}
-
-function showAdminCode() {
-  showOnly(['staff-screen']);
-  notifyLifecycle({ activeView: 'admin' });
-}
-
-async function checkForURLPasskey() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  if (!code || activeSession?.authenticated) return;
-
-  const cleanUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-  window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-  showOnly(['gatekeeper']);
-  notifyLifecycle({ activeView: 'gatekeeper' });
-  const input = document.getElementById('passcodeInput');
-  if (input) input.value = code;
-  const session = await visitorAccess.submit(code, {
-    button: document.getElementById('unlockBtn'),
-    errorElement: document.getElementById('errorMsg'),
-  });
-  if (session?.authenticated) {
-    await showMapExperience();
-  }
-}
-
 let isInitializingMap = false;
 
 async function showMapExperience() {
@@ -470,13 +355,9 @@ async function showMapExperience() {
   isInitializingMap = true;
 
   notifyLifecycle({ activeView: 'map' });
-  applySessionChrome();
   loadScopedState();
   resetDailyChatIfNeeded();
 
-  showOnly([]);
-
-  // Ensure map container and page chrome (like progress container) are visible
   document.getElementById('map-container')?.classList.remove('hidden');
   document.getElementById('progress-container')?.classList.remove('hidden');
 
@@ -491,7 +372,6 @@ async function showMapExperience() {
     statePanel.classList.remove('hidden');
   }
 
-  // Disable any existing retry button during init
   const existingRetryBtn = document.getElementById('btnMapRetry');
   if (existingRetryBtn) {
     existingRetryBtn.disabled = true;
@@ -502,18 +382,12 @@ async function showMapExperience() {
     setupGameUIListeners();
     await mapController.initMap();
 
-    // Success: hide the state panel
     statePanel?.classList.add('hidden');
 
     bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
     passportController.refreshProgress();
     chatController.updateCount();
     chatController.setDisabled(userMessageCount >= getChatLimit());
-
-    const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
-    if (resetDemoProgressBtn) {
-      resetDemoProgressBtn.classList.toggle('hidden', activeSession?.role !== 'demo');
-    }
 
     onboardingController.openWelcomeOnce();
   } catch (error) {
@@ -545,84 +419,8 @@ async function showMapExperience() {
   }
 }
 
-function showAdminExperience() {
-  notifyLifecycle({ activeView: 'admin' });
-  applySessionChrome();
-  showOnly(['staff-screen']);
-  bindAdminUI();
-  showAdminTools();
-}
-
-function showLandingPage() {
-  notifyLifecycle({ activeView: 'landing' });
-  document.documentElement.classList.remove('jejak-hide-staff');
-  showOnly(['landing-page']);
-}
-
-function setupAccessFlow() {
-  [
-    ['btnVisitor', 'join-event-button'],
-    ['passcodeInput', 'visitor-passkey-input'],
-    ['unlockBtn', 'visitor-passkey-submit'],
-    ['map', 'map-experience'],
-  ].forEach(([id, testId]) => {
-    document.getElementById(id)?.setAttribute('data-testid', testId);
-  });
-
-  const landingScreen = createLandingScreen({
-    notifyLifecycle,
-    async onExploreDemo() {
-      try {
-        await demoAccess.start();
-        await showMapExperience();
-      } catch {
-        window.alert('Unable to start the demo session. Please try again.');
-      }
-    },
-    onVisitor() {},
-    onStaff: showAdminCode,
-    onBackHome: showLandingPage,
-    onCloseStaff: showLandingPage,
-  });
-
-  landingScreen.init();
-  bindAdminUI();
-
-  const unlockBtn = document.getElementById('unlockBtn');
-  if (unlockBtn && unlockBtn.dataset.bound !== 'true') {
-    unlockBtn.dataset.bound = 'true';
-    unlockBtn.addEventListener('click', async () => {
-      const passcodeInput = document.getElementById('passcodeInput');
-      const pendingPasskey = passcodeInput?.value.trim();
-      if (!pendingPasskey) return;
-      
-      const session = await visitorAccess.submit(pendingPasskey, {
-        button: document.getElementById('unlockBtn'),
-        errorElement: document.getElementById('errorMsg'),
-      });
-      if (session?.authenticated) showMapExperience();
-    });
-  }
-}
-
 async function initApp() {
-  try {
-    activeSession = await refreshSession();
-  } catch {
-    activeSession = getCurrentSession();
-  }
-
-  notifyLifecycle({ session: activeSession });
-  await checkForURLPasskey();
-
-  if (activeSession?.authenticated) {
-    if (activeSession.role === 'admin') showAdminExperience();
-    else await showMapExperience();
-    return;
-  }
-
-  showLandingPage();
-  setupAccessFlow();
+  await showMapExperience();
 }
 
 export function startLegacyApp(options = {}) {

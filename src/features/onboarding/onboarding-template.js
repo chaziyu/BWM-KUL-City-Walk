@@ -26,12 +26,9 @@ export function createOnboardingTemplate() {
                 <div>
                     <h3 class="font-bold text-gray-900 mb-2">🔑 How to Get Started</h3>
                     <ol class="list-decimal list-inside text-sm space-y-2 ml-2">
-                        <li><strong>Explore Demo:</strong> Click "Explore Demo" to try the full heritage trail instantly
-                        </li>
-                        <li><strong>Visitor Passkey:</strong> Event participants can enter an organiser-issued visitor
-                            passkey</li>
-                        <li><strong>Start Exploring:</strong> The interactive map will open, showing all heritage sites
-                        </li>
+                        <li><strong>Interactive Map:</strong> Browse the pins on the map to see heritage buildings.</li>
+                        <li><strong>Site Details:</strong> Click any pin to open historical stories and images.</li>
+                        <li><strong>Stamps &amp; Quizzes:</strong> Complete quizzes at main stops to stamp your digital passport.</li>
                     </ol>
                 </div>
 
@@ -45,12 +42,6 @@ export function createOnboardingTemplate() {
                         <li><strong>🏆 Daily Challenge:</strong> Solve riddles to discover mystery locations</li>
                         <li><strong>🎓 Explorer Badge:</strong> Download your personalized completion certificate</li>
                     </ul>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-gray-900 mb-2">❓ Need Help While Exploring?</h3>
-                    <p class="text-sm">Look for the purple <strong>?</strong> button in the bottom-right corner after
-                        login. It provides a quick interactive tour of all features!</p>
                 </div>
 
                 <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">

@@ -1,8 +1,4 @@
-import { endSession } from '../../services/session-client.js';
-
 let isOnline = navigator.onLine;
-
-
 
 export function updateConnectivityUI(onlineState = navigator.onLine) {
   isOnline = onlineState;
@@ -34,7 +30,7 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
         <span class="text-xl" aria-hidden="true">⚠️</span>
         <div class="text-left">
           <p class="text-xs font-bold text-amber-900">You are offline</p>
-          <p class="text-[10px] text-amber-700 leading-tight">Heritage details remain usable. AI, maps, and login are limited.</p>
+          <p class="text-[10px] text-amber-700 leading-tight">Heritage details remain usable. AI and maps are limited.</p>
         </div>
       </div>
     `;
@@ -77,28 +73,6 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
     if (externalMapsLink) {
       externalMapsLink.classList.add('pointer-events-none', 'opacity-50');
       externalMapsLink.title = 'Maps require internet';
-    }
-
-    // Disable Passkey Login Submit
-    const unlockBtn = document.getElementById('unlockBtn');
-    if (unlockBtn) {
-      unlockBtn.disabled = true;
-      unlockBtn.classList.add('opacity-50', 'cursor-not-allowed');
-      unlockBtn.title = 'Login requires internet';
-    }
-
-    const continueLoginBtn = document.getElementById('continueLoginBtn');
-    if (continueLoginBtn) {
-      continueLoginBtn.disabled = true;
-      continueLoginBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    }
-
-    // Disable Admin Passkey tools
-    const adminGenerateBtn = document.getElementById('adminGenerateBtn');
-    if (adminGenerateBtn) {
-      adminGenerateBtn.disabled = true;
-      adminGenerateBtn.classList.add('opacity-50', 'cursor-not-allowed');
-      adminGenerateBtn.title = 'Passkey generation requires internet';
     }
   } else {
     // Show online banner briefly if it was visible
@@ -154,28 +128,6 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
     if (externalMapsLink) {
       externalMapsLink.classList.remove('pointer-events-none', 'opacity-50');
       externalMapsLink.title = '';
-    }
-
-    // Re-enable Passkey Login
-    const unlockBtn = document.getElementById('unlockBtn');
-    if (unlockBtn) {
-      unlockBtn.disabled = false;
-      unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      unlockBtn.title = '';
-    }
-
-    const continueLoginBtn = document.getElementById('continueLoginBtn');
-    if (continueLoginBtn) {
-      continueLoginBtn.disabled = false;
-      continueLoginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
-
-    // Re-enable Admin Tools
-    const adminGenerateBtn = document.getElementById('adminGenerateBtn');
-    if (adminGenerateBtn) {
-      adminGenerateBtn.disabled = false;
-      adminGenerateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      adminGenerateBtn.title = '';
     }
   }
 }
