@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { getState, resetState, setState } from '../../src/core/app-state.js';
 
 const DEFAULT_STATE = {
-  activeView: 'map',
+  activeView: 'landing',
   activeModal: null,
   bootstrapInitialized: false,
 };
@@ -30,7 +30,7 @@ describe('app state', () => {
     const snapshot = getState();
     snapshot.activeView = 'other';
 
-    expect(getState().activeView).toBe('map');
+    expect(getState().activeView).toBe('landing');
   });
 
   it('rejects unknown keys', () => {
