@@ -61,7 +61,116 @@ export function createAccessTemplate() {
             </div>
             
         </div>
-    </div>\n<div id=\"gatekeeper\" class=\"fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4 transition-opacity duration-500\">\n        <div class=\"classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative animate-fade-scale\">\n            <button id=\"backToHome\" class=\"absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200\">←\n                Back</button>\n            <div class=\"mb-4 mt-2 text-5xl\">🔐</div>\n            <h2 class=\"text-2xl font-bold text-gray-900 mb-2\">Visitor Access</h2>\n            <p class=\"text-gray-600 mb-6 text-sm\">Please enter the visitor passkey provided by the organiser.</p>\n            <input type=\"text\" id=\"passcodeInput\" placeholder=\"e.g. AB-12345\" class=\"w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition-all duration-200 font-mono\">\n            <button id=\"unlockBtn\" class=\"w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg\">Verify\n                &amp; Unlock</button>\n            <p id=\"errorMsg\" class=\"text-red-500 text-sm mt-4 hidden font-bold\">Invalid Passkey.</p>\n        </div>\n    </div>\n<div id=\"platformWarningModal\" class=\"fixed inset-0 bg-black/70 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"warningTitle\">\n        <div class=\"bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative\">\n            <div class=\"text-center mb-4\">\n                <div id=\"warningIcon\" class=\"text-6xl mb-3\">⚠️</div>\n                <h2 id=\"warningTitle\" class=\"text-2xl font-bold text-gray-900 mb-2\">Important Notice</h2>\n            </div>\n\n            <div id=\"warningContent\" class=\"bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-4\">\n                <p class=\"text-sm text-gray-800 leading-relaxed\"></p>\n            </div>\n\n            <div class=\"bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4\">\n                <p class=\"text-xs text-blue-900 font-semibold mb-2\">🔒 Device Locking Explained:</p>\n                <p class=\"text-xs text-gray-700\">Your passkey will be locked to <strong>one platform only</strong>\n                    (either PWA or Browser). This security feature prevents sharing passkeys across devices.</p>\n            </div>\n\n            <!-- Copy Passkey Section -->\n            <div class=\"bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4\">\n                <p class=\"text-xs text-gray-600 font-semibold mb-2\">📋 Your Passkey:</p>\n                <div class=\"flex gap-2\">\n                    <input id=\"passkeyDisplay\" type=\"text\" readonly=\"\" class=\"flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-mono text-sm text-gray-800 font-bold uppercase tracking-widest\">\n                    <button id=\"copyPasskeyBtn\" class=\"bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-semibold text-sm flex items-center gap-1 whitespace-nowrap\">\n                        <span>📋</span>\n                        <span>Copy</span>\n                    </button>\n                </div>\n                <p id=\"copySuccess\" class=\"text-xs text-green-600 font-semibold mt-2 hidden\">✓ Copied to clipboard!</p>\n            </div>\n\n            <div class=\"space-y-3\">\n                <button id=\"continueLoginBtn\" class=\"w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg\">\n                    I Understand, Continue Login\n                </button>\n                <button id=\"cancelLoginBtn\" class=\"w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all duration-200\">\n                    Cancel\n                </button>\n                <button id=\"whatIsPWABtn\" class=\"w-full bg-purple-50 text-purple-700 font-semibold py-2 rounded-xl hover:bg-purple-100 transition-all duration-200 border-2 border-purple-200 flex items-center justify-center gap-2\">\n                    <span>❓</span>\n                    <span>What is PWA?</span>\n                </button>\n            </div>\n\n            <p class=\"text-xs text-gray-500 text-center mt-4\">💡 Tip: We recommend using PWA for the best experience</p>\n        </div>\n    </div>\n<div id=\"staff-screen\" class=\"fixed inset-0 classic-modal-backdrop fixed inset-0 z-[7000] hidden flex flex-col justify-center items-center p-4 sm:p-6 text-center transition-opacity duration-500\">\n        <div class=\"classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative text-gray-900 animate-fade-scale\">\n            <button id=\"closeStaffScreen\" class=\"absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200\">←\n                Back</button>\n            <div class=\"mb-4 mt-2 text-5xl\">🧑‍💼</div>\n            <h2 class=\"text-2xl font-bold text-gray-900 mb-2\">Project Admin (Prototype)</h2>\n            <p class=\"text-gray-600 mb-6 text-sm\">Protected access for demonstrating the proposed organiser workflow.\n            </p>\n            <div id=\"adminLoginForm\">\n                <input type=\"password\" id=\"adminPasswordInput\" placeholder=\"Admin Password\" class=\"w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition-all duration-200\">\n                <button id=\"adminLoginBtn\" class=\"w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 shadow-lg\">Login</button>\n                <p id=\"adminErrorMsg\" class=\"text-red-500 text-sm mt-4 hidden font-bold\">Wrong password.</p>\n            </div>\n            <div id=\"adminResult\" class=\"hidden\">\n                <div class=\"prototype-notice mb-4 text-left\">\n                    <strong>Project Admin prototype:</strong>\n                    This interface demonstrates the proposed organiser workflow for issuing visitor passkeys and\n                    managing event access. It is maintained for project demonstration and is not currently operated by\n                    Badan Warisan Malaysia.\n                </div>\n                <p class=\"text-gray-600 mb-2\" id=\"passkeyDate\"></p>\n                <div class=\"bg-blue-50 p-4 rounded-2xl border border-blue-100 mb-4 shadow-sm\">\n                    <p class=\"text-2xl font-bold font-mono text-blue-600 mb-1\" id=\"passkeyResult\">Click \"Generate New\n                        Passkey\" to create a code</p>\n                    <p id=\"adminStatusMsg\" class=\"text-[10px] text-blue-400 font-bold uppercase tracking-widest hidden\">\n                        New Code Generated!</p>\n                </div>\n\n                <div class=\"space-y-3\">\n                    <button id=\"adminGenerateBtn\" class=\"w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-md flex items-center justify-center\">\n                        <span class=\"mr-2\">🪄</span> Generate New Passkey\n                    </button>\n                    <button id=\"adminShareBtn\" class=\"w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hidden flex items-center justify-center\">\n                        <span class=\"mr-2\">📧</span> Share via Email\n                    </button>\n                    <button id=\"adminSwitchToMapBtn\" class=\"w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center justify-center\">\n                        <span class=\"mr-2\">🗺️</span> Switch to Map\n                    </button>\n                    <button id=\"adminLogoutBtn\" class=\"w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition flex items-center justify-center\">\n                        <span class=\"mr-2\">🚪</span> Log Out\n                    </button>\n                </div>\n\n                <div class=\"mt-6 border-t pt-4\">\n                    <p class=\"text-xs text-gray-500\">To check your AI API usage and quota, log in to your Google Cloud\n                        account and visit the dashboard:</p>\n                    <a href=\"https://console.cloud.google.com/apis/dashboard\" target=\"_blank\" class=\"text-xs text-blue-600 hover:underline\">Google Cloud API Dashboard</a>\n                </div>\n            </div>\n        </div>
+    </div>
+<div id="gatekeeper" class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4 transition-opacity duration-500">
+        <div class="classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative animate-fade-scale">
+            <button id="backToHome" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
+                Back</button>
+            <div class="mb-4 mt-2 text-5xl">🔐</div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Visitor Access</h2>
+            <p class="text-gray-600 mb-6 text-sm">Please enter the visitor passkey provided by the organiser.</p>
+            <input type="text" id="passcodeInput" placeholder="e.g. AB-12345" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition-all duration-200 font-mono">
+            <button id="unlockBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg">Verify
+                &amp; Unlock</button>
+            <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
+        </div>
+    </div>
+<div id="platformWarningModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="warningTitle">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
+            <div class="text-center mb-4">
+                <div id="warningIcon" class="text-6xl mb-3">⚠️</div>
+                <h2 id="warningTitle" class="text-2xl font-bold text-gray-900 mb-2">Important Notice</h2>
+            </div>
+
+            <div id="warningContent" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-4">
+                <p class="text-sm text-gray-800 leading-relaxed"></p>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
+                <p class="text-xs text-blue-900 font-semibold mb-2">🔒 Device Locking Explained:</p>
+                <p class="text-xs text-gray-700">Your passkey will be locked to <strong>one platform only</strong>
+                    (either PWA or Browser). This security feature prevents sharing passkeys across devices.</p>
+            </div>
+
+            <!-- Copy Passkey Section -->
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                <p class="text-xs text-gray-600 font-semibold mb-2">📋 Your Passkey:</p>
+                <div class="flex gap-2">
+                    <input id="passkeyDisplay" type="text" readonly="" class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-mono text-sm text-gray-800 font-bold uppercase tracking-widest">
+                    <button id="copyPasskeyBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-semibold text-sm flex items-center gap-1 whitespace-nowrap">
+                        <span>📋</span>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <p id="copySuccess" class="text-xs text-green-600 font-semibold mt-2 hidden">✓ Copied to clipboard!</p>
+            </div>
+
+            <div class="space-y-3">
+                <button id="continueLoginBtn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg">
+                    I Understand, Continue Login
+                </button>
+                <button id="cancelLoginBtn" class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all duration-200">
+                    Cancel
+                </button>
+                <button id="whatIsPWABtn" class="w-full bg-purple-50 text-purple-700 font-semibold py-2 rounded-xl hover:bg-purple-100 transition-all duration-200 border-2 border-purple-200 flex items-center justify-center gap-2">
+                    <span>❓</span>
+                    <span>What is PWA?</span>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center mt-4">💡 Tip: We recommend using PWA for the best experience</p>
+        </div>
+    </div>
+<div id="staff-screen" class="fixed inset-0 classic-modal-backdrop fixed inset-0 z-[7000] hidden flex flex-col justify-center items-center p-4 sm:p-6 text-center transition-opacity duration-500">
+        <div class="classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative text-gray-900 animate-fade-scale">
+            <button id="closeStaffScreen" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
+                Back</button>
+            <div class="mb-4 mt-2 text-5xl">🧑‍💼</div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Project Admin (Prototype)</h2>
+            <p class="text-gray-600 mb-6 text-sm">Protected access for demonstrating the proposed organiser workflow.
+            </p>
+            <div id="adminLoginForm">
+                <input type="password" id="adminPasswordInput" placeholder="Admin Password" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition-all duration-200">
+                <button id="adminLoginBtn" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 shadow-lg">Login</button>
+                <p id="adminErrorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Wrong password.</p>
+            </div>
+            <div id="adminResult" class="hidden">
+                <div class="prototype-notice mb-4 text-left">
+                    <strong>Project Admin prototype:</strong>
+                    This interface demonstrates the proposed organiser workflow for issuing visitor passkeys and
+                    managing event access. It is maintained for project demonstration and is not currently operated by
+                    Badan Warisan Malaysia.
+                </div>
+                <p class="text-gray-600 mb-2" id="passkeyDate"></p>
+                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 mb-4 shadow-sm">
+                    <p class="text-2xl font-bold font-mono text-blue-600 mb-1" id="passkeyResult">Click "Generate New
+                        Passkey" to create a code</p>
+                    <p id="adminStatusMsg" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hidden">
+                        New Code Generated!</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="adminGenerateBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-md flex items-center justify-center">
+                        <span class="mr-2">🪄</span> Generate New Passkey
+                    </button>
+                    <button id="adminShareBtn" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hidden flex items-center justify-center">
+                        <span class="mr-2">📧</span> Share via Email
+                    </button>
+                    <button id="adminSwitchToMapBtn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center justify-center">
+                        <span class="mr-2">🗺️</span> Switch to Map
+                    </button>
+                    <button id="adminLogoutBtn" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition flex items-center justify-center">
+                        <span class="mr-2">🚪</span> Log Out
+                    </button>
+                </div>
+
+                <div class="mt-6 border-t pt-4">
+                    <p class="text-xs text-gray-500">To check your AI API usage and quota, log in to your Google Cloud
+                        account and visit the dashboard:</p>
+                    <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
+                </div>
+            </div>
+        </div>
     </div>`;
 }
 
