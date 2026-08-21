@@ -75,52 +75,6 @@ export function createAccessTemplate() {
             <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
         </div>
     </div>
-<div id="platformWarningModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="warningTitle">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
-            <div class="text-center mb-4">
-                <div id="warningIcon" class="text-6xl mb-3">⚠️</div>
-                <h2 id="warningTitle" class="text-2xl font-bold text-gray-900 mb-2">Important Notice</h2>
-            </div>
-
-            <div id="warningContent" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-4">
-                <p class="text-sm text-gray-800 leading-relaxed"></p>
-            </div>
-
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
-                <p class="text-xs text-blue-900 font-semibold mb-2">🔒 Device Locking Explained:</p>
-                <p class="text-xs text-gray-700">Your passkey will be locked to <strong>one platform only</strong>
-                    (either PWA or Browser). This security feature prevents sharing passkeys across devices.</p>
-            </div>
-
-            <!-- Copy Passkey Section -->
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                <p class="text-xs text-gray-600 font-semibold mb-2">📋 Your Passkey:</p>
-                <div class="flex gap-2">
-                    <input id="passkeyDisplay" type="text" readonly="" class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-mono text-sm text-gray-800 font-bold uppercase tracking-widest">
-                    <button id="copyPasskeyBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-semibold text-sm flex items-center gap-1 whitespace-nowrap">
-                        <span>📋</span>
-                        <span>Copy</span>
-                    </button>
-                </div>
-                <p id="copySuccess" class="text-xs text-green-600 font-semibold mt-2 hidden">✓ Copied to clipboard!</p>
-            </div>
-
-            <div class="space-y-3">
-                <button id="continueLoginBtn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg">
-                    I Understand, Continue Login
-                </button>
-                <button id="cancelLoginBtn" class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all duration-200">
-                    Cancel
-                </button>
-                <button id="whatIsPWABtn" class="w-full bg-purple-50 text-purple-700 font-semibold py-2 rounded-xl hover:bg-purple-100 transition-all duration-200 border-2 border-purple-200 flex items-center justify-center gap-2">
-                    <span>❓</span>
-                    <span>What is PWA?</span>
-                </button>
-            </div>
-
-            <p class="text-xs text-gray-500 text-center mt-4">💡 Tip: We recommend using PWA for the best experience</p>
-        </div>
-    </div>
 <div id="staff-screen" class="fixed inset-0 classic-modal-backdrop fixed inset-0 z-[7000] hidden flex flex-col justify-center items-center p-4 sm:p-6 text-center transition-opacity duration-500">
         <div class="classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative text-gray-900 animate-fade-scale">
             <button id="closeStaffScreen" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←

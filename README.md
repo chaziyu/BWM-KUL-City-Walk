@@ -12,7 +12,6 @@
 The project is designed as a low-cost portfolio prototype using Vercel serverless functions and managed third-party services where appropriate.
 
 ### Key Highlights
-*   **📱 Installable App Shell:** Manifest-based PWA install metadata with offline support planned for a later phase
 *   **🎓 Interactive Onboarding:** Beautiful guided tour system with spotlight effects to help new users discover features instantly
 *   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI with rich knowledge of all heritage sites
 *   **🛂 Digital Passport:** Collect stamps, check-in to sites, and track your exploration progress

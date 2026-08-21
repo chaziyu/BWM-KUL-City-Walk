@@ -10,5 +10,3 @@ window.html2canvas = (...args) =>
 window.marked = {
   parse: (...args) => import('marked').then(({ marked }) => marked.parse(...args)),
 };
-
-import './pwa/register-pwa.js';
