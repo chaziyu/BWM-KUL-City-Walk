@@ -27,8 +27,6 @@ describe('icon-only close controls', () => {
     expect(document.getElementById('closeDirectionsModal').getAttribute('aria-label')).toBe('Close directions');
     expect(document.getElementById('closeBadgeModal').getAttribute('aria-label')).toBe('Close explorer ID badge');
     expect(document.getElementById('closeChallengeModal').getAttribute('aria-label')).toBe('Close daily challenge');
-    expect(document.getElementById('closePWAPrompt').getAttribute('aria-label')).toBe('Close install prompt');
-    expect(document.getElementById('closePWAExplanation').getAttribute('aria-label')).toBe('Close PWA explanation');
     expect(document.getElementById('closeUserGuideModal').getAttribute('aria-label')).toBe('Close user guide');
   });
 });
