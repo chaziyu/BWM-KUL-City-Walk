@@ -348,6 +348,31 @@ function setupGameUIListeners() {
   chatController.loadHistory();
 }
 
+function showLandingPage() {
+  notifyLifecycle({ activeView: 'landing' });
+  document.getElementById('landing-page')?.classList.remove('hidden');
+  document.getElementById('map-container')?.classList.add('hidden');
+  document.getElementById('progress-container')?.classList.add('hidden');
+}
+
+function setupLandingUI() {
+  const btnExploreDemo = document.getElementById('btnExploreDemo');
+  if (btnExploreDemo && btnExploreDemo.dataset.bound !== 'true') {
+    btnExploreDemo.dataset.bound = 'true';
+    btnExploreDemo.addEventListener('click', async () => {
+      await showMapExperience();
+    });
+  }
+
+  const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
+  if (btnPreLoginHelp && btnPreLoginHelp.dataset.bound !== 'true') {
+    btnPreLoginHelp.dataset.bound = 'true';
+    btnPreLoginHelp.addEventListener('click', () => {
+      modalManager.open('userGuideModal');
+    });
+  }
+}
+
 let isInitializingMap = false;
 
 async function showMapExperience() {
@@ -358,6 +383,7 @@ async function showMapExperience() {
   loadScopedState();
   resetDailyChatIfNeeded();
 
+  document.getElementById('landing-page')?.classList.add('hidden');
   document.getElementById('map-container')?.classList.remove('hidden');
   document.getElementById('progress-container')?.classList.remove('hidden');
 
@@ -420,7 +446,8 @@ async function showMapExperience() {
 }
 
 async function initApp() {
-  await showMapExperience();
+  setupLandingUI();
+  showLandingPage();
 }
 
 export function startLegacyApp(options = {}) {

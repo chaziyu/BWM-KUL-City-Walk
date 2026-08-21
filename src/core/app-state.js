@@ -1,5 +1,5 @@
 const DEFAULT_STATE = {
-  activeView: 'map',
+  activeView: 'landing',
   activeModal: null,
   bootstrapInitialized: false,
 };

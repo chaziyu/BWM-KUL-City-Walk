@@ -15,7 +15,7 @@ export function createMapTemplate() {
             -
         </button>
     </div>
-<div id="progress-container" class="fixed top-[env(safe-area-inset-top)] left-0 w-full z-[1000] px-4 pt-4">
+<div id="progress-container" class="fixed top-[env(safe-area-inset-top)] left-0 w-full z-[1000] hidden px-4 pt-4">
         <div class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto flex items-center">
             <div class="bg-gray-200 rounded-full h-3 w-full mx-3 relative overflow-hidden">
                 <div id="progressBar" class="bg-gradient-to-r from-green-400 to-green-500 h-full w-0 transition-all duration-700 ease-out rounded-full">
@@ -24,7 +24,7 @@ export function createMapTemplate() {
             <span id="progressText" class="text-xs font-bold text-gray-700 whitespace-nowrap mr-2">0/11 Sites</span>
         </div>
     </div>
-<div id="map-container" class="relative w-full h-[100dvh] z-10">
+<div id="map-container" class="relative w-full h-[100dvh] z-10 hidden">
         <div id="map" class="w-full h-full"></div>
         <div id="map-state-panel" class="absolute inset-0 z-[500] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6 hidden"></div>
     </div>
