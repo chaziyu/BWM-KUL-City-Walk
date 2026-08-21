@@ -454,7 +454,13 @@ async function checkForURLPasskey() {
   notifyLifecycle({ activeView: 'gatekeeper' });
   const input = document.getElementById('passcodeInput');
   if (input) input.value = code;
-  await showPlatformWarning();
+  const session = await visitorAccess.submit(code, {
+    button: document.getElementById('unlockBtn'),
+    errorElement: document.getElementById('errorMsg'),
+  });
+  if (session?.authenticated) {
+    await showMapExperience();
+  }
 }
 
 let isInitializingMap = false;
