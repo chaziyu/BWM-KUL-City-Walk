@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { getState, resetState, setState } from '../../src/core/app-state.js';
 
 const DEFAULT_STATE = {
-  session: null,
-  activeView: 'landing',
+  activeView: 'map',
   activeModal: null,
   bootstrapInitialized: false,
 };
@@ -29,9 +28,9 @@ describe('app state', () => {
 
   it('does not expose mutable internal state', () => {
     const snapshot = getState();
-    snapshot.activeView = 'admin';
+    snapshot.activeView = 'other';
 
-    expect(getState().activeView).toBe('landing');
+    expect(getState().activeView).toBe('map');
   });
 
   it('rejects unknown keys', () => {
@@ -39,7 +38,7 @@ describe('app state', () => {
   });
 
   it('resets to defaults', () => {
-    setState({ activeView: 'map' });
+    setState({ activeModal: 'chatModal' });
     resetState();
 
     expect(getState()).toEqual(DEFAULT_STATE);

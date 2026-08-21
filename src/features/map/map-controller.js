@@ -159,7 +159,7 @@ export function createMapController({
 
         onSitesLoaded?.(sites);
         updateVisibility();
-        setTimeout(() => map?.invalidateSize(), 100);
+        setTimeout(() => map?.invalidateSize?.(), 100);
         return map;
       } catch (error) {
         destroyMap();

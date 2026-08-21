@@ -12,7 +12,7 @@ describe('app shell', () => {
     expect(document.querySelectorAll('#btnChallenge')).toHaveLength(1);
     expect(document.querySelectorAll('#btnPassport')).toHaveLength(1);
     expect(document.querySelector('[data-app-region="floating-controls"]')?.className).toContain('fixed');
-    expect(document.getElementById('landing-page')).toBeTruthy();
+    expect(document.getElementById('map')).toBeTruthy();
     expect(document.getElementById('siteModal')).toBeTruthy();
     expect(document.getElementById('hiddenBadgeTemplate')).toBeTruthy();
   });

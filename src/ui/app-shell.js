@@ -1,4 +1,3 @@
-import { createAccessTemplate } from '../features/access/access-template.js';
 import { createChallengeTemplate } from '../features/challenges/challenge-template.js';
 import { createChatTemplate } from '../features/chat/chat-template.js';
 import { createBadgeTemplate } from '../features/badge/badge-template.js';
@@ -14,7 +13,6 @@ export function renderAppShell(appRoot = document.getElementById('app')) {
 
   appRoot.dataset.mounted = 'true';
   appRoot.innerHTML = `
-    <div data-app-region="access">${createAccessTemplate()}</div>
     <div data-app-region="map">${createMapTemplate()}</div>
     <div data-app-region="translation">${createTranslationTemplate()}</div>
     <div data-app-region="floating-controls" class="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 z-[2500] flex gap-2">

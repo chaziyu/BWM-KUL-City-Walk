@@ -1,49 +1,4 @@
-import { endSession } from '../../services/session-client.js';
-
 let isOnline = navigator.onLine;
-
-async function handleClearOfflineData() {
-  const confirmed = window.confirm('Are you sure you want to clear offline data? This will clear all cached maps, heritage images, offline progress, and sign you out.');
-  if (!confirmed) return;
-
-  try {
-    // Delete only BWM runtime caches beginning with bwm-
-    if ('caches' in window) {
-      const keys = await window.caches.keys();
-      await Promise.all(
-        keys
-          .filter(key => key.startsWith('bwm-'))
-          .map(key => window.caches.delete(key))
-      );
-    }
-    // Logout from Vercel session
-    await endSession().catch(() => {});
-    
-    // Clear only documented BWM local storage keys/namespaces
-    const keysToDelete = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('jejak_') || key.startsWith('pwa_'))) {
-        keysToDelete.push(key);
-      }
-    }
-    keysToDelete.forEach(key => localStorage.removeItem(key));
-
-    // When offline, do not reload immediately. Show message instead.
-    if (!navigator.onLine) {
-      alert('Offline data cleared. Reconnect to restart the City Walk.');
-    } else {
-      window.location.reload();
-    }
-  } catch (err) {
-    console.error('Failed to clear offline data:', err?.message || 'Unknown error');
-    if (!navigator.onLine) {
-      alert('Offline data cleared. Reconnect to restart the City Walk.');
-    } else {
-      window.location.reload();
-    }
-  }
-}
 
 export function updateConnectivityUI(onlineState = navigator.onLine) {
   isOnline = onlineState;
@@ -75,12 +30,9 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
         <span class="text-xl" aria-hidden="true">⚠️</span>
         <div class="text-left">
           <p class="text-xs font-bold text-amber-900">You are offline</p>
-          <p class="text-[10px] text-amber-700 leading-tight">Heritage details remain usable. AI, maps, and login are limited.</p>
+          <p class="text-[10px] text-amber-700 leading-tight">Heritage details remain usable. AI and maps are limited.</p>
         </div>
       </div>
-      <button id="pwa-clear-offline-btn" class="flex-shrink-0 bg-amber-600/10 hover:bg-amber-600/20 text-amber-800 text-[10px] font-bold px-2.5 py-1.5 rounded-lg active:scale-95 transition cursor-pointer">
-        Clear Cache
-      </button>
     `;
     banner.classList.remove('bg-green-50/95', 'border-green-300', 'text-green-900');
     banner.classList.add('bg-amber-50/95', 'border-amber-300', 'text-amber-900');
@@ -88,9 +40,6 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
     // Force a reflow to trigger transition
     void banner.offsetHeight;
     banner.classList.remove('-translate-y-32');
-
-    // Bind Clear Cache button
-    document.getElementById('pwa-clear-offline-btn')?.addEventListener('click', handleClearOfflineData);
 
     // Show map offline notice only when map is active
     if (isMapVisible) {
@@ -124,28 +73,6 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
     if (externalMapsLink) {
       externalMapsLink.classList.add('pointer-events-none', 'opacity-50');
       externalMapsLink.title = 'Maps require internet';
-    }
-
-    // Disable Passkey Login Submit
-    const unlockBtn = document.getElementById('unlockBtn');
-    if (unlockBtn) {
-      unlockBtn.disabled = true;
-      unlockBtn.classList.add('opacity-50', 'cursor-not-allowed');
-      unlockBtn.title = 'Login requires internet';
-    }
-
-    const continueLoginBtn = document.getElementById('continueLoginBtn');
-    if (continueLoginBtn) {
-      continueLoginBtn.disabled = true;
-      continueLoginBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    }
-
-    // Disable Admin Passkey tools
-    const adminGenerateBtn = document.getElementById('adminGenerateBtn');
-    if (adminGenerateBtn) {
-      adminGenerateBtn.disabled = true;
-      adminGenerateBtn.classList.add('opacity-50', 'cursor-not-allowed');
-      adminGenerateBtn.title = 'Passkey generation requires internet';
     }
   } else {
     // Show online banner briefly if it was visible
@@ -201,28 +128,6 @@ export function updateConnectivityUI(onlineState = navigator.onLine) {
     if (externalMapsLink) {
       externalMapsLink.classList.remove('pointer-events-none', 'opacity-50');
       externalMapsLink.title = '';
-    }
-
-    // Re-enable Passkey Login
-    const unlockBtn = document.getElementById('unlockBtn');
-    if (unlockBtn) {
-      unlockBtn.disabled = false;
-      unlockBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      unlockBtn.title = '';
-    }
-
-    const continueLoginBtn = document.getElementById('continueLoginBtn');
-    if (continueLoginBtn) {
-      continueLoginBtn.disabled = false;
-      continueLoginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
-
-    // Re-enable Admin Tools
-    const adminGenerateBtn = document.getElementById('adminGenerateBtn');
-    if (adminGenerateBtn) {
-      adminGenerateBtn.disabled = false;
-      adminGenerateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      adminGenerateBtn.title = '';
     }
   }
 }

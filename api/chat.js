@@ -1,7 +1,6 @@
 // File: /api/chat.js
 const { GoogleGenAI } = require("@google/genai");
 
-const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
 const { consumeQuota, getQuotaRemaining, rateLimit } = require('./_shared/rate-limit');
 const { enforceSameOrigin } = require('./_shared/request-security');
 const { withTimeout } = require('./_shared/http');
@@ -16,6 +15,8 @@ const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
 const MAX_HISTORY_TEXT_CHARS = Number(process.env.CHAT_HISTORY_TEXT_CHARS) || 1500;
 const RATE_LIMIT_WINDOW_MS = Number(process.env.CHAT_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000;
 const RATE_LIMIT_MAX = Number(process.env.CHAT_RATE_LIMIT_MAX) || 30;
+const CHAT_QUOTA_LIMIT = Number(process.env.CHAT_QUOTA_LIMIT) || 30;
+const CHAT_QUOTA_WINDOW_MS = Number(process.env.CHAT_QUOTA_WINDOW_MS) || 24 * 60 * 60 * 1000;
 
 // --- CONTEXT ENGINEERING LAYER: SANITIZATION ---
 function sanitizeText(str, maxLength = 4000) {
@@ -39,8 +40,6 @@ function normalizeHistory(history) {
     }).filter(Boolean);
 }
 
-
-
 function getClientKey(request) {
     const forwardedFor = request.headers['x-forwarded-for'];
     const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
@@ -54,17 +53,9 @@ async function checkRateLimit(key) {
     return await rateLimit(`chat:${key}`, max, windowMs);
 }
 
-function getQuotaWindow(session) {
-    const now = new Date();
-    if (session.role === 'admin') {
-        return `${now.getUTCFullYear()}-${now.getUTCMonth()}-${now.getUTCDate()}-${now.getUTCHours()}`;
-    }
-
-    if (session.role === 'visitor') {
-        return now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
-    }
-
-    return session.sessionId;
+function getDailyQuotaKey(clientKey) {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+    return `chat-quota:${clientKey}:${today}`;
 }
 
 function getContextSites(context, cleanQuery) {
@@ -118,11 +109,6 @@ module.exports = async (request, response) => {
 
     if (!enforceSameOrigin(request, response)) return;
 
-    const session = getSessionFromRequest(request);
-    if (!session || !['demo', 'visitor', 'admin'].includes(session.role)) {
-        return response.status(401).json({ reply: 'Please unlock the app before using the AI guide.' });
-    }
-
     const { userQuery, context, history } = request.body || {};
     const cleanQuery = sanitizeText(userQuery, MAX_QUERY_CHARS);
     if (!cleanQuery) {
@@ -145,8 +131,8 @@ module.exports = async (request, response) => {
     }
 
     const contextSites = getContextSites(context, cleanQuery);
-    const limit = ROLE_LIMITS[session.role] || 0;
-    const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+    const quotaKey = getDailyQuotaKey(clientKey);
+    const limit = process.env.CHAT_QUOTA_LIMIT !== undefined ? Number(process.env.CHAT_QUOTA_LIMIT) : CHAT_QUOTA_LIMIT;
 
     let remainingQuota;
     try {
@@ -247,13 +233,13 @@ module.exports = async (request, response) => {
         if (!contract.notFound) {
             let quota;
             try {
-                quota = await consumeQuota(quotaKey, limit);
+                quota = await consumeQuota(quotaKey, limit, CHAT_QUOTA_WINDOW_MS);
             } catch (error) {
                 console.error('Quota backend failure during consumption:', error?.message || 'Unknown error');
                 return response.status(503).json({ reply: 'The access service is temporarily unavailable. Please try again shortly.' });
             }
             if (quota.exceeded) {
-                return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.', remainingQuota: quota.remaining });
+                return response.status(429).json({ reply: 'You have reached the AI chat limit for today.', remainingQuota: quota.remaining });
             }
             contract.remainingQuota = quota.remaining;
         } else {
