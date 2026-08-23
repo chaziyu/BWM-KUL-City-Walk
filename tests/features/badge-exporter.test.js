@@ -1,11 +1,13 @@
 /* @vitest-environment jsdom */
 import { describe, expect, it, vi } from 'vitest';
 import { applyCanvasSafeBadgeStyles } from '../../src/features/badge/badge-exporter.js';
-import { createBadgeTemplate } from '../../src/features/badge/badge-template.js';
+import fs from 'node:fs';
+
+const indexHtml = fs.readFileSync('index.html', 'utf8');
 
 describe('badge exporter', () => {
   it('marks badge capture as notranslate and applies canvas-safe colors', () => {
-    document.body.innerHTML = createBadgeTemplate();
+    document.body.innerHTML = indexHtml;
 
     const badge = document.getElementById('hiddenBadgeTemplate');
     applyCanvasSafeBadgeStyles(badge);
@@ -18,7 +20,7 @@ describe('badge exporter', () => {
   });
 
   it('converts inherited oklch custom properties before capture', () => {
-    document.body.innerHTML = createBadgeTemplate();
+    document.body.innerHTML = indexHtml;
     const canvasContext = {
       canvas: {},
       clearRect: vi.fn(),

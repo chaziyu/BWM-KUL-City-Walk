@@ -7,8 +7,10 @@ import {
     DEFAULT_BADGE_AVATAR,
     validateBadgePhoto,
 } from '../../src/features/badge/badge-renderer.js';
-import { createBadgeTemplate } from '../../src/features/badge/badge-template.js';
 import { STRINGS } from '../../localization.js';
+import fs from 'node:fs';
+
+const indexHtml = fs.readFileSync('index.html', 'utf8');
 
 describe('badge controller', () => {
   it('rejects oversized badge photos', () => {
@@ -27,7 +29,7 @@ describe('badge controller', () => {
   });
 
   it('restores the generate button after upload validation fails', async () => {
-    document.body.innerHTML = createBadgeTemplate();
+    document.body.innerHTML = indexHtml;
     const input = document.getElementById('explorerPhotoInput');
     Object.defineProperty(input, 'files', {
       value: [{ type: 'image/png', size: BADGE_PHOTO_MAX_BYTES + 1 }],
@@ -53,7 +55,7 @@ describe('badge controller', () => {
   });
 
   it('uses local default avatar and restores the generate button on failure', async () => {
-    document.body.innerHTML = createBadgeTemplate();
+    document.body.innerHTML = indexHtml;
     const image = document.getElementById('badgeProfileImage');
     Object.defineProperty(image, 'complete', { value: true, configurable: true });
     Object.defineProperty(image, 'naturalWidth', { value: 1, configurable: true });
