@@ -107,10 +107,7 @@ registerRoute(
   ({ request, url }) => {
     const isApi = url.pathname.startsWith('/api/');
     const isNonGet = request.method !== 'GET';
-    const isExternalService = url.hostname.includes('translate.google.com') ||
-                             url.hostname.includes('translate.googleapis.com') ||
-                             url.hostname.includes('translate-pa.googleapis.com') ||
-                             url.hostname.includes('maps.google.com') ||
+    const isExternalService = url.hostname.includes('maps.google.com') ||
                              url.hostname.includes('google.com');
     return isApi || isNonGet || isExternalService;
   },

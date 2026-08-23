@@ -264,7 +264,6 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 - Full offline support is planned for a later phase; third-party map tiles are online-only.
 - The admin workflow is a portfolio prototype.
 - Recommended sites do not all have quiz content yet.
-- Google Translate is a third-party widget loaded only when requested.
 - AI answer caching is in-memory only; Vercel cold starts or multiple instances do not share cache.
 - AI retrieval is lexical and depends on curated `search_terms`; add verified aliases from real visitor questions before considering heavier retrieval.
 - Invalid Gemini JSON fails safely without consuming quota, but may show fallback/error responses more often if the model ignores the response contract.

@@ -21,7 +21,6 @@ import { createSiteActions } from './src/features/sites/site-actions.js';
 import { isMainSite } from './src/features/sites/site-classification.js';
 import { loadSiteData } from './src/features/sites/site-data.js';
 import { createSiteModalController } from './src/features/sites/site-modal.js';
-import { createTranslationController } from './src/features/translation/translation-controller.js';
 import { STRINGS } from './localization.js';
 import { migrateData } from './src/services/storage-migration.js';
 import {
@@ -120,7 +119,6 @@ const chatController = createChatController({
 const directionsController = createDirectionsController({ modalManager });
 const badgeController = createBadgeController({ modalManager, progressService, strings: STRINGS });
 const onboardingController = createOnboardingController({ modalManager });
-const translationController = createTranslationController();
 
 const challengeController = createChallengeController({
   getSolvedRiddle: () => solvedRiddle,
@@ -458,7 +456,6 @@ export function startLegacyApp(options = {}) {
     onDomReady(() => {
       try {
         onboardingController.bind();
-        translationController.bind();
         resolve(initApp());
       } catch (error) {
         reject(error);
