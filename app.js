@@ -66,6 +66,7 @@ const mapController = createMapController({
   loadSites: loadSiteData,
   getIsCompleted: (siteId) => progressService.isCompleted(siteId),
   onSiteSelected: (site) => siteModalController.open(site),
+  onSitePreview: (site) => mapPreview?.open(site),
   onSitesLoaded: (sites) => {
     allSiteData = sites;
     mainSites = sites.filter(isMainSite);
@@ -118,7 +119,10 @@ const chatController = createChatController({
 
 const directionsController = createDirectionsController({ modalManager });
 const badgeController = createBadgeController({ modalManager, progressService, strings: STRINGS });
-const onboardingController = createOnboardingController({ modalManager });
+const onboardingController = createOnboardingController({ 
+  modalManager,
+  onLoginSuccess: () => showMapExperience()
+});
 
 const challengeController = createChallengeController({
   getSolvedRiddle: () => solvedRiddle,
@@ -354,14 +358,6 @@ function showLandingPage() {
 }
 
 function setupLandingUI() {
-  const btnExploreDemo = document.getElementById('btnExploreDemo');
-  if (btnExploreDemo && btnExploreDemo.dataset.bound !== 'true') {
-    btnExploreDemo.dataset.bound = 'true';
-    btnExploreDemo.addEventListener('click', async () => {
-      await showMapExperience();
-    });
-  }
-
   const btnPreLoginHelp = document.getElementById('btnPreLoginHelp');
   if (btnPreLoginHelp && btnPreLoginHelp.dataset.bound !== 'true') {
     btnPreLoginHelp.dataset.bound = 'true';

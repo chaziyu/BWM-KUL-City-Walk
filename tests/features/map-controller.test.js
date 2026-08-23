@@ -44,6 +44,9 @@ describe('map controller', () => {
         return layer;
       }),
       map: vi.fn(() => map),
+      polyline: vi.fn(() => ({
+        addTo: vi.fn(() => ({ remove: vi.fn() })),
+      })),
       circle: vi.fn(() => ({
         addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
       })),
@@ -151,26 +154,7 @@ describe('map controller', () => {
     expect(map.zoomOut).toHaveBeenCalledOnce();
   });
 
-  it('opens brief popup first, then details on repeat site click', async () => {
-    const { controller, markers, onSiteSelected } = setup(15);
 
-    await controller.initMap();
-    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
-    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
-
-    expect(onSiteSelected).toHaveBeenCalledOnce();
-  });
-
-  it('shows brief again after the popup closes', async () => {
-    const { controller, markers, onSiteSelected } = setup(15);
-
-    await controller.initMap();
-    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
-    markers[0].on.mock.calls.find(([event]) => event === 'popupclose')[1]();
-    markers[0].on.mock.calls.find(([event]) => event === 'click')[1]();
-
-    expect(onSiteSelected).not.toHaveBeenCalled();
-  });
 
   it('cleans up and leaves getMap() as null when map startup fails during data loading', async () => {
     const mapLayers = new Set();
@@ -189,6 +173,7 @@ describe('map controller', () => {
     const L = {
       layerGroup: vi.fn(() => createLayer()),
       map: vi.fn(() => mapObj),
+        polyline: vi.fn(() => ({ addTo: vi.fn(() => ({ remove: vi.fn() })) })),
       circle: vi.fn(() => ({
         addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
       })),
@@ -233,6 +218,7 @@ describe('map controller', () => {
     const L = {
       layerGroup: vi.fn(() => createLayer()),
       map: vi.fn(() => mapObj),
+        polyline: vi.fn(() => ({ addTo: vi.fn(() => ({ remove: vi.fn() })) })),
       circle: vi.fn(() => ({
         addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
       })),
@@ -281,6 +267,7 @@ describe('map controller', () => {
     const L = {
       layerGroup: vi.fn(() => createLayer()),
       map: vi.fn(() => mapObj),
+        polyline: vi.fn(() => ({ addTo: vi.fn(() => ({ remove: vi.fn() })) })),
       circle: vi.fn(() => ({
         addTo: vi.fn(() => ({ remove: vi.fn(), setLatLng: vi.fn() })),
       })),
