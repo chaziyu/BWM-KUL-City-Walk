@@ -1,0 +1,24 @@
+[2026-09-24T07:39:16.092Z] [CodeGraph daemon] Listening on \\.\pipe\codegraph-7c9503c3b86e7788 (pid 16160, v1.6.0). Idle timeout 300000ms.
+[2026-09-24T07:39:16.696Z] [CodeGraph MCP] File watcher active — graph will auto-sync on changes
+[2026-09-24T07:39:16.700Z] [CodeGraph MCP] Query pool: up to 7 worker thread(s) for concurrent reads.
+[2026-09-24T07:42:08.682Z] [CodeGraph daemon] Listening on \\.\pipe\codegraph-7c9503c3b86e7788 (pid 21012, v1.6.0). Idle timeout 300000ms.
+[2026-09-24T07:42:09.852Z] [CodeGraph daemon] Another daemon (pid 21012) already holds the lock; exiting.
+[2026-09-24T07:42:11.035Z] [CodeGraph MCP] File watcher active — graph will auto-sync on changes
+[2026-09-24T07:42:11.042Z] [CodeGraph MCP] Query pool: up to 7 worker thread(s) for concurrent reads.
+[2026-09-24T07:52:51.316Z] [CodeGraph MCP] Auto-synced 1 file(s) in 1320ms
+[2026-09-24T07:53:00.903Z] [CodeGraph MCP] Auto-synced 1 file(s) in 42ms
+[2026-09-24T07:53:21.661Z] [CodeGraph MCP] Auto-synced 1 file(s) in 10ms
+[2026-09-24T07:53:36.271Z] [CodeGraph MCP] Auto-synced 1 file(s) in 9ms
+[2026-09-24T07:53:57.251Z] [CodeGraph MCP] Auto-synced 2 file(s) in 30ms
+[2026-09-24T07:54:36.115Z] [CodeGraph MCP] Auto-synced 4 file(s) in 30ms
+[2026-09-24T07:55:17.944Z] [CodeGraph MCP] Auto-synced 2 file(s) in 40ms
+[2026-09-24T07:55:49.193Z] [CodeGraph MCP] Auto-synced 2 file(s) in 24ms
+[2026-09-24T07:55:59.232Z] [CodeGraph MCP] Auto-synced 1 file(s) in 26ms
+[2026-09-24T07:56:12.961Z] [CodeGraph MCP] Auto-synced 1 file(s) in 11ms
+[2026-09-24T07:56:40.815Z] [CodeGraph MCP] Auto-synced 2 file(s) in 37ms
+[2026-09-24T08:00:53.222Z] [CodeGraph MCP] Auto-synced 2 file(s) in 19ms
+[2026-09-24T08:01:22.536Z] [CodeGraph MCP] Auto-synced 1 file(s) in 17ms
+[2026-09-24T08:01:43.592Z] [CodeGraph MCP] Auto-synced 1 file(s) in 11ms
+[2026-09-24T08:03:16.478Z] [CodeGraph MCP] Auto-synced 1 file(s) in 17ms
+[2026-09-24T08:03:38.108Z] [CodeGraph MCP] Auto-synced 1 file(s) in 30ms
+[2026-09-24T08:12:34.972Z] [CodeGraph MCP] Auto-synced 82 file(s) in 2496ms
