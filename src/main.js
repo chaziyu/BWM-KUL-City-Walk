@@ -1,6 +1,5 @@
 import L from 'leaflet';
 import './styles/main.css';
-import './app/bootstrap.js';
 
 window.L = L;
 await import('leaflet-defaulticon-compatibility');
@@ -14,3 +13,5 @@ window.html2canvas = (...args) =>
 window.marked = {
   parse: (...args) => import('marked').then(({ marked }) => marked.parse(...args)),
 };
+
+await import('./app/bootstrap.js');
