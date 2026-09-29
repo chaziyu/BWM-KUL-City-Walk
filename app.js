@@ -22,6 +22,7 @@ import { createPassportController } from './src/features/passport/passport-contr
 import { createProgressService } from './src/features/passport/progress-service.js';
 import { createSiteActions } from './src/features/sites/site-actions.js';
 import { loadSiteData } from './src/features/sites/site-data.js';
+import { getMustVisitSites } from './src/features/sites/site-domain.js';
 import { createSiteModalController } from './src/features/sites/site-modal.js';
 import { createTranslationController } from './src/features/translation/translation-controller.js';
 import { STRINGS } from './localization.js';
@@ -64,6 +65,9 @@ migrateData();
 
 const modalManager = createModalManager({
   appRoot: document.getElementById('app') || document,
+  onModalStateChange({ activeModal }) {
+    notifyLifecycle({ activeModal });
+  },
 });
 
 const progressService = createProgressService({
@@ -78,7 +82,7 @@ const mapController = createMapController({
   onSiteSelected: (site) => siteModalController.open(site),
   onSitesLoaded: (sites) => {
     allSiteData = sites;
-    mainSites = sites.filter((site) => /^\d+$/.test(String(site.id)));
+    mainSites = getMustVisitSites(sites);
     progressService.setMainSites(mainSites);
     passportController.refreshProgress();
   },
@@ -537,7 +541,10 @@ async function checkForURLPasskey() {
 }
 
 function setMapChromeVisible(visible) {
-  document.getElementById('progress-container')?.classList.toggle('hidden', !visible);
+  document.querySelectorAll('[data-map-chrome]').forEach((element) => {
+    element.classList.toggle('hidden', !visible);
+    element.setAttribute('aria-hidden', String(!visible));
+  });
   document.getElementById('map')?.classList.toggle('hidden', !visible);
 }
 
