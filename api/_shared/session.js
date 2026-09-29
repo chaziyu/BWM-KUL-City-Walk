@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { isProduction, readInteger, readString } = require('./config');
+const { isProduction, readInteger, readString, useSecureCookies } = require('./config');
 
 const COOKIE_NAME = 'bwm_session';
 const ROLE_LIMITS = {
@@ -62,7 +62,7 @@ function getCookieOptions(maxAge) {
         'SameSite=Lax',
         'Path=/',
         `Max-Age=${Math.max(0, Math.floor(maxAge))}`,
-        isProduction() ? 'Secure' : ''
+        useSecureCookies() ? 'Secure' : ''
     ].filter(Boolean).join('; ');
 }
 
