@@ -315,7 +315,7 @@ function showAdminLogin() {
   const passwordInput = document.getElementById('adminPasswordInput');
   if (passwordInput) {
     passwordInput.value = '';
-    queueMicrotask(() => passwordInput.focus());
+    window.setTimeout(() => passwordInput.focus(), 0);
   }
 
   const errorElement = document.getElementById('adminErrorMsg');
