@@ -3,7 +3,7 @@
 
 const LATEST_VERSION = 4;
 const REMOVED_SITE_IDS = [];
-const PROGRESS_NAMESPACES = ['demo', 'visitor'];
+const PROGRESS_NAMESPACES = ['demo', 'visitor', 'admin'];
 
 function scopedKey(name, namespace) {
     return `jejak_${namespace}_${name}`;
