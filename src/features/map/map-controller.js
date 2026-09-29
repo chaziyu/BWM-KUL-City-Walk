@@ -20,6 +20,7 @@ export function createMapController({
   getIsCompleted,
   onSiteSelected,
   onSitesLoaded,
+  onLocationStatus,
 }) {
   let map = null;
   let markersLayer = null;
@@ -121,23 +122,29 @@ export function createMapController({
     map.on('zoomend', updateVisibility);
     window.addEventListener('resize', updateVisibility);
 
-    const sites = await loadSites();
-    if (destroyed) return null;
+    try {
+      const sites = await loadSites();
+      if (destroyed) return null;
 
-    allSites = sites;
-    markerRenderer.render(sites);
-    polygonRenderer.render(sites);
-    geolocation = createGeolocationController({
-      L,
-      map,
-      getMainSites: () => allSites.filter((site) => /^\d+$/.test(String(site.id))),
-      isCompleted: getIsCompleted,
-    });
+      allSites = sites;
+      markerRenderer.render(sites);
+      polygonRenderer.render(sites);
+      geolocation = createGeolocationController({
+        L,
+        map,
+        getMainSites: () => allSites.filter((site) => /^\d+$/.test(String(site.id))),
+        isCompleted: getIsCompleted,
+        onStatus: onLocationStatus,
+      });
 
-    onSitesLoaded?.(sites);
-    updateVisibility();
-    setTimeout(() => map?.invalidateSize(), 100);
-    return map;
+      onSitesLoaded?.(sites);
+      updateVisibility();
+      setTimeout(() => map?.invalidateSize(), 100);
+      return map;
+    } catch (error) {
+      destroyMap();
+      throw error;
+    }
   }
 
   function refreshVisitedState(siteId) {
