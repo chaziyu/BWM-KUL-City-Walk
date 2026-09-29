@@ -56,9 +56,11 @@ function validateUniqueField(sites, field, errors) {
 function validateImage(site, errors) {
   if (!hasText(site.image)) return;
 
-  const imagePath = path.resolve(ROOT, 'public', site.image);
-  if (!imagePath.startsWith(ROOT) || !fs.existsSync(imagePath)) {
-    errors.push(`${site.id}: image does not exist at ${site.image}`);
+  const publicRoot = path.resolve(ROOT, 'public');
+  const imagePath = path.resolve(publicRoot, site.image);
+  const isInsidePublic = imagePath === publicRoot || imagePath.startsWith(`${publicRoot}${path.sep}`);
+  if (!isInsidePublic || !fs.existsSync(imagePath)) {
+    errors.push(`${site.id}: image must resolve to an existing file inside public/: ${site.image}`);
   }
 }
 
