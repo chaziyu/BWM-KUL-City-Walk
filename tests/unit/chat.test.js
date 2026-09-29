@@ -120,7 +120,7 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' });
 
     expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I’m here to help with the BMW KUL City Walk. You can ask about places to visit, route ideas, or the story behind a stop.');
+    expect(result.body.reply).toBe('I’m here to help with the BWM KUL City Walk. You can ask about places to visit, route ideas, or the story behind a stop.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
@@ -131,7 +131,7 @@ describe('chat API quota ordering', () => {
     const result = await postChat(cookie, { userQuery: 'siapa awak?' });
 
     expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I’m your AI Tour Guide. I can help with places to visit, route ideas, and stories from the BMW KUL City Walk.');
+    expect(result.body.reply).toBe('I’m your AI Tour Guide. I can help with places to visit, route ideas, and stories from the BWM KUL City Walk.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
   });
 
