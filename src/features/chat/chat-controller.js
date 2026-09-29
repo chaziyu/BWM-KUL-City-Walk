@@ -11,7 +11,6 @@ export function createChatController({
   modalManager,
   onSourceClick,
   saveHistory,
-  saveMessageCount,
   setHistory,
   setMessageCount,
   strings,
@@ -64,8 +63,10 @@ export function createChatController({
     loadHistory();
     if (context.siteId) {
       const input = document.getElementById('chatInput');
-      if (input) input.value = 'Tell me more about this site.';
-      void sendMessage();
+      if (input) {
+        input.value = 'Tell me more about this site.';
+        input.focus();
+      }
     } else if (typeof context === 'string') {
       activeContext = { type: 'general' };
       const input = document.getElementById('chatInput');
@@ -75,7 +76,7 @@ export function createChatController({
   }
 
   function loadHistory() {
-    ui.loadHistory(getHistory());
+    ui.loadHistory(getScopedHistory());
   }
 
   function updateCount() {
@@ -122,7 +123,6 @@ export function createChatController({
         && Number.isFinite(Number(result.remainingQuota));
       if (hasRemainingQuota) {
         setMessageCount(Math.max(0, limit - Number(result.remainingQuota)));
-        saveMessageCount();
         updateCount();
       }
 
@@ -135,7 +135,6 @@ export function createChatController({
         && Number.isFinite(Number(error.remainingQuota));
       if (hasRemainingQuota) {
         setMessageCount(Math.max(0, limit - Number(error.remainingQuota)));
-        saveMessageCount();
         updateCount();
       }
 
