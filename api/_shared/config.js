@@ -16,6 +16,10 @@ function isProduction() {
     return process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
 }
 
+function useSecureCookies() {
+    return isProduction() || process.env.VERCEL === '1';
+}
+
 function getRedisConfig() {
     const url = readString('KV_REST_API_URL');
     const token = readString('KV_REST_API_TOKEN');
@@ -30,6 +34,7 @@ function getRedisConfig() {
 module.exports = {
     getRedisConfig,
     isProduction,
+    useSecureCookies,
     readInteger,
     readString,
 };
