@@ -132,7 +132,12 @@ const chatController = createChatController({
   strings: STRINGS,
 });
 
-const directionsController = createDirectionsController({ modalManager });
+const directionsController = createDirectionsController({
+  modalManager,
+  onError(message) {
+    showToast(message, { severity: 'error' });
+  },
+});
 const badgeController = createBadgeController({ modalManager, progressService, strings: STRINGS });
 const onboardingController = createOnboardingController({ getCurrentSession, modalManager });
 const translationController = createTranslationController();
