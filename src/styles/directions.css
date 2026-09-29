@@ -1,5 +1,19 @@
 /* --- 13. DIRECTIONS VIEWER (MODERN MODAL) --- */
+#directionsModal {
+    padding:
+        max(0.75rem, env(safe-area-inset-top))
+        max(0.75rem, env(safe-area-inset-right))
+        max(0.75rem, env(safe-area-inset-bottom))
+        max(0.75rem, env(safe-area-inset-left));
+}
+
 #directionsModal .modern-modal-content {
+    box-sizing: border-box;
+    width: min(calc(100vw - 1.5rem), 56rem);
+    max-width: none;
+    height: min(85vh, 46rem);
+    height: min(85dvh, 46rem);
+    min-height: 0;
     background: white;
     padding: 0;
     overflow: hidden;
@@ -10,11 +24,57 @@
     border-radius: 0;
 }
 
+#directionsSearchRegion {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+#directionsSearchIcon {
+    font-size: clamp(2.3rem, 10vw, 3.75rem);
+    line-height: 1;
+}
+
 @media (max-width: 640px) {
+    #directionsModal {
+        align-items: flex-end;
+        padding:
+            max(0.5rem, env(safe-area-inset-top))
+            0
+            0;
+    }
+
     #directionsModal .modern-modal-content {
-        height: 90vh;
         width: 100%;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
+        height: 92vh;
+        height: 92dvh;
+        border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0;
+    }
+
+    #directionsSearchRegion {
+        padding: clamp(1rem, 5vw, 1.5rem);
+    }
+}
+
+@media (max-height: 650px) {
+    #directionsModal .modern-modal-content {
+        height: calc(100vh - 0.5rem);
+        height: calc(100dvh - 0.5rem);
+    }
+
+    #directionsModal .modern-modal-content > div:first-child {
+        padding-block: 0.65rem;
+    }
+
+    #directionsModal .modern-modal-content > div:last-child {
+        padding: 0.75rem;
+    }
+
+    #directionsSearchIcon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #externalMapsLink {
+        padding-block: 0.75rem;
     }
 }

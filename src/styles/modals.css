@@ -228,8 +228,13 @@
 }
 
 .passport-panel {
-  width: min(94%, 34rem);
-  padding: 1.4rem;
+  width: min(calc(100vw - 2rem), 34rem);
+  max-height: 92vh;
+  max-height: 92dvh;
+  padding: clamp(1rem, 4vw, 1.4rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   text-align: left;
 }
 
@@ -253,7 +258,9 @@
 }
 
 .passport-panel__grid {
-  max-height: min(54dvh, 25rem);
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: none;
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -276,6 +283,7 @@
 
 .passport-panel--complete {
   max-width: 30rem;
+  overflow-y: auto;
   text-align: center;
 }
 
@@ -307,6 +315,8 @@
   .passport-panel {
     width: 100%;
     max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
     border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0;
   }
 
@@ -807,5 +817,114 @@
 
   .user-guide__features span {
     margin-top: 0.2rem;
+  }
+}
+
+
+/* Compact responsive overlays that still use legacy utility markup. */
+#pwaInstallPrompt,
+#pwaExplanationModal,
+#badgeInputModal {
+  padding:
+    max(0.75rem, env(safe-area-inset-top))
+    max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom))
+    max(0.75rem, env(safe-area-inset-left));
+}
+
+#pwaInstallPrompt > div,
+#pwaExplanationModal > div,
+#badgeInputModal > div {
+  box-sizing: border-box;
+  width: min(calc(100vw - 1.5rem), 32rem);
+  max-width: none;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+#pwaInstallPrompt > div,
+#badgeInputModal > div {
+  max-width: 28rem;
+}
+
+#pwaInstallPrompt .text-6xl,
+#pwaExplanationModal .text-6xl,
+#challengeModal .text-6xl {
+  font-size: clamp(2.2rem, 10vw, 3.75rem);
+  line-height: 1;
+}
+
+#pwaInstallPrompt h2,
+#pwaExplanationModal h2,
+#welcomeModal h2,
+#challengeModal h2 {
+  font-size: clamp(1.25rem, 5.5vw, 1.6rem);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+#welcomeModal .classic-modal-content,
+#challengeModal .classic-modal-content {
+  box-sizing: border-box;
+  width: min(calc(100vw - 2rem), 30rem);
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+#badgeInputModal input[type="file"] {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  #pwaInstallPrompt,
+  #pwaExplanationModal,
+  #badgeInputModal {
+    align-items: flex-end;
+    padding:
+      max(0.5rem, env(safe-area-inset-top))
+      0
+      0;
+  }
+
+  #pwaInstallPrompt > div,
+  #pwaExplanationModal > div,
+  #badgeInputModal > div,
+  #welcomeModal .classic-modal-content,
+  #challengeModal .classic-modal-content {
+    width: 100%;
+    max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
+    border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0;
+  }
+}
+
+@media (max-height: 650px) {
+  #pwaInstallPrompt > div,
+  #pwaExplanationModal > div,
+  #badgeInputModal > div,
+  #welcomeModal .classic-modal-content,
+  #challengeModal .classic-modal-content,
+  .passport-panel {
+    max-height: calc(100vh - 0.5rem);
+    max-height: calc(100dvh - 0.5rem);
+  }
+
+  #pwaInstallPrompt > div,
+  #pwaExplanationModal > div,
+  #badgeInputModal > div {
+    padding-block: 0.85rem;
+  }
+
+  #pwaInstallPrompt .text-6xl,
+  #pwaExplanationModal .text-6xl,
+  #challengeModal .text-6xl {
+    font-size: 2rem;
   }
 }
