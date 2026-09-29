@@ -2,8 +2,6 @@ const SCOPED_KEYS = [
     'visited',
     'discovered',
     'chat_history',
-    'message_count',
-    'last_active_day',
     'solved_riddle'
 ];
 
