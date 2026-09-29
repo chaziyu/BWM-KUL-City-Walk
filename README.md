@@ -132,9 +132,13 @@ Use `vercel dev` for passkey, admin, and chat testing because those flows depend
 
 ```bash
 npm run check
+npm run typecheck
+npm run test:coverage
 npm run test:browser
 npm run preview
 ```
+
+`npm run check` is the main local/CI verification command. It runs ESLint, JSDoc/TypeScript `checkJs` validation, heritage-data validation, the Vitest suite with V8 coverage, and a production build. Coverage gates are intentionally focused on business-risk modules such as sessions, quotas, storage, API contracts, site classification, and progress logic rather than template markup.
 
 ### Environment Variables
 
