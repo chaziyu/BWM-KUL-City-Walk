@@ -37,16 +37,16 @@ function sanitizeRenderedHtml(html) {
   return cleanFragment;
 }
 
-export function createChatUI({ strings, getSiteName, onSourceClick }) {
+export function createChatUI({ strings, getSiteName, onSourceClick, renderMarkdown }) {
   async function renderSafeMarkdown(container, text) {
     if (!container) return;
     container.replaceChildren();
-    if (typeof marked === 'undefined') {
+    if (typeof renderMarkdown !== 'function') {
       container.textContent = text || '';
       return;
     }
 
-    const rawHtml = await marked.parse(text || '');
+    const rawHtml = await renderMarkdown(text || '');
     container.appendChild(sanitizeRenderedHtml(rawHtml));
   }
 
