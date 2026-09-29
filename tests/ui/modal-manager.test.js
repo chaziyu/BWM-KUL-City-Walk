@@ -63,6 +63,7 @@ describe('modal manager', () => {
 
     expect(document.getElementById('second').classList.contains('hidden')).toBe(true);
     expect(document.getElementById('first').classList.contains('hidden')).toBe(false);
+    expect(document.activeElement).toBe(document.getElementById('firstClose'));
 
     manager.close('first');
     vi.advanceTimersByTime(400);
