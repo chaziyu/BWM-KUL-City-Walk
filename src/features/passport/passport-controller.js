@@ -86,6 +86,7 @@ export function createPassportController({
   return {
     bind,
     buildSharePayload,
+    getCompletionState: () => progressService.getCompletionState(),
     maybeShowTrailCompletion,
     openPassport,
     recordCheckIn(siteId) {
