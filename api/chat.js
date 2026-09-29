@@ -2,7 +2,7 @@
 const { GoogleGenAI } = require("@google/genai");
 
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
-const { consumeQuota, getQuotaRemaining, isRateLimited } = require('./_shared/rate-limit');
+const { consumeQuota, getQuotaRemaining, isRateLimited, refundQuota } = require('./_shared/rate-limit');
 const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
 const { buildPrompt } = require('./_shared/ai/build-prompt');
 const { retrieveSites } = require('./_shared/ai/retrieve-sites');
@@ -142,7 +142,8 @@ module.exports = async (request, response) => {
 
     const contextSites = getContextSites(context, cleanQuery);
     const limit = ROLE_LIMITS[session.role] || 0;
-    const quotaKey = `chat-quota:${session.role}:${session.sessionId}:${getQuotaWindow(session)}`;
+    const quotaSubject = session.quotaSubject || session.sessionId;
+    const quotaKey = `chat-quota:${session.role}:${quotaSubject}:${getQuotaWindow(session)}`;
     const remainingQuota = await getQuotaRemaining(quotaKey, limit);
     if (!contextSites.length) {
         return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
@@ -168,6 +169,14 @@ module.exports = async (request, response) => {
     const clientKey = getClientKey(request);
     if (await checkRateLimit(clientKey)) {
         return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
+    }
+
+    const quota = await consumeQuota(quotaKey, limit);
+    if (quota.exceeded) {
+        return response.status(429).json({
+            reply: 'You have reached the AI chat limit for this access mode.',
+            remainingQuota: quota.remaining
+        });
     }
 
     const cleanHistory = normalizeHistory(history);
@@ -222,13 +231,10 @@ module.exports = async (request, response) => {
         }
 
         if (!contract.notFound) {
-            const quota = await consumeQuota(quotaKey, limit);
-            if (quota.exceeded) {
-                return response.status(429).json({ reply: 'You have reached the AI chat limit for this access mode.', remainingQuota: quota.remaining });
-            }
             contract.remainingQuota = quota.remaining;
         } else {
-            contract.remainingQuota = remainingQuota;
+            await refundQuota(quotaKey);
+            contract.remainingQuota = await getQuotaRemaining(quotaKey, limit);
         }
 
         if (canCache) setCachedAnswer(cacheKey, contract);
@@ -243,10 +249,16 @@ module.exports = async (request, response) => {
 
     } catch (error) {
         console.error('Google GenAI SDK Error:', error);
+        await refundQuota(quotaKey);
+        const refundedRemainingQuota = await getQuotaRemaining(quotaKey, limit);
+
         if (context?.type === 'site' && contextSites[0]) {
-            return response.status(200).json(buildSiteFallback(contextSites[0], remainingQuota));
+            return response.status(200).json(buildSiteFallback(contextSites[0], refundedRemainingQuota));
         }
 
-        return response.status(500).json({ reply: "I'm having trouble connecting to the history books right now." });
+        return response.status(500).json({
+            reply: "I'm having trouble connecting to the history books right now.",
+            remainingQuota: refundedRemainingQuota
+        });
     }
 };
