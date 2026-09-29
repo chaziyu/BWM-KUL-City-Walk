@@ -112,7 +112,9 @@ describe('chat API quota ordering', () => {
     const cookie = createCookie();
     gemini.sendMessage.mockRejectedValue(new Error('provider down'));
 
-    expect((await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' })).statusCode).toBe(500);
+    const failed = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+    expect(failed.statusCode).toBe(500);
+    expect(failed.body.code).toBe('AI_PROVIDER_UNAVAILABLE');
 
     gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], confidence: 'high', notFound: false }) });
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
@@ -230,11 +232,35 @@ describe('chat API quota ordering', () => {
     expect(gemini.sendMessage).toHaveBeenCalledTimes(1);
   });
 
+  it('uses Gemma fallbacks without Gemini-only JSON configuration', async () => {
+    const cookie = createCookie();
+    gemini.sendMessage
+      .mockRejectedValueOnce(Object.assign(new Error('primary unavailable'), { status: 404 }))
+      .mockResolvedValueOnce({
+        text: '```json\n{"answer":"Recovered","sourceSiteIds":["1"],"confidence":"high","notFound":false}\n```',
+      });
+
+    const result = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+
+    expect(result.statusCode).toBe(200);
+    expect(gemini.create.mock.calls[0][0].model).toBe('gemini-3.5-flash-lite');
+    expect(gemini.create.mock.calls[1][0].model).toBe('gemma-4-26b-a4b-it');
+    expect(gemini.create.mock.calls[1][0].config.responseMimeType).toBeUndefined();
+    expect(result.body.reply).toBe('Recovered');
+  });
+
   it('uses structured low-temperature Gemini calls', async () => {
     const cookie = createCookie();
 
     expect((await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' })).statusCode).toBe(200);
     expect(gemini.create.mock.calls[0][0].config.temperature).toBe(0.2);
     expect(gemini.create.mock.calls[0][0].config.systemInstruction).toContain('Return only JSON');
+    expect(gemini.create.mock.calls[0][0].config.responseMimeType).toBe('application/json');
+    expect(gemini.create.mock.calls[0][0].config.responseSchema.required).toEqual([
+      'answer',
+      'sourceSiteIds',
+      'confidence',
+      'notFound',
+    ]);
   });
 });
