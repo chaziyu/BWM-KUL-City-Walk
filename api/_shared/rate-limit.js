@@ -42,15 +42,19 @@ async function isRateLimited(key, maxRequests, windowMs) {
             const redisKey = `ratelimit:${key}`;
             const windowStart = now - windowMs;
 
-            const pipeline = redis.pipeline();
-            pipeline.zremrangebyscore(redisKey, 0, windowStart);
-            pipeline.zcard(redisKey);
-            pipeline.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` });
-            pipeline.pexpire(redisKey, windowMs);
+            const cleanup = redis.pipeline();
+            cleanup.zremrangebyscore(redisKey, 0, windowStart);
+            cleanup.zcard(redisKey);
+            const cleanupResults = await cleanup.exec();
+            const count = Number(cleanupResults[1]) || 0;
 
-            const results = await pipeline.exec();
-            const count = results[1];
-            return count >= maxRequests;
+            if (count >= maxRequests) return true;
+
+            const record = redis.pipeline();
+            record.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` });
+            record.pexpire(redisKey, windowMs);
+            await record.exec();
+            return false;
         } catch (error) {
             logEvent('error', 'quota:redis-rate-limit-error', {
                 message: sanitizeLogValue(error.message || error),
