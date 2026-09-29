@@ -25,12 +25,12 @@ export function createMapTemplate() {
       aria-hidden="true"
       class="hidden map-utility-rail"
       role="group"
-      aria-label="Map controls"
+      aria-label="Display and map controls"
     >
-      <button id="btnUIZoomIn" aria-label="Zoom in" class="ui-icon-button map-utility-button">
+      <button id="btnUIScaleUp" aria-label="Increase interface size" title="Increase interface size" class="ui-icon-button map-utility-button">
         <span class="map-control-glyph" aria-hidden="true">+</span>
       </button>
-      <button id="btnUIZoomOut" aria-label="Zoom out" class="ui-icon-button map-utility-button">
+      <button id="btnUIScaleDown" aria-label="Decrease interface size" title="Decrease interface size" class="ui-icon-button map-utility-button">
         <span class="map-control-glyph" aria-hidden="true">−</span>
       </button>
       <span class="map-utility-divider" aria-hidden="true"></span>

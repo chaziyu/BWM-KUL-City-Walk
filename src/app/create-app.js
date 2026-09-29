@@ -45,6 +45,7 @@ import {
 import { createModalManager } from '../ui/modal-manager.js';
 import { showToast } from '../ui/toast.js';
 import { createTextSizeController } from '../ui/text-size-controller.js';
+import { createUiScaleController } from '../ui/ui-scale-controller.js';
 import { createAccessFlow } from './access-flow.js';
 import { createGameUiBindings } from './game-ui-bindings.js';
 import { createViewController } from './view-controller.js';
@@ -223,6 +224,9 @@ const textSizeController = createTextSizeController({
   maxFontSize: MAX_FONT_SIZE,
 });
 
+const uiScaleController = createUiScaleController();
+uiScaleController.bind();
+
 const platformWarningController = createPlatformWarningController({
   modalManager,
   visitorAccess,
@@ -370,7 +374,12 @@ async function showMapExperience() {
 
   gameUiBindings.bind();
   await mapController.initMap();
-  bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
+  bindMapUI({
+    controller: mapController,
+    defaultCenter: DEFAULT_CENTER,
+    defaultZoom: ZOOM,
+    uiScaleController,
+  });
   passportController.refreshProgress();
   chatController.updateCount();
   chatController.setDisabled(false);
