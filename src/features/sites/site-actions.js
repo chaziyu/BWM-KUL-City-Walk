@@ -9,10 +9,18 @@ export function createSiteActions({
   playChaChing,
 }) {
   function afterProgressChange(siteId, method) {
+    const before = progressController.getCompletionState();
     const state = progressController[method](siteId);
-    if (typeof onMapRefresh === 'function') onMapRefresh(siteId);
-    if (typeof playChaChing === 'function') playChaChing();
-    progressController.maybeShowTrailCompletion();
+
+    if (state.changed) {
+      if (typeof onMapRefresh === 'function') onMapRefresh(siteId);
+      if (typeof playChaChing === 'function') playChaChing();
+    }
+
+    if (!before.isComplete && state.isComplete) {
+      progressController.maybeShowTrailCompletion();
+    }
+
     return state;
   }
 
