@@ -93,10 +93,7 @@ export function createChatController({
 
     const userQuery = chatInput.value.trim();
     const limit = getChatLimit();
-    if (!userQuery || getMessageCount() >= limit) {
-      if (getMessageCount() >= limit) ui.setDisabled(true);
-      return;
-    }
+    if (!userQuery) return;
 
     chatInput.value = '';
     chatInput.disabled = true;
@@ -120,7 +117,12 @@ export function createChatController({
       setHistory(nextHistory);
       saveHistory();
 
-      setMessageCount(getMessageCount() + 1);
+      const remainingQuota = Number(result.remainingQuota);
+      if (Number.isFinite(remainingQuota)) {
+        setMessageCount(Math.max(0, limit - remainingQuota));
+      } else {
+        setMessageCount(getMessageCount() + 1);
+      }
       saveMessageCount();
       updateCount();
 
@@ -128,6 +130,13 @@ export function createChatController({
       ui.renderSourceChips(thinkingEl, result.sourceSiteIds, result.notFound);
       thinkingEl?.classList.add('chat-bubble');
     } catch (error) {
+      const remainingQuota = Number(error?.remainingQuota);
+      if (Number.isFinite(remainingQuota)) {
+        setMessageCount(Math.max(0, limit - remainingQuota));
+        saveMessageCount();
+        updateCount();
+      }
+
       const content = thinkingEl?.querySelector('.chat-content');
       if (content) {
         content.textContent = error.message || strings.chat.error;
