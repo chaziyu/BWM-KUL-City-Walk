@@ -65,6 +65,70 @@ test.describe('Responsive and Accessibility', () => {
     await expect(help).toBeVisible();
   });
 
+
+  test('user guide stays contained and usable across mobile ratios at 120% UI scale', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('jejak_ui_scale', '120');
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await page.locator('#btnPreLoginHelp').click();
+
+    const modal = page.locator('#userGuideModal');
+    const panel = modal.locator('.user-guide-panel');
+    const body = modal.locator('.user-guide__body');
+    const footer = modal.locator('.user-guide__footer');
+
+    await expect(modal).toBeVisible();
+    await expect(footer).toBeVisible();
+
+    const portrait = await panel.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        bottom: box.bottom,
+        left: box.left,
+        right: box.right,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(portrait.top).toBeGreaterThanOrEqual(-1);
+    expect(portrait.bottom).toBeLessThanOrEqual(portrait.viewportHeight + 1);
+    expect(portrait.left).toBeGreaterThanOrEqual(-1);
+    expect(portrait.right).toBeLessThanOrEqual(portrait.viewportWidth + 1);
+
+    const bodyMetrics = await body.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowY: getComputedStyle(element).overflowY,
+    }));
+    expect(['auto', 'scroll']).toContain(bodyMetrics.overflowY);
+    expect(bodyMetrics.scrollHeight).toBeGreaterThanOrEqual(bodyMetrics.clientHeight);
+
+    await page.setViewportSize({ width: 844, height: 390 });
+
+    const landscape = await panel.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        bottom: box.bottom,
+        left: box.left,
+        right: box.right,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(landscape.top).toBeGreaterThanOrEqual(-1);
+    expect(landscape.bottom).toBeLessThanOrEqual(landscape.viewportHeight + 1);
+    expect(landscape.left).toBeGreaterThanOrEqual(-1);
+    expect(landscape.right).toBeLessThanOrEqual(landscape.viewportWidth + 1);
+    await expect(footer).toBeVisible();
+  });
+
   test('keyboard navigation reaches the primary visitor login action', async ({ page }) => {
     await page.goto('/');
     const primaryAction = page.locator('#btnVisitor');
