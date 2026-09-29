@@ -1,182 +1,223 @@
 export function createLandingTemplate() {
-  return `<div id="landing-page" class="fixed inset-0 bg-white z-[6000] text-center overflow-y-auto">
-        <!-- Title Section -->
-        <div class="landing-header animate-fade-in">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight leading-tight">
-                BWM KUL City Walk
-            </h1>
-            <p class="landing-subtitle">
-                Discover Kuala Lumpur's Heritage Buildings
-            </p>
-        </div>
+  return `<div id="landing-page" class="ui-screen fixed inset-0 z-[6000] overflow-y-auto">
+        <main class="landing-shell">
+            <header class="landing-hero animate-fade-in">
+                <div class="brand-lockup" aria-label="BWM KUL City Walk">
+                    <span class="brand-mark" aria-hidden="true">BWM</span>
+                    <span class="ui-kicker">Kuala Lumpur Heritage Walk</span>
+                </div>
+                <h1 class="ui-title">BWM KUL City Walk</h1>
+                <p class="landing-lead">Explore the stories, architecture, and places that shape Kuala Lumpur's historic heart.</p>
+                <div class="landing-meta" aria-label="Trail highlights">
+                    <span>11 heritage stops</span>
+                    <span>Self-guided</span>
+                    <span>Mobile friendly</span>
+                </div>
+            </header>
 
-        <!-- Buttons Section - Centered -->
-        <div class="landing-actions animate-slide-up">
-            <button id="btnExploreDemo" class="w-full group relative flex flex-col justify-center items-center py-3.5 sm:py-4 px-4 border border-transparent text-sm sm:text-base font-bold rounded-xl text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:scale-95">
-                <span class="flex items-center justify-center"><span class="mr-2 sm:mr-3 text-lg sm:text-xl">▶</span><span>Explore Demo</span></span>
-                <span class="text-[11px] sm:text-xs font-medium text-gray-300 mt-1">Try the full heritage trail
-                    instantly</span>
-            </button>
-            <button id="btnVisitor" class="w-full group relative flex flex-col justify-center items-center py-3 sm:py-4 px-4 border-2 border-gray-900 text-sm sm:text-base font-bold rounded-xl text-gray-900 bg-white hover:bg-gray-50 transition-all active:scale-95">
-                <span class="flex items-center justify-center"><span class="mr-2 sm:mr-3 text-lg sm:text-xl">🗝️</span><span>Enter Visitor Passkey</span></span>
-                <span class="text-[11px] sm:text-xs font-medium text-gray-500 mt-1">For participants with an
-                    organiser-issued code</span>
-            </button>
-            <button id="btnStaff" class="w-full flex flex-col justify-center items-center py-2.5 sm:py-3 px-4 border border-gray-200 text-xs sm:text-sm font-bold rounded-xl text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-900 hover:border-gray-400 transition-all active:scale-95">
-                <span class="flex items-center justify-center"><span class="mr-2">🧑‍💼</span><span>Project Admin
-                        (Prototype)</span></span>
-                <span class="text-[10px] sm:text-xs font-medium text-gray-400 mt-1">View the proposed organiser passkey
-                    workflow</span>
-            </button>
-            <div class="prototype-notice">
-                <strong>Prototype notice:</strong>
-                This project was developed for Badan Warisan Malaysia. The Project Admin area demonstrates a proposed
-                organiser workflow and is not currently operated by Badan Warisan Malaysia.
-            </div>
-        </div>
+            <section class="landing-actions ui-surface animate-slide-up" aria-label="Choose how to enter">
+                <div class="landing-actions__header">
+                    <p class="ui-kicker">Start your walk</p>
+                    <p>Choose the option that matches your visit.</p>
+                </div>
 
-        <!-- Bottom Section -->
-        <div class="landing-footer">
-            <button id="btnPreLoginHelp" class="w-full flex justify-center items-center py-2.5 sm:py-3 px-4 border border-gray-300 text-xs sm:text-sm font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all active:scale-95">
-                <span class="mr-2">ℹ️</span>
-                <span>How to Use This App</span>
-            </button>
-            <p class="text-[10px] sm:text-xs text-gray-400 animate-fade-in px-4 leading-relaxed">
-                A SULAM Project by Universiti Malaya &amp; BWM
-            </p>
-        </div>
+                <button id="btnVisitor" class="ui-button ui-button--primary">
+                    <span class="access-action-icon" aria-hidden="true">01</span>
+                    <span class="ui-button__copy">
+                        <span class="ui-button__title">Enter Visitor Passkey</span>
+                        <span class="ui-button__hint">I have an organiser-issued code</span>
+                    </span>
+                    <span class="access-action-arrow" aria-hidden="true">→</span>
+                </button>
+
+                <button id="btnExploreDemo" class="ui-button ui-button--secondary">
+                    <span class="access-action-icon access-action-icon--soft" aria-hidden="true">02</span>
+                    <span class="ui-button__copy">
+                        <span class="ui-button__title">Explore Demo</span>
+                        <span class="ui-button__hint">Preview the heritage trail instantly</span>
+                    </span>
+                    <span class="access-action-arrow" aria-hidden="true">→</span>
+                </button>
+
+                <button id="btnPreLoginHelp" class="ui-button ui-button--quiet">
+                    <span aria-hidden="true">?</span>
+                    <span>How to use this app</span>
+                </button>
+
+                <div class="landing-admin-row">
+                    <button id="btnStaff" class="landing-admin-link">
+                        Project Admin <span aria-hidden="true">·</span> Prototype
+                    </button>
+                </div>
+            </section>
+
+            <footer class="landing-footer">
+                <div class="ui-notice prototype-notice">
+                    <strong>Project prototype</strong>
+                    Developed for Badan Warisan Malaysia. The admin workflow demonstrates a proposed organiser experience and is not currently operated by BWM.
+                </div>
+                <p>A SULAM Project by Universiti Malaya &amp; BWM</p>
+            </footer>
+        </main>
     </div>`;
 }
 
 export function createVisitorGateTemplate() {
-  return `<div id="gatekeeper" class="fixed inset-0 bg-slate-900 z-[7000] hidden flex flex-col justify-center items-center p-4 transition-opacity duration-500">
-        <div class="classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative animate-fade-scale">
-            <button id="backToHome" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
-                Back</button>
-            <div class="mb-4 mt-2 text-5xl">🔐</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Visitor Access</h2>
-            <p class="text-gray-600 mb-6 text-sm">Please enter the visitor passkey provided by the organiser.</p>
-            <input type="text" id="passcodeInput" placeholder="e.g. AB-12345" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center text-lg uppercase tracking-widest focus:outline-none focus:border-blue-500 transition-all duration-200 font-mono">
-            <button id="unlockBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg">Verify
-                &amp; Unlock</button>
-            <p id="errorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Invalid Passkey.</p>
-        </div>
+  return `<div id="gatekeeper" class="ui-screen access-screen fixed inset-0 z-[7000] hidden overflow-y-auto">
+        <main class="access-shell">
+            <section class="ui-surface access-card animate-fade-scale" aria-labelledby="visitorAccessTitle">
+                <button id="backToHome" type="button" class="access-back-button" aria-label="Back to start">
+                    <span aria-hidden="true">←</span> Back
+                </button>
+
+                <div class="access-card__header">
+                    <p class="ui-kicker">Visitor access</p>
+                    <h2 id="visitorAccessTitle" class="ui-title">Enter your passkey</h2>
+                    <p class="ui-copy">Use the code provided by the organiser to unlock the heritage walk on this device.</p>
+                </div>
+
+                <div class="access-form">
+                    <label for="passcodeInput" class="ui-field-label">Visitor passkey</label>
+                    <input
+                        type="text"
+                        id="passcodeInput"
+                        placeholder="AB-12345"
+                        autocomplete="one-time-code"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                        class="ui-field access-code-input"
+                    >
+                    <p class="ui-helper">Codes are case-insensitive and usually include a hyphen.</p>
+
+                    <button id="unlockBtn" class="ui-button ui-button--primary">
+                        Verify and continue
+                        <span aria-hidden="true">→</span>
+                    </button>
+                    <p id="errorMsg" class="access-error hidden" role="alert">Invalid passkey.</p>
+                </div>
+
+                <div class="ui-notice">
+                    <strong>Why a passkey?</strong>
+                    It helps the organiser control access to the event experience and AI usage.
+                </div>
+            </section>
+        </main>
     </div>`;
 }
 
 export function createPlatformWarningTemplate() {
-  return `<div id="platformWarningModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[8000] hidden flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="warningTitle">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-scale relative">
-            <div class="text-center mb-4">
-                <div id="warningIcon" class="text-6xl mb-3">⚠️</div>
-                <h2 id="warningTitle" class="text-2xl font-bold text-gray-900 mb-2">Important Notice</h2>
+  return `<div id="platformWarningModal" class="classic-modal-backdrop fixed inset-0 z-[8000] hidden" role="dialog" aria-modal="true" aria-labelledby="warningTitle">
+        <div class="ui-surface access-dialog animate-fade-scale">
+            <div class="access-dialog__header">
+                <p class="ui-kicker">Before you continue</p>
+                <h2 id="warningTitle" class="ui-title">Keep your passkey handy</h2>
+                <p class="ui-copy">You can continue in your browser. Installing the app is optional.</p>
             </div>
 
-            <div id="warningContent" class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-4">
-                <p class="text-sm text-gray-800 leading-relaxed"></p>
+            <div id="warningContent" class="ui-notice ui-notice--accent">
+                <p></p>
             </div>
 
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
-                <p class="text-xs text-blue-900 font-semibold mb-2">🔒 Device validation:</p>
-                <p class="text-xs text-gray-700">This app sends a local device identifier with your passkey so the organiser validation service can apply its access policy. Clearing browser data can change that identifier.</p>
+            <div class="ui-notice">
+                <strong>Device validation</strong>
+                This app sends a local device identifier with your passkey so the organiser validation service can apply its access policy. Clearing browser data can change that identifier.
             </div>
 
-            <!-- Copy Passkey Section -->
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                <p class="text-xs text-gray-600 font-semibold mb-2">📋 Your Passkey:</p>
-                <div class="flex gap-2">
-                    <input id="passkeyDisplay" type="text" readonly="" class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-mono text-sm text-gray-800 font-bold uppercase tracking-widest">
-                    <button id="copyPasskeyBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 font-semibold text-sm flex items-center gap-1 whitespace-nowrap">
-                        <span>📋</span>
-                        <span>Copy</span>
+            <div class="passkey-copy-card">
+                <label for="passkeyDisplay" class="ui-field-label">Your passkey</label>
+                <div class="passkey-copy-row">
+                    <input id="passkeyDisplay" type="text" readonly class="ui-field access-code-input">
+                    <button id="copyPasskeyBtn" class="ui-button ui-button--secondary passkey-copy-button">
+                        Copy
                     </button>
                 </div>
-                <p id="copySuccess" class="text-xs text-green-600 font-semibold mt-2 hidden">✓ Copied to clipboard!</p>
+                <p id="copySuccess" class="access-success hidden" role="status">Copied to clipboard.</p>
             </div>
 
-            <div class="space-y-3">
-                <button id="continueLoginBtn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg">
-                    I Understand, Continue Login
+            <div class="access-dialog__actions">
+                <button id="continueLoginBtn" class="ui-button ui-button--primary">
+                    Continue to the walk
+                    <span aria-hidden="true">→</span>
                 </button>
-                <button id="cancelLoginBtn" class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition-all duration-200">
-                    Cancel
-                </button>
-                <button id="whatIsPWABtn" class="w-full bg-purple-50 text-purple-700 font-semibold py-2 rounded-xl hover:bg-purple-100 transition-all duration-200 border-2 border-purple-200 flex items-center justify-center gap-2">
-                    <span>❓</span>
-                    <span>What is PWA?</span>
-                </button>
+                <button id="cancelLoginBtn" class="ui-button ui-button--secondary">Cancel</button>
+                <button id="whatIsPWABtn" class="ui-button ui-button--quiet">What is a PWA?</button>
             </div>
-
-            <p class="text-xs text-gray-500 text-center mt-4">Installing the app is optional. You can continue in your browser.</p>
         </div>
     </div>`;
 }
 
 export function createMapErrorTemplate() {
-  return `<div id="map-error-screen" class="fixed inset-0 z-[7000] hidden bg-slate-950/95 p-4 sm:p-6 flex items-center justify-center">
-        <div class="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 text-center shadow-2xl">
-            <div class="text-4xl mb-3">🗺️</div>
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Unable to load the map</h2>
-            <p id="mapErrorMessage" class="text-sm text-slate-600 mb-6">The heritage map could not be loaded. Check your connection and try again.</p>
-            <div class="grid gap-3">
-                <button id="retryMapBtn" class="w-full rounded-xl bg-slate-900 px-4 py-3 font-bold text-white hover:bg-slate-800">Retry Map</button>
-                <button id="mapErrorBackBtn" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 hover:bg-slate-50">Back</button>
-            </div>
-        </div>
+  return `<div id="map-error-screen" class="ui-screen access-screen fixed inset-0 z-[7000] hidden overflow-y-auto">
+        <main class="access-shell">
+            <section class="ui-surface access-card access-card--compact">
+                <div class="status-symbol" aria-hidden="true">!</div>
+                <div class="access-card__header">
+                    <p class="ui-kicker">Map unavailable</p>
+                    <h2 class="ui-title">We couldn't load the heritage map</h2>
+                    <p id="mapErrorMessage" class="ui-copy">Check your connection and try again.</p>
+                </div>
+                <div class="access-dialog__actions">
+                    <button id="retryMapBtn" class="ui-button ui-button--primary">Retry map</button>
+                    <button id="mapErrorBackBtn" class="ui-button ui-button--secondary">Back</button>
+                </div>
+            </section>
+        </main>
     </div>`;
 }
 
 export function createAdminTemplate() {
-  return `<div id="staff-screen" class="fixed inset-0 classic-modal-backdrop fixed inset-0 z-[7000] hidden flex flex-col justify-center items-center p-4 sm:p-6 text-center transition-opacity duration-500">
-        <div class="classic-modal-content p-6 md:p-8 max-w-sm w-full text-center relative text-gray-900 animate-fade-scale">
-            <button id="closeStaffScreen" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 text-sm font-medium transition-all duration-200">←
-                Back</button>
-            <div class="mb-4 mt-2 text-5xl">🧑‍💼</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Project Admin (Prototype)</h2>
-            <p class="text-gray-600 mb-6 text-sm">Protected access for demonstrating the proposed organiser workflow.
-            </p>
-            <div id="adminLoginForm">
-                <input type="password" id="adminPasswordInput" placeholder="Admin Password" class="w-full border-2 border-gray-200 p-3 rounded-lg mb-4 text-center focus:outline-none focus:border-blue-500 transition-all duration-200">
-                <button id="adminLoginBtn" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 shadow-lg">Login</button>
-                <p id="adminErrorMsg" class="text-red-500 text-sm mt-4 hidden font-bold">Wrong password.</p>
-            </div>
-            <div id="adminResult" class="hidden">
-                <div class="prototype-notice mb-4 text-left">
-                    <strong>Project Admin prototype:</strong>
-                    This interface demonstrates the proposed organiser workflow for issuing visitor passkeys and
-                    managing event access. It is maintained for project demonstration and is not currently operated by
-                    Badan Warisan Malaysia.
-                </div>
-                <p class="text-gray-600 mb-2" id="passkeyDate"></p>
-                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 mb-4 shadow-sm">
-                    <p class="text-2xl font-bold font-mono text-blue-600 mb-1" id="passkeyResult">Click "Generate New
-                        Passkey" to create a code</p>
-                    <p id="adminStatusMsg" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest hidden">
-                        New Code Generated!</p>
+  return `<div id="staff-screen" class="ui-screen access-screen fixed inset-0 z-[7000] hidden overflow-y-auto">
+        <main class="access-shell">
+            <section class="ui-surface access-card animate-fade-scale" aria-labelledby="adminTitle">
+                <button id="closeStaffScreen" type="button" class="access-back-button" aria-label="Back to start">
+                    <span aria-hidden="true">←</span> Back
+                </button>
+
+                <div class="access-card__header">
+                    <p class="ui-kicker">Project admin · prototype</p>
+                    <h2 id="adminTitle" class="ui-title">Organiser tools</h2>
+                    <p class="ui-copy">Protected access for demonstrating the proposed visitor-passkey workflow.</p>
                 </div>
 
-                <div class="space-y-3">
-                    <button id="adminGenerateBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-md flex items-center justify-center">
-                        <span class="mr-2">🪄</span> Generate New Passkey
-                    </button>
-                    <button id="adminShareBtn" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition shadow-md hidden flex items-center justify-center">
-                        <span class="mr-2">📧</span> Share via Email
-                    </button>
-                    <button id="adminSwitchToMapBtn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center justify-center">
-                        <span class="mr-2">🗺️</span> Switch to Map
-                    </button>
-                    <button id="adminLogoutBtn" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition flex items-center justify-center">
-                        <span class="mr-2">🚪</span> Log Out
-                    </button>
+                <div id="adminLoginForm" class="access-form">
+                    <label for="adminPasswordInput" class="ui-field-label">Admin password</label>
+                    <input
+                        type="password"
+                        id="adminPasswordInput"
+                        autocomplete="current-password"
+                        placeholder="Enter admin password"
+                        class="ui-field"
+                    >
+                    <button id="adminLoginBtn" class="ui-button ui-button--primary">Sign in</button>
+                    <p id="adminErrorMsg" class="access-error hidden" role="alert">Wrong password.</p>
                 </div>
 
-                <div class="mt-6 border-t pt-4">
-                    <p class="text-xs text-gray-500">To check your AI API usage and quota, log in to your Google Cloud
-                        account and visit the dashboard:</p>
-                    <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" class="text-xs text-blue-600 hover:underline">Google Cloud API Dashboard</a>
+                <div id="adminResult" class="hidden">
+                    <div class="ui-notice prototype-notice">
+                        <strong>Prototype workflow</strong>
+                        This interface demonstrates issuing visitor passkeys and managing event access. It is maintained for project demonstration and is not currently operated by BWM.
+                    </div>
+
+                    <p class="admin-date" id="passkeyDate"></p>
+                    <div class="passkey-result-card">
+                        <p id="passkeyResult">Click “Generate New Passkey” to create a code</p>
+                        <p id="adminStatusMsg" class="hidden" role="status">New code generated</p>
+                    </div>
+
+                    <div class="access-dialog__actions">
+                        <button id="adminGenerateBtn" class="ui-button ui-button--primary">Generate new passkey</button>
+                        <button id="adminShareBtn" class="ui-button ui-button--secondary hidden">Share via email</button>
+                        <button id="adminSwitchToMapBtn" class="ui-button ui-button--secondary">Switch to map</button>
+                        <button id="adminLogoutBtn" class="ui-button ui-button--quiet">Log out</button>
+                    </div>
+
+                    <p class="admin-footnote">
+                        AI API usage can be reviewed in the
+                        <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" rel="noopener noreferrer">Google Cloud API Dashboard</a>.
+                    </p>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>`;
 }
 
