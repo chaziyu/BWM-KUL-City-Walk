@@ -101,7 +101,7 @@ function verifySessionCookie(cookieValue) {
         if (Date.now() > Number(payload.expiresAt)) return null;
         if (!['demo', 'visitor', 'admin'].includes(payload.role)) return null;
         return payload;
-    } catch (error) {
+    } catch {
         return null;
     }
 }
