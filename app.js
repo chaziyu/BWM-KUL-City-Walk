@@ -37,11 +37,8 @@ import {
 import {
   clearScopedProgress,
   readScopedJSON,
-  readScopedNumber,
-  readScopedString,
   writeScopedJSON,
   writeScopedNumber,
-  writeScopedString,
 } from './src/services/storage.js';
 import { createModalManager } from './src/ui/modal-manager.js';
 import { showToast } from './src/ui/toast.js';
@@ -260,18 +257,6 @@ function saveMessageCount() {
 
 function applySessionChrome() {
   document.documentElement.classList.toggle('jejak-hide-staff', activeSession?.role !== 'admin');
-}
-
-function resetDailyChatIfNeeded() {
-  const todayStr = new Date().toDateString();
-  const namespace = getProgressNamespace();
-  const lastActiveDay = readScopedString('last_active_day', '', namespace);
-
-  if (lastActiveDay !== todayStr) {
-    userMessageCount = 0;
-    writeScopedNumber('message_count', 0, namespace);
-    writeScopedString('last_active_day', todayStr, namespace);
-  }
 }
 
 function setupTextSizeControls() {
