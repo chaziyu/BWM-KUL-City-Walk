@@ -60,7 +60,7 @@ export function createModalManager({ appRoot = document, onModalStateChange } = 
     animateOpenModal(modal);
     setTimeout(() => top()?.trap.focusFirst(), 100);
     syncListeners();
-    onModalStateChange?.({ id: modal.id, open: true });
+    onModalStateChange?.({ id: modal.id, open: true, activeModal: top()?.id || null });
   }
 
   function close(idOrElement) {
@@ -88,7 +88,7 @@ export function createModalManager({ appRoot = document, onModalStateChange } = 
       }
     }
     syncListeners();
-    onModalStateChange?.({ id: modal.id, open: false });
+    onModalStateChange?.({ id: modal.id, open: false, activeModal: top()?.id || null });
   }
 
   function closeTopmost() {
