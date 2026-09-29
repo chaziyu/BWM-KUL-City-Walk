@@ -6,6 +6,7 @@ const { consumeQuota, getQuotaRemaining, isRateLimited, refundQuota } = require(
 const { getQuotaKey } = require('./_shared/chat-quota');
 const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
 const { buildPrompt } = require('./_shared/ai/build-prompt');
+const { CHAT_MODELS, supportsJsonMode } = require('./_shared/ai/model-config');
 const { retrieveSites } = require('./_shared/ai/retrieve-sites');
 const { parseModelResponse, validateResponse } = require('./_shared/ai/response-contract');
 const { getSiteById } = require('./_shared/ai/site-catalog');
@@ -182,23 +183,38 @@ module.exports = async (request, response) => {
     try {
         const client = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
 
-        const MODELS = [
-            "gemini-3.5-flash-lite",
-            "gemma-4-26b-a4b-it",
-            "gemma-4-31b-it"
-        ];
-
         let contract = null;
         let lastError = null;
 
-        for (const modelName of MODELS) {
+        for (const modelName of CHAT_MODELS) {
             try {
+                const config = {
+                    systemInstruction: buildPrompt(contextSites),
+                    temperature: 0.2,
+                };
+                if (supportsJsonMode(modelName)) {
+                    config.responseMimeType = 'application/json';
+                    config.responseSchema = {
+                        type: 'OBJECT',
+                        properties: {
+                            answer: { type: 'STRING' },
+                            sourceSiteIds: {
+                                type: 'ARRAY',
+                                items: { type: 'STRING' },
+                            },
+                            confidence: {
+                                type: 'STRING',
+                                enum: ['high', 'medium', 'low'],
+                            },
+                            notFound: { type: 'BOOLEAN' },
+                        },
+                        required: ['answer', 'sourceSiteIds', 'confidence', 'notFound'],
+                    };
+                }
+
                 const chat = client.chats.create({
                     model: modelName,
-                    config: {
-                        systemInstruction: buildPrompt(contextSites),
-                        temperature: 0.2,
-                    },
+                    config,
                     history: cleanHistory
                 });
 
@@ -211,14 +227,23 @@ module.exports = async (request, response) => {
                 break;
 
             } catch (error) {
-                console.warn(`Fallback: Model ${modelName} failed.`, error.message);
+                console.warn('[chat:model-failure]', {
+                    model: modelName,
+                    status: Number(error?.status) || null,
+                    code: error?.code || null,
+                    message: sanitizeText(error?.message || 'Unknown provider error', 300),
+                });
                 lastError = error;
             }
         }
 
         if (!contract) {
-            console.error('All models failed. Last error:', lastError);
-            throw lastError || new Error("All models failed to respond.");
+            console.error('[chat:all-models-failed]', {
+                models: CHAT_MODELS,
+                lastStatus: Number(lastError?.status) || null,
+                lastCode: lastError?.code || null,
+            });
+            throw lastError || new Error('All models failed to respond.');
         }
 
         if (!contract.notFound) {
@@ -239,7 +264,11 @@ module.exports = async (request, response) => {
         });
 
     } catch (error) {
-        console.error('Google GenAI SDK Error:', error);
+        console.error('[chat:provider-error]', {
+            status: Number(error?.status) || null,
+            code: error?.code || null,
+            message: sanitizeText(error?.message || 'Unknown provider error', 300),
+        });
         await refundQuota(quotaKey);
         const refundedRemainingQuota = await getQuotaRemaining(quotaKey, limit);
 
@@ -248,6 +277,7 @@ module.exports = async (request, response) => {
         }
 
         return response.status(500).json({
+            code: 'AI_PROVIDER_UNAVAILABLE',
             reply: "I'm having trouble connecting to the history books right now.",
             remainingQuota: refundedRemainingQuota
         });
