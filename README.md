@@ -59,11 +59,11 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **Challenge System:** Daily riddles to discover mystery locations
 
 ### 🤖 **6. AI Tour Guide**
-*   **Grounded Answers:** Retrieves matching verified site facts from `data/sites.json` before calling Gemini
+*   **Grounded Answers:** Resolves Unicode-safe multilingual site aliases and retrieves compact verified fact packets from `data/sites.json` before calling Gemini
 *   **Friendly Persona:** Helpful local guide character
-*   **Smart Limits:** Deterministic factual replies, server-side quotas, hourly rate limits, and optional Upstash-backed shared answer caching help control API costs
+*   **Smart Limits:** Dates, architects, opening hours, fees, visit duration, and curated visitor tips are answered deterministically before Gemini; provider calls still use server-side quotas, rate limits, and optional Upstash-backed caching
 *   **Safe Rendering:** AI Markdown is sanitized before display to reduce XSS risk
-*   **Structured Responses:** Requests JSON mode from Gemini, defensively parses fallback-model JSON, and validates source site IDs, confidence, and unsupported-question fallbacks
+*   **Structured Responses:** Uses Gemini structured JSON, validates source site IDs, and derives confidence from server-side retrieval quality rather than model self-rating
 *   **Source Chips:** Answers can show verified trail source labels below the chat message
 
 ### 🎨 **7. Premium UI/UX**
@@ -87,7 +87,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **Hosting:** Vercel (Static + Serverless Functions)
 *   **Passkey Service:** Google Apps Script-backed visitor validation/generation with a legacy sheet fallback
 *   **Admin Tools:** Protected server API for prototype passkey generation
-*   **AI Engine:** Google GenAI SDK with grounded prompts, structured JSON validation, and multi-model fallback
+*   **AI Engine:** Gemini 3.5 Flash-Lite with minimal thinking, compact grounded prompts, structured JSON validation, and one transient-error Flash-Lite fallback
 
 ### Performance
 *   **PWA:** Installable app shell with a service worker for same-origin assets and previously loaded heritage content; third-party map tiles remain online-only

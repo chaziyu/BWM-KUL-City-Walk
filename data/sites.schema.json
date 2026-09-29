@@ -14,8 +14,16 @@
       "ai_context"
     ],
     "anyOf": [
-      { "required": ["info_more"] },
-      { "required": ["flyer_text"] }
+      {
+        "required": [
+          "info_more"
+        ]
+      },
+      {
+        "required": [
+          "flyer_text"
+        ]
+      }
     ],
     "properties": {
       "id": {
@@ -35,11 +43,16 @@
         "uniqueItems": true
       },
       "category": {
-        "enum": ["must_visit", "recommended"]
+        "enum": [
+          "must_visit",
+          "recommended"
+        ]
       },
       "coordinates": {
         "type": "object",
-        "required": ["marker"],
+        "required": [
+          "marker"
+        ],
         "properties": {
           "marker": {
             "type": "array",
@@ -98,10 +111,22 @@
       },
       "quiz": {
         "type": "object",
-        "required": ["options"],
+        "required": [
+          "options"
+        ],
         "anyOf": [
-          { "required": ["question", "answer"] },
-          { "required": ["q", "a"] }
+          {
+            "required": [
+              "question",
+              "answer"
+            ]
+          },
+          {
+            "required": [
+              "q",
+              "a"
+            ]
+          }
         ],
         "properties": {
           "question": {
@@ -142,7 +167,11 @@
         "type": "string"
       },
       "reviewStatus": {
-        "enum": ["draft", "needs_review", "reviewed"]
+        "enum": [
+          "draft",
+          "needs_review",
+          "reviewed"
+        ]
       },
       "accessibilityNotes": {
         "type": "string"
@@ -150,6 +179,14 @@
       "estimatedVisitMinutes": {
         "type": "integer",
         "minimum": 1
+      },
+      "aliases": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uniqueItems": true
       }
     }
   }

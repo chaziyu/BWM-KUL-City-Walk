@@ -28,6 +28,8 @@ export default defineConfig({
         'api/_shared/rate-limit.js',
         'api/_shared/ai/answer-cache.js',
         'api/_shared/ai/deterministic-answer.js',
+        'api/_shared/ai/history-policy.js',
+        'api/_shared/ai/language.js',
         'api/_shared/ai/retrieve-sites.js',
         'api/_shared/ai/response-contract.js',
       ],
