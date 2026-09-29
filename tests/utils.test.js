@@ -9,8 +9,9 @@ describe('scoped storage keys', () => {
     expect(getScopedKey('visited', 'visitor')).toBe('jejak_visitor_visited');
   });
 
-  it('falls back to the visitor namespace for unknown modes', () => {
-    expect(getScopedKey('visited', 'admin')).toBe('jejak_visitor_visited');
+  it('keeps admin separate and falls back unknown modes to visitor', () => {
+    expect(getScopedKey('visited', 'admin')).toBe('jejak_admin_visited');
+    expect(getScopedKey('visited', 'unknown')).toBe('jejak_visitor_visited');
   });
 });
 
