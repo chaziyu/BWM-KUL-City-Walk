@@ -1,4 +1,4 @@
-import { startLegacyApp } from '../../app.js';
+import { createApp } from '../app/create-app.js';
 import { getState, setState } from './app-state.js';
 
 let initializationPromise = null;
@@ -8,7 +8,7 @@ export function initializeApp() {
 
   setState({ bootstrapInitialized: true });
 
-  initializationPromise = startLegacyApp({
+  initializationPromise = createApp({
     onLifecycleChange(patch) {
       setState(patch);
     },
