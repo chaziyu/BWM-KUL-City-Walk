@@ -37,19 +37,11 @@
   gap: 0.7rem;
 }
 
-.brand-mark {
-  width: 2.65rem;
-  height: 2.65rem;
-  border-radius: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ui-primary);
-  color: white;
-  box-shadow: var(--ui-shadow-sm);
-  font-size: 0.7rem;
-  font-weight: 850;
-  letter-spacing: 0.04em;
+.brand-logo {
+  width: auto;
+  height: 2.8rem;
+  max-width: 7.5rem;
+  object-fit: contain;
 }
 
 .landing-hero .ui-title {
@@ -149,17 +141,25 @@
 }
 
 .landing-footer {
-  width: min(100%, 34rem);
-  display: grid;
-  gap: 0.7rem;
+  width: min(100%, 38rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.8rem;
 }
 
 .landing-footer > p {
   margin: 0;
   color: var(--ui-subtle);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.5;
   text-align: center;
+}
+
+.landing-prototype-note::before {
+  content: "•";
+  margin-right: 0.8rem;
 }
 
 .prototype-notice {
@@ -183,8 +183,63 @@
   padding: clamp(1.25rem, 4vw, 1.75rem);
 }
 
+.access-card--split {
+  width: min(100%, 52rem);
+}
+
 .access-card {
   position: relative;
+}
+
+.access-card__intro,
+.access-card__panel {
+  min-width: 0;
+}
+
+.access-card__intro .ui-title {
+  margin: 0.55rem 0 0.8rem;
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+}
+
+.access-card__intro .ui-copy {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.access-card__panel {
+  border-top: 1px solid var(--ui-border);
+  padding-top: 1.15rem;
+}
+
+.access-feature-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.access-feature-list span {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--ui-ink-soft);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.access-feature-list span::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ui-accent);
+}
+
+.access-privacy-note {
+  margin: 0.75rem 0 0;
+  color: var(--ui-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
 }
 
 .access-card--compact {
@@ -313,6 +368,16 @@
   padding: 1rem;
 }
 
+.passkey-result-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--ui-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 #passkeyResult {
   margin: 0;
   color: var(--ui-ink);
@@ -348,7 +413,7 @@
 }
 
 
-@media (min-width: 900px) and (min-height: 600px) {
+@media (min-width: 760px) and (min-height: 560px) {
   .landing-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(24rem, 27rem);
@@ -386,18 +451,41 @@
   .landing-footer {
     grid-area: footer;
     width: 100%;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .landing-footer .prototype-notice {
-    max-width: 46rem;
+    justify-content: flex-start;
   }
 
   .landing-footer > p {
-    text-align: right;
-    white-space: nowrap;
+    text-align: left;
+  }
+
+  .access-card--split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+    grid-template-areas:
+      "back back"
+      "intro panel";
+    gap: 1rem 2rem;
+    padding: 1.6rem;
+  }
+
+  .access-card--split .access-back-button {
+    grid-area: back;
+    justify-self: start;
+    margin-bottom: 0;
+  }
+
+  .access-card--split .access-card__intro {
+    grid-area: intro;
+    align-self: center;
+    padding: 0.5rem 0.2rem 0.5rem 0.25rem;
+  }
+
+  .access-card--split .access-card__panel {
+    grid-area: panel;
+    align-self: center;
+    border-top: 0;
+    border-left: 1px solid var(--ui-border);
+    padding: 0.35rem 0 0.35rem 2rem;
   }
 }
 
@@ -423,6 +511,10 @@
 @media (max-width: 420px) {
   .brand-lockup {
     margin-bottom: 0.7rem;
+  }
+
+  .brand-logo {
+    height: 2.35rem;
   }
 
   .landing-shell {
