@@ -76,7 +76,16 @@ export function createModalManager({ appRoot = document, onModalStateChange } = 
     }
 
     if (wasTopmost) {
-      entry?.returnFocus?.focus?.();
+      const nextTop = top();
+      if (nextTop) {
+        if (entry?.returnFocus && nextTop.modal.contains(entry.returnFocus)) {
+          entry.returnFocus.focus?.();
+        } else {
+          nextTop.trap.focusFirst();
+        }
+      } else {
+        entry?.returnFocus?.focus?.();
+      }
     }
     syncListeners();
     onModalStateChange?.({ id: modal.id, open: false });
