@@ -7,9 +7,10 @@ const renderSafeMarkdown = vi.fn();
 const renderSourceChips = vi.fn();
 const setDisabled = vi.fn();
 const updateCount = vi.fn();
+const send = vi.fn();
 
 vi.mock('../../src/features/chat/chat-service.js', () => ({
-  createChatService: vi.fn(() => ({ send: vi.fn() })),
+  createChatService: vi.fn(() => ({ send })),
 }));
 
 vi.mock('../../src/features/chat/chat-ui.js', () => ({
@@ -34,6 +35,7 @@ describe('chat controller history', () => {
     renderSourceChips.mockClear();
     setDisabled.mockClear();
     updateCount.mockClear();
+    send.mockReset();
   });
 
   it('loads the full stored history when a site chat opens', () => {
@@ -59,5 +61,79 @@ describe('chat controller history', () => {
     controller.loadHistory();
 
     expect(loadHistory).toHaveBeenCalledWith(history);
+  });
+  it('syncs the local counter from server remaining quota', async () => {
+    let messageCount = 0;
+    const setMessageCount = vi.fn((next) => {
+      messageCount = next;
+    });
+    const messageElement = document.createElement('div');
+    const content = document.createElement('div');
+    content.className = 'chat-content';
+    messageElement.appendChild(content);
+    addMessage.mockReturnValue(messageElement);
+    send.mockResolvedValue({
+      reply: 'Verified answer',
+      remainingQuota: 3,
+      sourceSiteIds: [],
+      notFound: false,
+    });
+
+    const controller = createChatController({
+      deviceId: 'device-1',
+      getChatLimit: () => 5,
+      getHistory: () => [],
+      getMessageCount: () => messageCount,
+      historyWindowSize: 6,
+      getSiteName: () => 'Site',
+      modalManager: { open: vi.fn(), close: vi.fn() },
+      saveHistory: vi.fn(),
+      saveMessageCount: vi.fn(),
+      setHistory: vi.fn(),
+      setMessageCount,
+      strings: { chat: { aiName: 'AI', userName: 'You', limitReached: 'Done', placeholder: 'Ask', error: 'Error' } },
+    });
+
+    document.getElementById('chatInput').value = 'Question';
+    await controller.sendMessage();
+
+    expect(setMessageCount).toHaveBeenCalledWith(2);
+    expect(messageCount).toBe(2);
+  });
+
+  it('disables chat from a server quota error', async () => {
+    let messageCount = 0;
+    const setMessageCount = vi.fn((next) => {
+      messageCount = next;
+    });
+    const messageElement = document.createElement('div');
+    const content = document.createElement('div');
+    content.className = 'chat-content';
+    messageElement.appendChild(content);
+    addMessage.mockReturnValue(messageElement);
+    const error = new Error('Quota reached');
+    error.remainingQuota = 0;
+    send.mockRejectedValue(error);
+
+    const controller = createChatController({
+      deviceId: 'device-1',
+      getChatLimit: () => 5,
+      getHistory: () => [],
+      getMessageCount: () => messageCount,
+      historyWindowSize: 6,
+      getSiteName: () => 'Site',
+      modalManager: { open: vi.fn(), close: vi.fn() },
+      saveHistory: vi.fn(),
+      saveMessageCount: vi.fn(),
+      setHistory: vi.fn(),
+      setMessageCount,
+      strings: { chat: { aiName: 'AI', userName: 'You', limitReached: 'Done', placeholder: 'Ask', error: 'Error' } },
+    });
+
+    document.getElementById('chatInput').value = 'Question';
+    await controller.sendMessage();
+
+    expect(setMessageCount).toHaveBeenCalledWith(5);
+    expect(setDisabled).toHaveBeenCalledWith(true);
   });
 });
