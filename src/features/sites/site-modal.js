@@ -36,16 +36,14 @@ export function createSiteModalController({
 
     if (elements.food && elements.food.dataset.bound !== 'true') {
       elements.food.dataset.bound = 'true';
-      elements.food.addEventListener('click', (event) => {
-        event.preventDefault();
+      elements.food.addEventListener('click', () => {
         if (currentSite) actions.openFood(currentSite);
       });
     }
 
     if (elements.hotel && elements.hotel.dataset.bound !== 'true') {
       elements.hotel.dataset.bound = 'true';
-      elements.hotel.addEventListener('click', (event) => {
-        event.preventDefault();
+      elements.hotel.addEventListener('click', () => {
         if (currentSite) actions.openHotels(currentSite);
       });
     }
