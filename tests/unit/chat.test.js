@@ -25,13 +25,17 @@ require.cache[genaiPath] = {
 };
 
 const chatHandler = require('../../api/chat.js');
-const { createSessionPayload, setSessionCookie } = require('../../api/_shared/session.js');
+const { ROLE_LIMITS, createQuotaSubject, createSessionPayload, setSessionCookie } = require('../../api/_shared/session.js');
 const { resetMemoryBucketsForTests } = require('../../api/_shared/rate-limit.js');
 const { resetAnswerCacheForTests } = require('../../api/_shared/ai/answer-cache.js');
 
-function createCookie() {
+function createCookie(role = 'demo', options = {}) {
   const headers = {};
-  setSessionCookie({ setHeader: (key, value) => { headers[key] = value; } }, createSessionPayload('demo'), 3600);
+  setSessionCookie(
+    { setHeader: (key, value) => { headers[key] = value; } },
+    createSessionPayload(role, options),
+    3600,
+  );
   return headers['Set-Cookie'].split(';')[0];
 }
 
@@ -192,6 +196,26 @@ describe('chat API quota ordering', () => {
 
     gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], confidence: 'high', notFound: false }) });
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
+  });
+
+  it('keeps visitor quota across recreated sessions with the same signed subject', async () => {
+    const originalLimit = ROLE_LIMITS.visitor;
+    ROLE_LIMITS.visitor = 2;
+
+    try {
+      const quotaSubject = createQuotaSubject('visitor:AB-12345:device-1');
+      const firstSession = createCookie('visitor', { quotaSubject });
+      const secondSession = createCookie('visitor', { quotaSubject });
+
+      expect((await postChat(firstSession, { userQuery: 'Tell me about Sultan Abdul Samad Building visitor one' })).statusCode).toBe(200);
+      expect((await postChat(secondSession, { userQuery: 'Tell me about Sultan Abdul Samad Building visitor two' })).statusCode).toBe(200);
+
+      const blocked = await postChat(secondSession, { userQuery: 'Tell me about Sultan Abdul Samad Building visitor three' });
+      expect(blocked.statusCode).toBe(429);
+      expect(blocked.body.remainingQuota).toBe(0);
+    } finally {
+      ROLE_LIMITS.visitor = originalLimit;
+    }
   });
 
   it('uses cached answers without calling Gemini or consuming quota again', async () => {
