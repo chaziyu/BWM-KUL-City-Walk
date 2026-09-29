@@ -131,8 +131,9 @@ export function createChatUI({ strings, getSiteName, onSourceClick }) {
   function updateCount(remaining) {
     const chatLimitText = document.getElementById('chatLimitText');
     if (!chatLimitText) return;
-    chatLimitText.textContent = `You have ${remaining} messages remaining.`;
-    if (remaining <= 0) setDisabled(true);
+    chatLimitText.textContent = remaining <= 0
+      ? 'No AI-generated answers remaining. Cached trail information may still be available.'
+      : `You have ${remaining} AI-generated messages remaining.`;
   }
 
   return { addMessage, loadHistory, renderSafeMarkdown, renderSourceChips, setDisabled, updateCount };
