@@ -1,23 +1,21 @@
+const { readInteger, readString } = require('../_shared/config');
+const { getClientIp, requireMethod, sendError } = require('../_shared/http');
+const { attachRequestContext, logEvent, sanitizeLogValue } = require('../_shared/observability');
+const { isRateLimited } = require('../_shared/rate-limit');
+const { requireSameOrigin } = require('../_shared/security');
 const {
     createQuotaSubject,
     createSessionPayload,
     getSafeSessionDetails,
-    setSessionCookie
+    setSessionCookie,
 } = require('../_shared/session');
-const { isRateLimited } = require('../_shared/rate-limit');
-
-function getTodayString() {
-    return new Date().toLocaleDateString('en-GB', {
-        timeZone: 'Asia/Kuala_Lumpur'
-    });
-}
 
 function isValidPasskeyFormat(passkey) {
     return /^[A-Z0-9-]{4,40}$/.test(passkey);
 }
 
 async function validateWithAppsScript(passkey, deviceId) {
-    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
+    const scriptUrl = readString('GOOGLE_SCRIPT_URL');
     if (!scriptUrl) {
         return { serviceError: true, error: 'Visitor validation service is not configured.' };
     }
@@ -25,7 +23,7 @@ async function validateWithAppsScript(passkey, deviceId) {
     const scriptResponse = await fetch(scriptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ passkey, deviceId })
+        body: JSON.stringify({ passkey, deviceId }),
     });
 
     if (!scriptResponse.ok) {
@@ -36,54 +34,57 @@ async function validateWithAppsScript(passkey, deviceId) {
 }
 
 module.exports = async (request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
+    const requestId = attachRequestContext(request, response);
+    if (!requireMethod(request, response, 'POST')) return;
+    if (!requireSameOrigin(request, response)) return;
 
     try {
         const { passkey, deviceId } = request.body || {};
         const normalizedPasskey = String(passkey || '').trim().toUpperCase();
 
         if (!normalizedPasskey) {
-            return response.status(400).json({ error: 'Passkey required.' });
+            return sendError(response, 400, 'PASSKEY_REQUIRED', 'Passkey required.');
         }
 
         if (!isValidPasskeyFormat(normalizedPasskey)) {
-            return response.status(400).json({ error: 'Passkey format is invalid.' });
+            return sendError(response, 400, 'INVALID_PASSKEY_FORMAT', 'Passkey format is invalid.');
         }
 
-        const forwardedFor = request.headers['x-forwarded-for'];
-        const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
-        
-        // Rate limit: Max 10 attempts per IP per 10 minutes
-        const isLimited = await isRateLimited(`login:visitor:${ip}`, 10, 10 * 60 * 1000);
-        if (isLimited) {
-            return response.status(429).json({ error: 'Too many attempts. Please try again later.' });
+        if (await isRateLimited(`login:visitor:${getClientIp(request)}`, 10, 10 * 60 * 1000)) {
+            return sendError(response, 429, 'RATE_LIMITED', 'Too many attempts. Please try again later.');
         }
 
         const validation = await validateWithAppsScript(normalizedPasskey, deviceId);
 
         if (validation?.serviceError) {
-            return response.status(503).json({ error: validation.error });
+            return sendError(response, 503, 'VISITOR_SERVICE_UNAVAILABLE', validation.error);
         }
 
         if (!validation?.success || validation?.isAdmin) {
-            return response.status(401).json({ error: validation?.error || 'Invalid or expired passkey.' });
+            return sendError(
+                response,
+                401,
+                'INVALID_PASSKEY',
+                validation?.error || 'Invalid or expired passkey.',
+            );
         }
 
-        const maxAge = Number(process.env.VISITOR_SESSION_MAX_AGE) || 24 * 60 * 60;
+        const maxAge = readInteger('VISITOR_SESSION_MAX_AGE', 24 * 60 * 60, { min: 60 });
         const session = createSessionPayload('visitor', {
             accessType: 'visitor-passkey',
             maxAge,
             quotaSubject: createQuotaSubject(
-                `visitor:${normalizedPasskey}:${String(deviceId || '')}`
-            )
+                `visitor:${normalizedPasskey}:${String(deviceId || '')}`,
+            ),
         });
 
         setSessionCookie(response, session, maxAge);
         return response.status(200).json(getSafeSessionDetails(session));
     } catch (error) {
-        console.error('Error creating visitor session:', error);
-        return response.status(500).json({ error: 'Server error during passkey validation.' });
+        logEvent('error', 'session:visitor-create-failed', {
+            requestId,
+            message: sanitizeLogValue(error.message || error),
+        });
+        return sendError(response, 500, 'SESSION_CREATE_FAILED', 'Server error during passkey validation.');
     }
 };
