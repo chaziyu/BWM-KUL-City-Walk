@@ -117,22 +117,24 @@ export function createChatController({
       setHistory(nextHistory);
       saveHistory();
 
-      const remainingQuota = Number(result.remainingQuota);
-      if (Number.isFinite(remainingQuota)) {
-        setMessageCount(Math.max(0, limit - remainingQuota));
-      } else {
-        setMessageCount(getMessageCount() + 1);
+      const hasRemainingQuota = result.remainingQuota !== null
+        && result.remainingQuota !== undefined
+        && Number.isFinite(Number(result.remainingQuota));
+      if (hasRemainingQuota) {
+        setMessageCount(Math.max(0, limit - Number(result.remainingQuota)));
+        saveMessageCount();
+        updateCount();
       }
-      saveMessageCount();
-      updateCount();
 
       await ui.renderSafeMarkdown(thinkingEl?.querySelector('.chat-content'), reply);
       ui.renderSourceChips(thinkingEl, result.sourceSiteIds, result.notFound);
       thinkingEl?.classList.add('chat-bubble');
     } catch (error) {
-      const remainingQuota = Number(error?.remainingQuota);
-      if (Number.isFinite(remainingQuota)) {
-        setMessageCount(Math.max(0, limit - remainingQuota));
+      const hasRemainingQuota = error?.remainingQuota !== null
+        && error?.remainingQuota !== undefined
+        && Number.isFinite(Number(error.remainingQuota));
+      if (hasRemainingQuota) {
+        setMessageCount(Math.max(0, limit - Number(error.remainingQuota)));
         saveMessageCount();
         updateCount();
       }
@@ -144,13 +146,9 @@ export function createChatController({
       }
     }
 
-    if (getMessageCount() < limit) {
-      chatInput.disabled = false;
-      chatSendBtn.disabled = false;
-      chatInput.focus();
-    } else {
-      ui.setDisabled(true);
-    }
+    chatInput.disabled = false;
+    chatSendBtn.disabled = false;
+    chatInput.focus();
   }
 
   return { bind, loadHistory, open, sendMessage, setDisabled, updateCount };
