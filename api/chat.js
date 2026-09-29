@@ -3,6 +3,7 @@ const { GoogleGenAI } = require("@google/genai");
 
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
 const { consumeQuota, getQuotaRemaining, isRateLimited, refundQuota } = require('./_shared/rate-limit');
+const { getQuotaKey } = require('./_shared/chat-quota');
 const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
 const { buildPrompt } = require('./_shared/ai/build-prompt');
 const { retrieveSites } = require('./_shared/ai/retrieve-sites');
@@ -61,19 +62,6 @@ function getClientKey(request) {
 
 async function checkRateLimit(key) {
     return await isRateLimited(`chat:${key}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
-}
-
-function getQuotaWindow(session) {
-    const now = new Date();
-    if (session.role === 'admin') {
-        return `${now.getUTCFullYear()}-${now.getUTCMonth()}-${now.getUTCDate()}-${now.getUTCHours()}`;
-    }
-
-    if (session.role === 'visitor') {
-        return now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
-    }
-
-    return session.sessionId;
 }
 
 function getContextSites(context, cleanQuery) {
@@ -142,8 +130,7 @@ module.exports = async (request, response) => {
 
     const contextSites = getContextSites(context, cleanQuery);
     const limit = ROLE_LIMITS[session.role] || 0;
-    const quotaSubject = session.quotaSubject || session.sessionId;
-    const quotaKey = `chat-quota:${session.role}:${quotaSubject}:${getQuotaWindow(session)}`;
+    const quotaKey = getQuotaKey(session);
     const remainingQuota = await getQuotaRemaining(quotaKey, limit);
     if (!contextSites.length) {
         return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
@@ -168,7 +155,10 @@ module.exports = async (request, response) => {
 
     const clientKey = getClientKey(request);
     if (await checkRateLimit(clientKey)) {
-        return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
+        return response.status(429).json({
+            reply: 'You have reached the request rate limit for now. Please try again later.',
+            remainingQuota
+        });
     }
 
     const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
