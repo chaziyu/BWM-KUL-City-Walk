@@ -1,5 +1,5 @@
 export function showOnly(ids) {
-  ['landing-page', 'gatekeeper', 'staff-screen'].forEach((id) => {
+  ['landing-page', 'gatekeeper', 'map-error-screen', 'staff-screen'].forEach((id) => {
     const element = document.getElementById(id);
     if (!element) return;
     element.classList.toggle('hidden', !ids.includes(id));
