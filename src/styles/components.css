@@ -20,102 +20,6 @@ html {
     left: 0;
 }
 
-/* --- 2. UI LAYOUT --- */
-#progress-container {
-    pointer-events: none;
-}
-
-#progress-container>div {
-    pointer-events: auto;
-}
-
-#progress-container {
-    padding-left: 75px;
-    /* leave space for zoom controls */
-}
-
-#progress-container {
-    pointer-events: none !important;
-}
-
-#progress-container .pointer-events-auto {
-    pointer-events: auto !important;
-}
-
-#progress-container .w-full {
-    transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease;
-}
-
-#progress-container {
-    background: none !important;
-    backdrop-filter: none !important;
-}
-
-/* A subtle pulse for the progress bar head */
-#progressBar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 10px;
-    height: 100%;
-    background: white;
-    opacity: 0.3;
-    filter: blur(4px);
-}
-
-/* MODIFIED: Added #btnChallenge */
-/* MODIFIED: Added #btnChallenge and Enhanced Glassmorphism */
-#btnChat,
-#btnPassport,
-#btnRecenter,
-#btnChallenge {
-    z-index: 1000;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    background: rgba(255, 255, 255, 0.85) !important;
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(255, 255, 255, 0.5) inset;
-    /* PREMIUM SPRING TRANSITION */
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-#btnChat:hover,
-#btnPassport:hover,
-#btnRecenter:hover,
-#btnChallenge:hover,
-#btnAdminToggle:hover {
-    transform: scale(1.1);
-}
-
-#btnChat:active,
-#btnPassport:active,
-#btnRecenter:active,
-#btnChallenge:active,
-#btnAdminToggle:active {
-    transform: scale(0.85) translateY(2px);
-}
-
-/* Compact right-side action buttons */
-#btnAdminToggle,
-#btnChat,
-#btnRecenter,
-#btnChallenge,
-#btnPassport {
-    width: 3rem;
-    height: 3rem;
-    padding: 0;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-}
-
-#btnAdminToggle span {
-    display: none;
-}
-
 /* --- 3. TRANSITIONS & ANIMATIONS --- */
 @keyframes cinematicFadeIn {
     from {
@@ -269,45 +173,6 @@ html {
     animation: cinematicFadeOut 0.4s forwards;
 }
 
-/* --- 5. PREVIEW CARD (BOTTOM SHEET) ANIMATIONS --- */
-@keyframes previewSlideIn {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes previewSlideOut {
-    0% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-}
-
-.preview-card-opening {
-    animation: previewSlideIn 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.preview-card-closing {
-    animation: previewSlideOut 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.modern-modal-content {
-    height: 70vh;
-    display: flex;
-    flex-direction: column;
-}
-
 /* --- 6. GAMIFICATION STYLES --- */
 .marker-visited {
     filter: hue-rotate(140deg) brightness(1.2) saturate(3);
@@ -348,51 +213,12 @@ html {
     opacity: 0.6;
 }
 
-/* ---
-8. NEW USER LOCATION PIN
----
-*/
-/* Wrapper: Just a container, no animation or colors */
-.user-pin-wrapper {
-    background: transparent;
-    border: none;
-}
-
-body {
-    -webkit-tap-highlight-color: transparent;
-    font-family: 'Inter', sans-serif;
-    /* PWA ENHANCEMENTS */
-    user-select: none;
-    -webkit-user-select: none;
-    /* Prevent text selection */
-    overscroll-behavior: none;
-    /* Prevent pull-to-refresh / rubber band */
-    touch-action: manipulation;
-    /* Remove tap delay */
-}
-
 /* GPU Acceleration for smoother modal transitions */
 .classic-modal-content,
 #google_translate_element {
     will-change: transform, opacity;
     transform: translateZ(0);
     /* Trigger Hardware Acceleration */
-}
-
-/* Leaflet Map Fixes */
-/* Inner Pin: Holds the color and animation */
-.user-location-pin {
-    background-color: #007bff;
-    width: 100%;
-    /* Fill the wrapper */
-    height: 100%;
-    /* Fill the wrapper */
-    border-radius: 50%;
-    border: 3px solid #ffffff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-
-    /* Animation happens here, safely inside the wrapper */
-    animation: pulse-animation-medium 1.5s infinite;
 }
 
 /* --- ANIMATIONS & TRANSITIONS --- */
@@ -448,124 +274,6 @@ body {
     background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
-}
-
-/* MAKE SURE YOU HAVE THIS KEYFRAME DEFINED! */
-/* If this is missing, the animation won't work */
-@keyframes pulse-animation-medium {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
-
-    70% {
-        transform: scale(1.2);
-        /* This scale is now safe! */
-        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-    }
-
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-    }
-}
-
-/* Renamed old animation to medium */
-@keyframes pulse-animation-medium {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.4);
-        opacity: 0.7;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* ADDED: New animation speeds */
-@keyframes pulse-animation-slow {
-    0% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-
-    50% {
-        transform: scale(1.2);
-        opacity: 0.5;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-}
-
-@keyframes pulse-animation-fast {
-    0% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.6);
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-}
-
-/* ADDED: Classes to trigger new animations */
-.pulse-slow {
-    animation: pulse-animation-slow 3s infinite !important;
-}
-
-.pulse-medium {
-    animation: pulse-animation-medium 1.5s infinite !important;
-}
-
-.pulse-fast {
-    animation: pulse-animation-fast 0.7s infinite !important;
-}
-
-
-/* --- 9. NEW UI ADDITIONS --- */
-#logoOverlay {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 1000;
-    pointer-events: none;
-
-    background-color: white;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    width: 120px;
-}
-
-#logoOverlay img {
-    width: 80px;
-    height: 80px;
-    display: block;
-    margin: 0 auto 8px auto;
-}
-
-#logoOverlay p {
-    font-size: 10px;
-    font-weight: 600;
-    color: #333;
-    text-align: center;
-    line-height: 1.2;
-    letter-spacing: 0.5px;
 }
 
 /* --- 10. HERITAGE POLYGON STYLES --- */
@@ -671,25 +379,6 @@ body {
     }
 }
 
-
-/* Disable entrance animations/transitions for specific site modal controls */
-#btnTextSizeLarge,
-#btnTextSizeSmall,
-#btnTextSizeReset,
-#siteModalMoreBtn,
-#siteModalDirections,
-#siteModalAskAI,
-#siteModalCheckInBtn {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-}
-
-/* Hide the floating Daily Challenge button */
-#btnChallenge {
-    display: none !important;
-}
 
 .prototype-notice {
     border: 1px solid rgba(148, 163, 184, 0.35);

@@ -1,8 +1,281 @@
-html {
-  scroll-behavior: smooth;
-}
 :root {
   --content-font-size: 100%;
+
+  --ui-ink: #172a3a;
+  --ui-ink-soft: #334155;
+  --ui-muted: #64748b;
+  --ui-subtle: #94a3b8;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #f8fafc;
+  --ui-surface-warm: #fbfaf7;
+  --ui-border: #dbe2e8;
+  --ui-border-strong: #cbd5e1;
+  --ui-primary: #172a3a;
+  --ui-primary-hover: #223c50;
+  --ui-accent: #a56a2a;
+  --ui-accent-soft: #f7efe5;
+  --ui-success: #2f7d5a;
+  --ui-danger: #b42318;
+
+  --ui-radius-sm: 0.75rem;
+  --ui-radius-md: 1rem;
+  --ui-radius-lg: 1.5rem;
+  --ui-radius-pill: 9999px;
+
+  --ui-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 14px rgba(15, 23, 42, 0.05);
+  --ui-shadow-md: 0 12px 35px rgba(15, 23, 42, 0.12);
+  --ui-shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.18);
+
+  --ui-control-size: 3rem;
+  --ui-transition: 180ms ease;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--ui-surface-soft);
+}
+
+body {
+  color: var(--ui-ink);
+  background: var(--ui-surface-soft);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+button,
+[role="button"],
+input,
+select {
+  font: inherit;
+}
+
+button,
+[role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(165, 106, 42, 0.28);
+  outline-offset: 3px;
+}
+
+.ui-screen {
+  min-height: 100svh;
+  width: 100%;
+  color: var(--ui-ink);
+  background:
+    radial-gradient(circle at top right, rgba(165, 106, 42, 0.10), transparent 32rem),
+    linear-gradient(180deg, #fff 0%, var(--ui-surface-warm) 100%);
+}
+
+.ui-surface {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-lg);
+}
+
+.ui-kicker {
+  color: var(--ui-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ui-title {
+  color: var(--ui-ink);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.ui-copy {
+  color: var(--ui-muted);
+  line-height: 1.65;
+}
+
+.ui-button {
+  min-height: 3.25rem;
+  width: 100%;
+  border-radius: var(--ui-radius-md);
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.78rem 1rem;
+  font-weight: 750;
+  line-height: 1.2;
+  transition:
+    background-color var(--ui-transition),
+    border-color var(--ui-transition),
+    color var(--ui-transition),
+    box-shadow var(--ui-transition),
+    transform var(--ui-transition);
+}
+
+.ui-button:hover {
+  transform: translateY(-1px);
+}
+
+.ui-button:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.ui-button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  transform: none;
+}
+
+.ui-button--primary {
+  color: white;
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-shadow-sm);
+}
+
+.ui-button--primary:hover {
+  background: var(--ui-primary-hover);
+}
+
+.ui-button--secondary {
+  color: var(--ui-ink);
+  background: white;
+  border-color: var(--ui-border-strong);
+}
+
+.ui-button--secondary:hover {
+  background: var(--ui-surface-soft);
+  border-color: #aebbc7;
+}
+
+.ui-button--quiet {
+  min-height: 2.75rem;
+  color: var(--ui-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.ui-button--quiet:hover {
+  color: var(--ui-ink);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ui-button__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ui-button__title {
+  font-size: 0.94rem;
+}
+
+.ui-button__hint {
+  margin-top: 0.18rem;
+  color: currentColor;
+  font-size: 0.72rem;
+  font-weight: 550;
+  opacity: 0.66;
+}
+
+.ui-field-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--ui-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-align: left;
+}
+
+.ui-field {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: white;
+  color: var(--ui-ink);
+  padding: 0.8rem 0.95rem;
+  transition: border-color var(--ui-transition), box-shadow var(--ui-transition);
+}
+
+.ui-field:focus {
+  border-color: var(--ui-accent);
+  box-shadow: 0 0 0 4px rgba(165, 106, 42, 0.10);
+  outline: none;
+}
+
+.ui-helper {
+  margin-top: 0.45rem;
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.ui-notice {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface-soft);
+  color: var(--ui-muted);
+  padding: 0.85rem 0.95rem;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.ui-notice strong {
+  color: var(--ui-ink);
+}
+
+.ui-notice--accent {
+  background: var(--ui-accent-soft);
+  border-color: rgba(165, 106, 42, 0.24);
+}
+
+.ui-icon-button {
+  width: var(--ui-control-size);
+  height: var(--ui-control-size);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  border-radius: var(--ui-radius-pill);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ui-ink);
+  box-shadow: var(--ui-shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--ui-transition), background-color var(--ui-transition), box-shadow var(--ui-transition);
+}
+
+.ui-icon-button:hover {
+  background: white;
+  box-shadow: var(--ui-shadow-md);
+  transform: translateY(-1px);
+}
+
+.ui-icon-button:active {
+  transform: scale(0.96);
+}
+
+.ui-icon-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
 }
 
 #siteModalInfo,
@@ -13,4 +286,15 @@ html {
 .jejak-hide-staff #btnStaff,
 .jejak-hide-staff #btnAdminToggle {
   display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

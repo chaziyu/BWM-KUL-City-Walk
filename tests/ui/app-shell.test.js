@@ -11,7 +11,7 @@ describe('app shell', () => {
     expect(document.querySelectorAll('#btnChat')).toHaveLength(1);
     expect(document.querySelectorAll('#btnChallenge')).toHaveLength(1);
     expect(document.querySelectorAll('#btnPassport')).toHaveLength(1);
-    expect(document.querySelector('[data-app-region="floating-controls"]')?.className).toContain('fixed');
+    expect(document.querySelector('[data-app-region="floating-controls"]')?.className).toContain('map-action-dock');
     expect(document.getElementById('landing-page')).toBeTruthy();
     expect(document.getElementById('map-error-screen')).toBeTruthy();
     expect(document.querySelectorAll('#chatModal')).toHaveLength(1);
@@ -21,6 +21,8 @@ describe('app shell', () => {
     expect(document.querySelector('[data-app-region="floating-controls"]').classList.contains('hidden')).toBe(true);
     expect(document.querySelectorAll('[data-map-chrome]').length).toBeGreaterThan(0);
     expect(document.getElementById('siteModal')).toBeTruthy();
+    expect(document.getElementById('tabMustVisit')?.getAttribute('aria-pressed')).toBe('true');
+    expect(document.getElementById('tabRecommended')?.getAttribute('aria-pressed')).toBe('false');
     expect(document.getElementById('hiddenBadgeTemplate')).toBeTruthy();
   });
 });

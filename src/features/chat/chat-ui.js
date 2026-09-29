@@ -54,9 +54,9 @@ export function createChatUI({ strings, getSiteName, onSourceClick, renderMarkdo
     if (!messageEl || notFound || !sourceSiteIds.length) return;
 
     const sourceEl = document.createElement('div');
-    sourceEl.className = 'mt-2 pt-2 border-t border-blue-200 text-xs';
+    sourceEl.className = 'chat-sources';
     const labelEl = document.createElement('p');
-    labelEl.className = 'font-semibold mb-1';
+    labelEl.className = 'chat-sources__label';
     labelEl.textContent = 'Verified trail source:';
     sourceEl.appendChild(labelEl);
 
@@ -65,7 +65,7 @@ export function createChatUI({ strings, getSiteName, onSourceClick, renderMarkdo
       if (!name) return;
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'source-chip inline-block mr-1 mb-1 px-2 py-1 rounded-full bg-white text-blue-900 border border-blue-200';
+      button.className = 'source-chip';
       button.textContent = name;
       button.addEventListener('click', () => onSourceClick?.(siteId));
       sourceEl.appendChild(button);
@@ -80,10 +80,10 @@ export function createChatUI({ strings, getSiteName, onSourceClick, renderMarkdo
 
     const messageEl = document.createElement('div');
     const isUser = role === 'user';
-    messageEl.className = `p-3 rounded-lg ${isUser ? 'bg-white text-gray-900 self-end' : 'bg-blue-100 text-blue-900 self-start'} max-w-xs shadow-sm chat-bubble`;
+    messageEl.className = `chat-bubble ${isUser ? 'chat-bubble--user' : 'chat-bubble--assistant'}`;
 
     const nameEl = document.createElement('p');
-    nameEl.className = 'font-bold text-sm mb-1';
+    nameEl.className = 'chat-bubble__name';
     nameEl.textContent = isUser ? strings.chat.userName : strings.chat.aiName;
 
     const contentEl = document.createElement('div');

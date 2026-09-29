@@ -36,10 +36,6 @@ export function createGameUiBindings({
     if (bound) return;
     bound = true;
 
-    document.getElementById('logoOverlay')?.addEventListener('click', () => {
-      window.open('https://badanwarisanmalaysia.org/', '_blank', 'noopener,noreferrer');
-    });
-
     const siteModal = document.getElementById('siteModal');
     const passportModal = document.getElementById('passportModal');
     const congratsModal = document.getElementById('congratsModal');

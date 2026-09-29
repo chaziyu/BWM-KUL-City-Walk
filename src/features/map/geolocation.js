@@ -10,10 +10,10 @@ export function createGeolocationController({ L, map, getMainSites, isCompleted,
 
   const userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
   const userCircle = L.circle([0, 0], {
-    color: '#10B981',
-    opacity: 0.4,
-    fillColor: '#10B981',
-    fillOpacity: 0.05,
+    color: '#246B81',
+    opacity: 0.38,
+    fillColor: '#246B81',
+    fillOpacity: 0.06,
     weight: 1,
   }).addTo(map);
 

@@ -1,3 +1,53 @@
 export function createSiteModalTemplate() {
-  return "<div id=\"siteModal\" class=\"classic-modal-backdrop fixed inset-0 hidden\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"siteModalTitle\">\n        <div class=\"classic-modal-content animate-fade-scale\">\n            <div class=\"relative\">\n                <img id=\"siteModalImage\" src=\"\" alt=\"Heritage Site\" class=\"w-full h-48 object-cover\">\n                <button id=\"closeSiteModal\" aria-label=\"Close site details\" class=\"absolute top-3 right-3 bg-white text-gray-800 rounded-full w-12 h-12 flex items-center justify-center hover:bg-gray-100 transition shadow-lg text-3xl font-bold border-2 border-gray-200 z-50\">×</button>\n            </div>\n            <div class=\"p-6 max-h-[60vh] overflow-y-auto\">\n\n                <h2 class=\"text-2xl font-bold text-gray-900 mb-2\">\n                    <span id=\"siteModalLabel\" class=\"text-gray-500 font-medium mr-2\"></span>\n                    <span id=\"siteModalTitle\">Site Title</span>\n                </h2>\n\n                <!-- Zoom Controls -->\n                <div class=\"flex gap-2 mb-2\">\n                    <button id=\"btnTextSizeSmall\" class=\"px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200\">A-</button>\n                    <button id=\"btnTextSizeReset\" class=\"px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200\">Reset</button>\n                    <button id=\"btnTextSizeLarge\" class=\"px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-gray-700 transition-all duration-200\">A+</button>\n                </div>\n\n                <p id=\"siteModalInfo\" class=\"text-gray-700 mb-4\">Site info loading...</p>\n                <!-- More Info: Collapsible detailed description -->\n                <div id=\"siteModalMore\" class=\"mb-4\">\n                    <button id=\"siteModalMoreBtn\" class=\"w-full bg-gray-600 text-white font-bold py-2 rounded-lg hover:bg-gray-700 transition-all duration-200 mb-2 text-sm\">More\n                        info</button>\n                    <div id=\"siteModalMoreContent\" class=\"mt-2 text-gray-700 hidden whitespace-pre-line bg-gray-100 border border-gray-200 rounded-lg p-3\">\n                    </div>\n                </div>\n\n                <button id=\"siteModalCheckInBtn\" class=\"w-full bg-purple-700 text-white font-bold py-2 rounded-lg hover:bg-purple-800 transition-all duration-200 mb-4 text-sm\">\n                    Check In to this Site\n                </button>\n\n                <button id=\"siteModalSolveChallengeBtn\" class=\"w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-600 transition-all duration-200 mb-4 text-sm hidden\">\n                    🏆 Solve Daily Challenge\n                </button>\n\n                <div class=\"flex gap-2\">\n                    <button id=\"siteModalDirections\" class=\"flex-1 bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700 transition-all duration-200 text-sm\">\n                        Get Directions\n                    </button>\n                    <button id=\"siteModalAskAI\" class=\"flex-1 bg-gray-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-gray-700 transition-all duration-200 text-sm\">\n                        Ask AI\n                    </button>\n                </div>\n\n                <div class=\"flex gap-2 mt-2\">\n                    <button id=\"siteModalFoodBtn\" type=\"button\" class=\"flex-1 text-center bg-orange-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-orange-600 transition-all duration-200 text-sm\">\n                        🍜 Food Near This Site\n                    </button>\n                    <button id=\"siteModalHotelBtn\" type=\"button\" class=\"flex-1 text-center bg-blue-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-blue-600 transition-all duration-200 text-sm\">\n                        🏨 Hotels Near This Site\n                    </button>\n                </div>\n\n                <div id=\"siteModalQuizArea\" class=\"bg-gray-100 p-4 rounded-lg mt-4\">\n                    <p id=\"siteModalQuizQ\" class=\"font-bold text-gray-800 mb-2\">Quiz: Question loading...</p>\n                    <div id=\"siteModalQuizOptions\" class=\"grid grid-cols-1 gap-2\"></div>\n                    <p id=\"siteModalHintText\" class=\"text-sm mt-2 text-gray-500 italic hidden bg-yellow-50 p-2 rounded border border-yellow-200 text-center\">\n                    </p>\n                    <p id=\"siteModalQuizResult\" class=\"text-sm mt-2 text-center font-bold\"></p>\n                </div>\n            </div>\n        </div>\n    </div>";
+  return `<div id="siteModal" class="classic-modal-backdrop fixed inset-0 hidden" role="dialog" aria-modal="true" aria-labelledby="siteModalTitle">
+        <div class="classic-modal-content site-sheet animate-fade-scale">
+            <div class="site-sheet__media">
+                <img id="siteModalImage" src="" alt="Heritage site">
+                <button id="closeSiteModal" aria-label="Close site details" class="ui-icon-button site-sheet__close">×</button>
+            </div>
+
+            <div class="site-sheet__body">
+                <div class="site-sheet__heading">
+                    <span id="siteModalLabel" class="ui-kicker"></span>
+                    <h2 id="siteModalTitle" class="ui-title">Site Title</h2>
+                </div>
+
+                <div class="text-size-controls" aria-label="Text size">
+                    <button id="btnTextSizeSmall" type="button">A−</button>
+                    <button id="btnTextSizeReset" type="button">Reset</button>
+                    <button id="btnTextSizeLarge" type="button">A+</button>
+                </div>
+
+                <p id="siteModalInfo" class="site-sheet__intro">Site info loading...</p>
+
+                <div id="siteModalMore" class="site-more">
+                    <button id="siteModalMoreBtn" class="ui-button ui-button--quiet site-more__toggle">More information</button>
+                    <div id="siteModalMoreContent" class="site-more__content hidden whitespace-pre-line"></div>
+                </div>
+
+                <button id="siteModalCheckInBtn" class="ui-button ui-button--primary">
+                    Check in to this site
+                </button>
+
+                <button id="siteModalSolveChallengeBtn" class="ui-button ui-button--secondary hidden">
+                    Solve daily challenge
+                </button>
+
+                <div class="site-action-grid">
+                    <button id="siteModalDirections" class="ui-button ui-button--secondary">Directions</button>
+                    <button id="siteModalAskAI" class="ui-button ui-button--secondary">Ask AI</button>
+                    <button id="siteModalFoodBtn" type="button" class="ui-button ui-button--secondary">Food nearby</button>
+                    <button id="siteModalHotelBtn" type="button" class="ui-button ui-button--secondary">Hotels nearby</button>
+                </div>
+
+                <div id="siteModalQuizArea" class="site-quiz">
+                    <p class="ui-kicker">Quick quiz</p>
+                    <p id="siteModalQuizQ" class="site-quiz__question">Question loading...</p>
+                    <div id="siteModalQuizOptions" class="grid grid-cols-1 gap-2"></div>
+                    <p id="siteModalHintText" class="site-quiz__hint hidden"></p>
+                    <p id="siteModalQuizResult" class="site-quiz__result"></p>
+                </div>
+            </div>
+        </div>
+    </div>`;
 }

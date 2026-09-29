@@ -4,15 +4,15 @@ export function createLandingScreen({ onExploreDemo, onVisitor, onStaff, onBackH
       const exploreDemoBtn = document.getElementById('btnExploreDemo');
       if (exploreDemoBtn && exploreDemoBtn.dataset.bound !== 'true') {
         exploreDemoBtn.dataset.bound = 'true';
+        const originalContent = exploreDemoBtn.innerHTML;
         exploreDemoBtn.addEventListener('click', async () => {
           exploreDemoBtn.disabled = true;
-          exploreDemoBtn.textContent = 'Starting demo...';
+          exploreDemoBtn.textContent = 'Starting demo…';
           try {
             await onExploreDemo?.();
           } finally {
             exploreDemoBtn.disabled = false;
-            exploreDemoBtn.innerHTML =
-              '<span class="mr-2 sm:mr-3 text-lg sm:text-xl">▶</span><span>Explore Demo</span>';
+            exploreDemoBtn.innerHTML = originalContent;
           }
         });
       }

@@ -65,9 +65,9 @@ test.describe('Responsive and Accessibility', () => {
     await expect(help).toBeVisible();
   });
 
-  test('keyboard navigation reaches the primary login action', async ({ page }) => {
+  test('keyboard navigation reaches the primary visitor login action', async ({ page }) => {
     await page.goto('/');
-    const primaryAction = page.locator('#btnExploreDemo');
+    const primaryAction = page.locator('#btnVisitor');
     let reachedPrimaryAction = false;
 
     for (let index = 0; index < 8; index += 1) {

@@ -3,11 +3,11 @@
 @source "../**/*.js";
 @import "leaflet/dist/leaflet.css";
 @import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
-@import "./base.css";
-@import "./map.css";
-@import "./modals.css";
 @import "./components.css";
+@import "./base.css";
+@import "./modals.css";
 @import "./access.css";
+@import "./map.css";
 @import "./translation.css";
 @import "./chat.css";
 @import "./directions.css";
