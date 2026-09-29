@@ -8,7 +8,8 @@ const SCOPED_KEYS = [
 ];
 
 export function getScopedKey(name, mode = 'visitor') {
-    const safeMode = mode === 'demo' ? 'demo' : 'visitor';
+    const allowedModes = new Set(['demo', 'visitor', 'admin']);
+    const safeMode = allowedModes.has(mode) ? mode : 'visitor';
     return `jejak_${safeMode}_${name}`;
 }
 
