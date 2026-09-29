@@ -11,7 +11,6 @@ import { createLandingScreen } from './src/features/access/landing-screen.js';
 import { showOnly } from './src/features/access/access-ui.js';
 import { createVisitorAccess } from './src/features/access/visitor-access.js';
 import { createMapController } from './src/features/map/map-controller.js';
-import { createMapPreview } from './src/features/map/map-preview.js';
 import { bindMapUI } from './src/features/map/map-ui.js';
 import { createBadgeController } from './src/features/badge/badge-controller.js';
 import { createChallengeController } from './src/features/challenges/challenge-controller.js';
@@ -69,8 +68,6 @@ const modalManager = createModalManager({
 const progressService = createProgressService({
   getNamespace: () => activeSession.progressNamespace || 'visitor',
 });
-
-let mapPreview = null;
 
 const mapController = createMapController({
   L: window.L,
@@ -178,12 +175,6 @@ const siteModalController = createSiteModalController({
     modalManager.close('siteModal');
     challengeController.solveCurrent();
   },
-});
-
-mapPreview = createMapPreview({
-  strings: STRINGS,
-  getSites: () => allSiteData,
-  openSiteDetails: (site) => siteModalController.open(site),
 });
 
 const demoAccess = createDemoAccess({
@@ -421,7 +412,6 @@ function setupGameUIListeners() {
     hotel: document.getElementById('siteModalHotelBtn'),
     hintText: document.getElementById('siteModalHintText'),
   });
-  mapPreview.bind();
 
   passportController.bind({
     btnPassport: document.getElementById('btnPassport'),
@@ -491,7 +481,6 @@ function setupGameUIListeners() {
   }
 
   window.addEventListener('popstate', () => {
-    mapPreview.close();
     modalManager.closeTopmost();
   });
 
