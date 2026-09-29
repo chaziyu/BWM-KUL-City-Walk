@@ -38,7 +38,7 @@ describe('chat controller history', () => {
     send.mockReset();
   });
 
-  it('loads the full stored history when a site chat opens', () => {
+  it('loads only the active chat scope', () => {
     const history = [
       { role: 'user', parts: [{ text: 'General question' }], meta: { scopeKey: 'general' } },
       { role: 'user', parts: [{ text: 'Site question' }], meta: { scopeKey: 'site:1' } },
@@ -52,7 +52,6 @@ describe('chat controller history', () => {
       getSiteName: () => 'Site',
       modalManager: { open: vi.fn(), close: vi.fn() },
       saveHistory: vi.fn(),
-      saveMessageCount: vi.fn(),
       setHistory: vi.fn(),
       setMessageCount: vi.fn(),
       strings: { chat: { aiName: 'AI', userName: 'You', limitReached: 'Done', placeholder: 'Ask', error: 'Error' } },
@@ -60,7 +59,34 @@ describe('chat controller history', () => {
 
     controller.loadHistory();
 
-    expect(loadHistory).toHaveBeenCalledWith(history);
+    expect(loadHistory).toHaveBeenCalledWith([history[0]]);
+  });
+
+  it('prefills site chat without automatically sending a message', () => {
+    const history = [
+      { role: 'user', parts: [{ text: 'General question' }], meta: { scopeKey: 'general' } },
+      { role: 'user', parts: [{ text: 'Site question' }], meta: { scopeKey: 'site:1' } },
+    ];
+    const modalManager = { open: vi.fn(), close: vi.fn() };
+    const controller = createChatController({
+      deviceId: 'device-1',
+      getChatLimit: () => 5,
+      getHistory: () => history,
+      getMessageCount: () => 0,
+      historyWindowSize: 6,
+      getSiteName: () => 'Site',
+      modalManager,
+      saveHistory: vi.fn(),
+      setHistory: vi.fn(),
+      setMessageCount: vi.fn(),
+      strings: { chat: { aiName: 'AI', userName: 'You', limitReached: 'Done', placeholder: 'Ask', error: 'Error' } },
+    });
+
+    controller.open({ siteId: '1' });
+
+    expect(loadHistory).toHaveBeenLastCalledWith([history[1]]);
+    expect(document.getElementById('chatInput').value).toBe('Tell me more about this site.');
+    expect(send).not.toHaveBeenCalled();
   });
   it('syncs the local counter from server remaining quota', async () => {
     let messageCount = 0;
@@ -88,7 +114,6 @@ describe('chat controller history', () => {
       getSiteName: () => 'Site',
       modalManager: { open: vi.fn(), close: vi.fn() },
       saveHistory: vi.fn(),
-      saveMessageCount: vi.fn(),
       setHistory: vi.fn(),
       setMessageCount,
       strings: { chat: { aiName: 'AI', userName: 'You', limitReached: 'Done', placeholder: 'Ask', error: 'Error' } },
@@ -124,7 +149,6 @@ describe('chat controller history', () => {
       getSiteName: () => 'Site',
       modalManager: { open: vi.fn(), close: vi.fn() },
       saveHistory: vi.fn(),
-      saveMessageCount: vi.fn(),
       setHistory: vi.fn(),
       setMessageCount,
       strings: { chat: { aiName: 'AI', userName: 'You', limitReached: 'Done', placeholder: 'Ask', error: 'Error' } },
