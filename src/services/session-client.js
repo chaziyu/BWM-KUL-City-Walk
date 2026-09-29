@@ -22,11 +22,13 @@ let currentSession = { ...DEFAULT_SESSION };
  */
 function normalizeSession(session) {
     if (!session || !session.authenticated) return { ...DEFAULT_SESSION };
+    const role = session.role || 'guest';
     return {
         ...DEFAULT_SESSION,
         ...session,
-        role: session.role || 'guest',
-        progressNamespace: session.progressNamespace || (['demo', 'visitor', 'admin'].includes(session.role) ? session.role : 'visitor')
+        role,
+        progressNamespace: session.progressNamespace
+            || (['demo', 'visitor', 'admin'].includes(role) ? role : 'visitor'),
     };
 }
 
@@ -43,6 +45,7 @@ export function setCurrentSession(session) {
     return currentSession;
 }
 
+/** @returns {Promise<AppSession>} */
 export async function refreshSession() {
     const response = await fetch('/api/session/current', {
         method: 'GET',
@@ -51,6 +54,7 @@ export async function refreshSession() {
     return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
+/** @returns {Promise<AppSession>} */
 export async function startDemoSession() {
     const response = await fetch('/api/session/demo', {
         method: 'POST',
@@ -59,6 +63,11 @@ export async function startDemoSession() {
     return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
+/**
+ * @param {string} passkey
+ * @param {string} deviceId
+ * @returns {Promise<AppSession>}
+ */
 export async function startVisitorSession(passkey, deviceId) {
     const response = await fetch('/api/session/visitor', {
         method: 'POST',
@@ -69,6 +78,10 @@ export async function startVisitorSession(passkey, deviceId) {
     return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
+/**
+ * @param {string} password
+ * @returns {Promise<AppSession>}
+ */
 export async function startAdminSession(password) {
     const response = await fetch('/api/session/admin', {
         method: 'POST',
@@ -79,6 +92,7 @@ export async function startAdminSession(password) {
     return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
+/** @returns {Promise<AppSession>} */
 export async function endSession() {
     await fetch('/api/session/logout', {
         method: 'POST',
