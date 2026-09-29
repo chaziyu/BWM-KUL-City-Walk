@@ -39,7 +39,6 @@ import {
   clearScopedProgress,
   readScopedJSON,
   writeScopedJSON,
-  writeScopedNumber,
 } from './src/services/storage.js';
 import { createModalManager } from './src/ui/modal-manager.js';
 import { showToast } from './src/ui/toast.js';
@@ -57,7 +56,8 @@ const UI_TEXT_SIZE_KEY = 'jejak_ui_text_size';
 const LEGACY_UI_TEXT_SIZE_KEY = 'ui_text_size';
 
 if (!deviceId) {
-  deviceId = `device-${Math.random().toString(36).slice(2, 11)}`;
+  const generatedId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 15);
+  deviceId = `device-${generatedId}`;
   localStorage.setItem('bwm_device_id', deviceId);
 }
 
@@ -123,7 +123,6 @@ const chatController = createChatController({
     siteModalController.open(site);
   },
   saveHistory: saveChatHistory,
-  saveMessageCount,
   setHistory: (nextHistory) => {
     chatHistory = nextHistory;
   },
@@ -251,10 +250,6 @@ function loadScopedState() {
 
 function saveChatHistory() {
   writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
-}
-
-function saveMessageCount() {
-  writeScopedNumber('message_count', userMessageCount, getProgressNamespace());
 }
 
 function applySessionChrome() {
