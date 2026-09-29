@@ -11,10 +11,10 @@ describe('progress service', () => {
       getNamespace: () => 'visitor',
     });
     service.setMainSites([
-      { id: '1' },
-      { id: 2 },
-      { id: '3' },
-      { id: 'A' },
+      { id: '1', category: 'must_visit' },
+      { id: 2, category: 'must_visit' },
+      { id: '3', category: 'must_visit' },
+      { id: 'A', category: 'recommended' },
     ]);
   });
 
@@ -31,8 +31,15 @@ describe('progress service', () => {
   });
 
   it('records check-ins and quiz completions with string ids', () => {
-    service.recordCheckIn(1);
-    service.recordQuizCompletion(2);
+    const firstCheckIn = service.recordCheckIn(1);
+    const duplicateCheckIn = service.recordCheckIn(1);
+    const firstQuiz = service.recordQuizCompletion(2);
+    const duplicateQuiz = service.recordQuizCompletion(2);
+
+    expect(firstCheckIn.changed).toBe(true);
+    expect(duplicateCheckIn.changed).toBe(false);
+    expect(firstQuiz.changed).toBe(true);
+    expect(duplicateQuiz.changed).toBe(false);
 
     const state = service.getCompletionState();
     expect([...state.completedIds].sort()).toEqual(['1', '2']);
