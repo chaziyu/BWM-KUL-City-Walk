@@ -67,6 +67,7 @@ test.describe('Responsive and Accessibility', () => {
 
 
   test('user guide stays contained and usable across mobile ratios at 120% UI scale', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.addInitScript(() => {
       localStorage.setItem('jejak_ui_scale', '120');
     });
