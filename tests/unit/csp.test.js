@@ -5,8 +5,11 @@ const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
 const csp = vercelConfig.headers[0].headers.find((header) => header.key === 'Content-Security-Policy').value;
 
 describe('production CSP', () => {
-  it('allows CARTO map tiles without broad img-src wildcards', () => {
-    expect(csp).toContain("img-src 'self' data: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://fonts.gstatic.com https://www.gstatic.com");
+  it('allows only the no-key OpenFreeMap host for basemap resources', () => {
+    expect(csp).toContain("img-src 'self' data: https://tiles.openfreemap.org https://fonts.gstatic.com https://www.gstatic.com");
+    expect(csp).toContain("connect-src 'self' https://tiles.openfreemap.org");
+    expect(csp).not.toContain('basemaps.cartocdn.com');
+    expect(csp).not.toContain('tile.openstreetmap.org');
     expect(csp).not.toContain('img-src *');
   });
 
