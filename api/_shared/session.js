@@ -1,15 +1,17 @@
 const crypto = require('crypto');
+const { isProduction, readInteger, readString } = require('./config');
 
 const COOKIE_NAME = 'bwm_session';
 const ROLE_LIMITS = {
-    demo: Number(process.env.DEMO_CHAT_LIMIT) || 5,
-    visitor: Number(process.env.VISITOR_CHAT_LIMIT) || 15,
-    admin: Number(process.env.ADMIN_CHAT_LIMIT) || 30
+    demo: readInteger('DEMO_CHAT_LIMIT', 5, { min: 0 }),
+    visitor: readInteger('VISITOR_CHAT_LIMIT', 15, { min: 0 }),
+    admin: readInteger('ADMIN_CHAT_LIMIT', 30, { min: 0 }),
 };
 
 function getSessionSecret() {
-    if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-    if (process.env.NODE_ENV !== 'production') {
+    const configured = readString('SESSION_SECRET');
+    if (configured) return configured;
+    if (!isProduction()) {
         console.warn('SESSION_SECRET is not set. Using a local development-only fallback.');
         return 'bwm-local-development-session-secret';
     }
@@ -55,13 +57,12 @@ function parseCookies(cookieHeader = '') {
 }
 
 function getCookieOptions(maxAge) {
-    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
     return [
         'HttpOnly',
         'SameSite=Lax',
         'Path=/',
         `Max-Age=${Math.max(0, Math.floor(maxAge))}`,
-        isProduction ? 'Secure' : ''
+        isProduction() ? 'Secure' : ''
     ].filter(Boolean).join('; ');
 }
 
