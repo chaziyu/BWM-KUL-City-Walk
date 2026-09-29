@@ -173,45 +173,6 @@ html {
     animation: cinematicFadeOut 0.4s forwards;
 }
 
-/* --- 5. PREVIEW CARD (BOTTOM SHEET) ANIMATIONS --- */
-@keyframes previewSlideIn {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes previewSlideOut {
-    0% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-}
-
-.preview-card-opening {
-    animation: previewSlideIn 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.preview-card-closing {
-    animation: previewSlideOut 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.modern-modal-content {
-    height: 70vh;
-    display: flex;
-    flex-direction: column;
-}
-
 /* --- 6. GAMIFICATION STYLES --- */
 .marker-visited {
     filter: hue-rotate(140deg) brightness(1.2) saturate(3);
@@ -418,20 +379,6 @@ html {
     }
 }
 
-
-/* Disable entrance animations/transitions for specific site modal controls */
-#btnTextSizeLarge,
-#btnTextSizeSmall,
-#btnTextSizeReset,
-#siteModalMoreBtn,
-#siteModalDirections,
-#siteModalAskAI,
-#siteModalCheckInBtn {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-}
 
 .prototype-notice {
     border: 1px solid rgba(148, 163, 184, 0.35);
