@@ -10,6 +10,7 @@ import { createDemoAccess } from './src/features/access/demo-access.js';
 import { createLandingScreen } from './src/features/access/landing-screen.js';
 import { showOnly } from './src/features/access/access-ui.js';
 import { createVisitorAccess } from './src/features/access/visitor-access.js';
+import { createOpenFreeMapLayer } from './src/features/map/basemap.js';
 import { createMapController } from './src/features/map/map-controller.js';
 import { bindMapUI } from './src/features/map/map-ui.js';
 import { createBadgeController } from './src/features/badge/badge-controller.js';
@@ -72,6 +73,7 @@ const progressService = createProgressService({
 const mapController = createMapController({
   L: window.L,
   loadSites: loadSiteData,
+  createBasemapLayer: createOpenFreeMapLayer,
   getIsCompleted: (siteId) => progressService.isCompleted(siteId),
   onSiteSelected: (site) => siteModalController.open(site),
   onSitesLoaded: (sites) => {
