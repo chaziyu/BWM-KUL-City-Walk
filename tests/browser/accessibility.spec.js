@@ -54,7 +54,7 @@ test.describe('Responsive and Accessibility', () => {
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,
       scrollHeight: element.scrollHeight,
-      overflowY: getComputedStyle(element).overflowY,
+      overflowY: window.getComputedStyle(element).overflowY,
     }));
 
     expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
