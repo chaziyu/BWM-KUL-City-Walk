@@ -18,7 +18,9 @@ function isValidPasskeyFormat(passkey) {
 
 async function validateWithAppsScript(passkey, deviceId) {
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-    if (!scriptUrl) return null;
+    if (!scriptUrl) {
+        return { serviceError: true, error: 'Visitor validation service is not configured.' };
+    }
 
     const scriptResponse = await fetch(scriptUrl, {
         method: 'POST',
@@ -27,7 +29,7 @@ async function validateWithAppsScript(passkey, deviceId) {
     });
 
     if (!scriptResponse.ok) {
-        return { success: false, error: 'Could not validate passkey.' };
+        return { serviceError: true, error: 'Visitor validation service is unavailable.' };
     }
 
     return scriptResponse.json();
@@ -60,6 +62,10 @@ module.exports = async (request, response) => {
         }
 
         const validation = await validateWithAppsScript(normalizedPasskey, deviceId);
+
+        if (validation?.serviceError) {
+            return response.status(503).json({ error: validation.error });
+        }
 
         if (!validation?.success || validation?.isAdmin) {
             return response.status(401).json({ error: validation?.error || 'Invalid or expired passkey.' });
