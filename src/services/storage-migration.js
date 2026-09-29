@@ -1,7 +1,7 @@
 // storage-migration.js
 // Handles localStorage data validation, versioning, and migration.
 
-const LATEST_VERSION = 3;
+const LATEST_VERSION = 4;
 const REMOVED_SITE_IDS = [];
 const PROGRESS_NAMESPACES = ['demo', 'visitor'];
 
@@ -64,8 +64,6 @@ export function migrateData() {
         migrateLegacyKey('visited', '[]');
         migrateLegacyKey('discovered', '[]');
         migrateLegacyKey('chat_history', '[]');
-        migrateLegacyKey('message_count', '0');
-        migrateLegacyKey('last_active_day');
         migrateLegacyKey('solved_riddle', '{}');
 
         // Remove obsolete auth state. Local storage is no longer trusted for roles.
@@ -76,15 +74,15 @@ export function migrateData() {
             validateArrayKey('visited', namespace);
             validateArrayKey('discovered', namespace);
 
-            const msgKey = scopedKey('message_count', namespace);
-            let msgCount = localStorage.getItem(msgKey);
-            if (msgCount && isNaN(parseInt(msgCount, 10))) {
-                console.warn(`Resetting invalid message count for ${namespace}`);
-                localStorage.setItem(msgKey, '0');
-            }
         });
 
-        // --- END MIGRATION LOGIC ---
+        ['demo', 'visitor', 'admin'].forEach(namespace => {
+            localStorage.removeItem(scopedKey('message_count', namespace));
+            localStorage.removeItem(scopedKey('last_active_day', namespace));
+        });
+
+        localStorage.removeItem('jejak_message_count');
+        localStorage.removeItem('jejak_last_active_day');
 
         // Update version reference
         localStorage.setItem('jejak_db_version', LATEST_VERSION.toString());
