@@ -21,4 +21,32 @@ describe('chat service', () => {
       history: [],
     });
   });
+  it('does not invent a zero quota when an error omits remainingQuota', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: () => Promise.resolve({ reply: 'Session expired' }),
+    });
+    const service = createChatService({ deviceId: 'device-1', fetchImpl });
+
+    await expect(service.send({ userQuery: 'Hello', context: {}, history: [] }))
+      .rejects.toMatchObject({ message: 'Session expired', status: 401 });
+    try {
+      await service.send({ userQuery: 'Hello', context: {}, history: [] });
+    } catch (error) {
+      expect(Object.hasOwn(error, 'remainingQuota')).toBe(false);
+    }
+  });
+
+  it('preserves an explicit zero remaining quota', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: () => Promise.resolve({ reply: 'Quota reached', remainingQuota: 0 }),
+    });
+    const service = createChatService({ deviceId: 'device-1', fetchImpl });
+
+    await expect(service.send({ userQuery: 'Hello', context: {}, history: [] }))
+      .rejects.toMatchObject({ remainingQuota: 0, status: 429 });
+  });
 });
