@@ -89,10 +89,9 @@ async function isQuotaExceeded(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
 
     // In-memory fallback
     const count = quotaBuckets.get(key) || 0;
-    if (count >= maxQuota) return true;
-
-    quotaBuckets.set(key, count + 1);
-    return false;
+    const nextCount = count + 1;
+    quotaBuckets.set(key, nextCount);
+    return nextCount > maxQuota;
 }
 
 async function getQuotaRemaining(key, maxQuota) {
