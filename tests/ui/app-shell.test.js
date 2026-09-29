@@ -17,6 +17,9 @@ describe('app shell', () => {
     expect(document.querySelectorAll('#chatModal')).toHaveLength(1);
     expect(document.querySelectorAll('#passportModal')).toHaveLength(1);
     expect(document.querySelectorAll('#challengeModal')).toHaveLength(1);
+    expect(document.getElementById('previewCard')).toBeNull();
+    expect(document.querySelector('[data-app-region="floating-controls"]').classList.contains('hidden')).toBe(true);
+    expect(document.querySelectorAll('[data-map-chrome]').length).toBeGreaterThan(0);
     expect(document.getElementById('siteModal')).toBeTruthy();
     expect(document.getElementById('hiddenBadgeTemplate')).toBeTruthy();
   });
