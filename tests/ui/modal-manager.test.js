@@ -46,6 +46,35 @@ describe('modal manager', () => {
     expect(replaceState).not.toHaveBeenCalled();
   });
 
+  it('reports the active modal as nested modals open and close', () => {
+    document.body.innerHTML = `
+      <div id="first" class="hidden"><button>First</button></div>
+      <div id="second" class="hidden"><button>Second</button></div>
+    `;
+    const onModalStateChange = vi.fn();
+    const manager = createModalManager({ appRoot: document.body, onModalStateChange });
+
+    manager.open('first');
+    manager.open('second');
+    manager.close('second');
+
+    expect(onModalStateChange).toHaveBeenNthCalledWith(1, {
+      id: 'first',
+      open: true,
+      activeModal: 'first',
+    });
+    expect(onModalStateChange).toHaveBeenNthCalledWith(2, {
+      id: 'second',
+      open: true,
+      activeModal: 'second',
+    });
+    expect(onModalStateChange).toHaveBeenNthCalledWith(3, {
+      id: 'second',
+      open: false,
+      activeModal: 'first',
+    });
+  });
+
   it('restores focus and closes the top modal once on Escape', () => {
     vi.useFakeTimers();
     document.body.innerHTML = `
