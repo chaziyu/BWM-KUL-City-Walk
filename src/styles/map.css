@@ -205,17 +205,33 @@
   border-radius: 50%;
   background: #246b81;
   box-shadow: 0 0 0 5px rgba(36, 107, 129, 0.18), 0 3px 10px rgba(15, 23, 42, 0.2);
-  animation: user-location-pulse 1.8s ease-out infinite;
 }
 
-@keyframes user-location-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 4px rgba(36, 107, 129, 0.18), 0 3px 10px rgba(15, 23, 42, 0.2);
-  }
+@keyframes user-location-pulse-slow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 0.72; }
+}
 
-  50% {
-    box-shadow: 0 0 0 10px rgba(36, 107, 129, 0), 0 3px 10px rgba(15, 23, 42, 0.2);
-  }
+@keyframes user-location-pulse-medium {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.78; }
+}
+
+@keyframes user-location-pulse-fast {
+  0%, 100% { transform: scale(1.08); opacity: 1; }
+  50% { transform: scale(1.45); opacity: 0.88; }
+}
+
+.user-location-pin.pulse-slow {
+  animation: user-location-pulse-slow 2.8s ease-in-out infinite;
+}
+
+.user-location-pin.pulse-medium {
+  animation: user-location-pulse-medium 1.5s ease-in-out infinite;
+}
+
+.user-location-pin.pulse-fast {
+  animation: user-location-pulse-fast 0.75s ease-in-out infinite;
 }
 
 .heritage-polygon {
