@@ -213,7 +213,7 @@ const adminAccess = createAdminAccess({
     notifyLifecycle({ session: activeSession });
   },
   onShowMap() {
-    showMapExperience();
+    void openMapSafely();
   },
 });
 
@@ -243,7 +243,12 @@ function getChatLimit() {
 function loadScopedState() {
   progressService.load();
   chatHistory = readScopedJSON('chat_history', [], getProgressNamespace());
-  userMessageCount = 0;
+  const remainingQuota = activeSession.remainingQuota;
+  userMessageCount = remainingQuota !== null
+    && remainingQuota !== undefined
+    && Number.isFinite(Number(remainingQuota))
+    ? Math.max(0, getChatLimit() - Number(remainingQuota))
+    : 0;
   solvedRiddle = readScopedJSON('solved_riddle', {}, getProgressNamespace());
 }
 
@@ -343,7 +348,7 @@ function setupPlatformWarning() {
           button: document.getElementById('unlockBtn'),
           errorElement: document.getElementById('errorMsg'),
         });
-        if (session?.authenticated) showMapExperience();
+        if (session?.authenticated) await openMapSafely();
       });
     }
 
@@ -370,9 +375,9 @@ function setupPlatformWarning() {
     if (passkeyDisplay) passkeyDisplay.value = pendingPasskey;
 
     if (warningContent) {
-      warningContent.innerHTML = isPwaMode()
-        ? "<strong>You're using the PWA (App Mode)</strong><br><br>Once you log in here, this passkey will be locked to the <strong>PWA only</strong>."
-        : "<strong>You're using a Browser</strong><br><br>Once you log in here, this passkey will be locked to <strong>browser mode only</strong>.";
+      warningContent.textContent = isPwaMode()
+        ? 'You are using the installed app view. Your passkey will be validated with this device.'
+        : 'You are using the browser view. Your passkey will be validated with this device.';
     }
 
     modalManager.open(modal);
@@ -540,21 +545,39 @@ async function checkForURLPasskey() {
   await showPlatformWarning();
 }
 
+function setMapChromeVisible(visible) {
+  document.getElementById('progress-container')?.classList.toggle('hidden', !visible);
+  document.getElementById('map')?.classList.toggle('hidden', !visible);
+}
+
+async function syncActiveSession() {
+  try {
+    const refreshed = await refreshSession();
+    if (!refreshed?.authenticated) {
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+    activeSession = refreshed;
+    notifyLifecycle({ session: activeSession });
+  } catch (error) {
+    if (!activeSession?.authenticated) throw error;
+  }
+}
+
 async function showMapExperience() {
+  await syncActiveSession();
   notifyLifecycle({ activeView: 'map' });
   applySessionChrome();
   loadScopedState();
 
   showOnly([]);
-  document.getElementById('progress-container')?.classList.remove('hidden');
-  document.getElementById('map')?.classList.remove('hidden');
+  setMapChromeVisible(true);
 
   setupGameUIListeners();
   await mapController.initMap();
   bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
   passportController.refreshProgress();
   chatController.updateCount();
-  chatController.setDisabled(userMessageCount >= getChatLimit());
+  chatController.setDisabled(false);
 
   const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
   if (resetDemoProgressBtn) {
@@ -564,7 +587,33 @@ async function showMapExperience() {
   onboardingController.openWelcomeOnce();
 }
 
+async function openMapSafely() {
+  try {
+    await showMapExperience();
+    return true;
+  } catch (error) {
+    console.error('Unable to load the heritage map:', error);
+    mapController.destroyMap();
+    setMapChromeVisible(false);
+    showOnly(['map-error-screen']);
+    notifyLifecycle({ activeView: 'map-error' });
+
+    const message = document.getElementById('mapErrorMessage');
+    if (message) {
+      message.textContent = error?.message
+        ? `The heritage map could not be loaded: ${error.message}`
+        : 'The heritage map could not be loaded. Check your connection and try again.';
+    }
+    showToast('Unable to load the heritage map. You can retry without losing your session.', {
+      severity: 'error',
+    });
+    return false;
+  }
+}
+
 function showAdminExperience() {
+  mapController.destroyMap();
+  setMapChromeVisible(false);
   notifyLifecycle({ activeView: 'admin' });
   applySessionChrome();
   showOnly(['staff-screen']);
@@ -573,6 +622,8 @@ function showAdminExperience() {
 }
 
 function showLandingPage() {
+  mapController.destroyMap();
+  setMapChromeVisible(false);
   notifyLifecycle({ activeView: 'landing' });
   document.documentElement.classList.remove('jejak-hide-staff');
   showOnly(['landing-page']);
@@ -600,14 +651,7 @@ function setupAccessFlow() {
         return;
       }
 
-      try {
-        await showMapExperience();
-      } catch (error) {
-        console.error('Unable to load the demo map:', error);
-        showToast('Demo access started, but the heritage map could not load. Check your connection and try again.', {
-          severity: 'error',
-        });
-      }
+      await openMapSafely();
     },
     onVisitor() {},
     onStaff: showAdminCode,
@@ -617,6 +661,21 @@ function setupAccessFlow() {
 
   landingScreen.init();
   bindAdminUI();
+
+  const retryMapBtn = document.getElementById('retryMapBtn');
+  if (retryMapBtn && retryMapBtn.dataset.bound !== 'true') {
+    retryMapBtn.dataset.bound = 'true';
+    retryMapBtn.addEventListener('click', () => void openMapSafely());
+  }
+
+  const mapErrorBackBtn = document.getElementById('mapErrorBackBtn');
+  if (mapErrorBackBtn && mapErrorBackBtn.dataset.bound !== 'true') {
+    mapErrorBackBtn.dataset.bound = 'true';
+    mapErrorBackBtn.addEventListener('click', () => {
+      if (activeSession?.role === 'admin') showAdminExperience();
+      else showLandingPage();
+    });
+  }
 
   const unlockBtn = document.getElementById('unlockBtn');
   if (unlockBtn && unlockBtn.dataset.bound !== 'true') {
@@ -637,16 +696,16 @@ async function initApp() {
   }
 
   notifyLifecycle({ session: activeSession });
+  setupAccessFlow();
   await checkForURLPasskey();
 
   if (activeSession?.authenticated) {
     if (activeSession.role === 'admin') showAdminExperience();
-    else await showMapExperience();
+    else await openMapSafely();
     return;
   }
 
   showLandingPage();
-  setupAccessFlow();
 }
 
 export function startLegacyApp(options = {}) {
