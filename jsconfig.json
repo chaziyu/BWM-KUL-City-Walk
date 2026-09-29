@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": [
+    "src/types/**/*.js",
+    "src/services/api-client.js",
+    "src/services/session-client.js",
+    "src/features/chat/chat-service.js",
+    "src/features/passport/progress-service.js",
+    "src/features/sites/site-domain.js"
+  ]
+}
