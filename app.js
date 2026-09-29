@@ -258,7 +258,20 @@ function saveMessageCount() {
 }
 
 function applySessionChrome() {
-  document.documentElement.classList.toggle('jejak-hide-staff', activeSession?.role !== 'admin');
+  const isAdmin = activeSession?.role === 'admin';
+  const allowedUI = new Set(activeSession?.allowedUI || []);
+
+  document.documentElement.classList.toggle('jejak-hide-staff', !isAdmin);
+
+  [
+    ['btnChat', 'chat'],
+    ['btnPassport', 'passport'],
+    ['btnChallenge', 'challenge'],
+  ].forEach(([id, capability]) => {
+    document.getElementById(id)?.classList.toggle('hidden', !allowedUI.has(capability));
+  });
+
+  document.getElementById('btnAdminToggle')?.classList.toggle('hidden', !isAdmin);
 }
 
 function setupTextSizeControls() {
@@ -545,7 +558,9 @@ function setMapChromeVisible(visible) {
     element.classList.toggle('hidden', !visible);
     element.setAttribute('aria-hidden', String(!visible));
   });
-  document.getElementById('map')?.classList.toggle('hidden', !visible);
+  const mapElement = document.getElementById('map');
+  mapElement?.classList.toggle('hidden', !visible);
+  mapElement?.setAttribute('aria-hidden', String(!visible));
 }
 
 async function syncActiveSession() {
