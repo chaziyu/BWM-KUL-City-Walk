@@ -17,6 +17,7 @@ export function getSiteColors(site) {
 export function createMapController({
   L,
   loadSites,
+  createBasemapLayer,
   getIsCompleted,
   onSiteSelected,
   onSitesLoaded,
@@ -75,10 +76,8 @@ export function createMapController({
       maxBoundsViscosity: 1.0,
     }).setView(DEFAULT_CENTER, 16);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap contributors © CARTO',
-      maxZoom: 20,
-    }).addTo(map);
+    const basemapLayer = createBasemapLayer();
+    basemapLayer.addTo(map);
 
     markersLayer = L.layerGroup().addTo(map);
     polygonsLayer = L.layerGroup();
