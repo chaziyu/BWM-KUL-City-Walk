@@ -19,7 +19,9 @@
     "html2canvas": "^1.4.1",
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",
-    "marked": "^18.0.5"
+    "marked": "^18.0.5",
+    "@maplibre/maplibre-gl-leaflet": "^0.1.4",
+    "maplibre-gl": "^6.11.2"
   },
   "engines": {
     "node": ">=18.0.0"
