@@ -9,7 +9,7 @@ function extractJsonText(text) {
     const raw = String(text || '').trim();
     if (!raw) throw new SyntaxError('AI response was empty.');
 
-    const fenced = raw.match(/^\`\`\`(?:json)?\s*([\s\S]*?)\s*\`\`\`$/i);
+    const fenced = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
     const candidate = (fenced?.[1] || raw).trim();
 
     try {
