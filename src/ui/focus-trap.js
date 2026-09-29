@@ -2,7 +2,11 @@ const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabi
 
 export function createFocusTrap(container) {
   function getFocusable() {
-    return [...(container?.querySelectorAll(FOCUSABLE) || [])].filter((el) => !el.disabled);
+    return [...(container?.querySelectorAll(FOCUSABLE) || [])].filter((el) => {
+      if (el.disabled) return false;
+      if (el.closest('[hidden], [aria-hidden="true"], .hidden')) return false;
+      return true;
+    });
   }
 
   function focusFirst() {
