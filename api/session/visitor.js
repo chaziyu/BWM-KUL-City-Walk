@@ -1,4 +1,5 @@
 const {
+    createQuotaSubject,
     createSessionPayload,
     getSafeSessionDetails,
     setSessionCookie
@@ -67,7 +68,10 @@ module.exports = async (request, response) => {
         const maxAge = Number(process.env.VISITOR_SESSION_MAX_AGE) || 24 * 60 * 60;
         const session = createSessionPayload('visitor', {
             accessType: 'visitor-passkey',
-            maxAge
+            maxAge,
+            quotaSubject: createQuotaSubject(
+                `visitor:${normalizedPasskey}:${String(deviceId || '')}`
+            )
         });
 
         setSessionCookie(response, session, maxAge);
