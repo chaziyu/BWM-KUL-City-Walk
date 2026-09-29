@@ -192,9 +192,7 @@ The endpoint uses low-temperature factual calls and tries models in this order:
 [
   "gemini-3.5-flash-lite",
   "gemma-4-26b-a4-b-it",
-  "gemma-4-31b-it",
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-flash"
+  "gemma-4-31b-it"
 ]
 ```
 
