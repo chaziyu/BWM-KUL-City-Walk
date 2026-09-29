@@ -1,12 +1,29 @@
 const EMPTY_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E';
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function safeImageSource(value) {
+  const source = String(value || '').trim();
+  if (!source) return '';
+  if (/^(?:https?:\/\/|\/|\.\.?\/|images\/)/i.test(source)) return escapeHtml(source);
+  return '';
+}
+
 export function buildMoreInfoHtml(site) {
-  const bwImageHtml = site.flyer_image?.trim()
-    ? `<img src="${site.flyer_image}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">`
+  const flyerImage = safeImageSource(site.flyer_image);
+  const bwImageHtml = flyerImage
+    ? `<img src="${flyerImage}" class="w-full h-auto rounded-lg mb-4 shadow-md border border-gray-200" alt="Historical view">`
     : '';
 
   const flyerTextHtml = site.flyer_text
-    ? `<p class="text-gray-700 mb-4">${site.flyer_text}</p>`
+    ? `<p class="text-gray-700 mb-4">${escapeHtml(site.flyer_text)}</p>`
     : '';
 
   const faqHtml = site.faq
@@ -14,9 +31,9 @@ export function buildMoreInfoHtml(site) {
       <div class="mt-4 pt-4 border-t border-gray-200">
         <h4 class="font-bold text-gray-900 text-sm">📍 Visitor Quick Facts</h4>
         <ul class="text-sm text-gray-700">
-          <li><strong>🕒 Hours:</strong> ${site.faq.opening_hours || 'Exterior view 24/7'}</li>
-          <li><strong>🎟️ Fee:</strong> ${site.faq.ticket_fee || 'Free Admission'}</li>
-          <li><strong>💡 Tip:</strong> ${site.faq.tips || 'Great for photography!'}</li>
+          <li><strong>🕒 Hours:</strong> ${escapeHtml(site.faq.opening_hours || 'Exterior view 24/7')}</li>
+          <li><strong>🎟️ Fee:</strong> ${escapeHtml(site.faq.ticket_fee || 'Free Admission')}</li>
+          <li><strong>💡 Tip:</strong> ${escapeHtml(site.faq.tips || 'Great for photography!')}</li>
         </ul>
       </div>
     `
@@ -29,7 +46,7 @@ export function buildMoreInfoHtml(site) {
 }
 
 export function renderQuizOptions({ container, options, onSelect }) {
-  container.innerHTML = '';
+  container.replaceChildren();
   options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className =
