@@ -39,9 +39,6 @@ export default [
         FileReader: 'readonly',
         alert: 'readonly',
         L: 'readonly',
-        confetti: 'readonly',
-        html2canvas: 'readonly',
-        marked: 'readonly',
       },
     },
     rules: {
