@@ -22,3 +22,13 @@
 [2026-09-24T08:03:16.478Z] [CodeGraph MCP] Auto-synced 1 file(s) in 17ms
 [2026-09-24T08:03:38.108Z] [CodeGraph MCP] Auto-synced 1 file(s) in 30ms
 [2026-09-24T08:12:34.972Z] [CodeGraph MCP] Auto-synced 82 file(s) in 2496ms
+[2026-09-24T08:51:22.996Z] [CodeGraph daemon] Listening on \\.\pipe\codegraph-7c9503c3b86e7788 (pid 24288, v1.6.0). Idle timeout 300000ms.
+[2026-09-24T08:51:23.464Z] [CodeGraph MCP] File watcher active — graph will auto-sync on changes
+[2026-09-24T08:51:23.470Z] [CodeGraph MCP] Query pool: up to 7 worker thread(s) for concurrent reads.
+[2026-09-24T08:53:06.805Z] [CodeGraph daemon] Listening on \\.\pipe\codegraph-7c9503c3b86e7788 (pid 34508, v1.6.0). Idle timeout 300000ms.
+[2026-09-24T08:53:07.697Z] [CodeGraph MCP] File watcher active — graph will auto-sync on changes
+[2026-09-24T08:53:07.705Z] [CodeGraph MCP] Query pool: up to 7 worker thread(s) for concurrent reads.
+[2026-09-24T08:55:20.449Z] [CodeGraph MCP] Auto-synced 1 file(s) in 537ms
+[2026-09-24T11:25:27.070Z] [CodeGraph daemon] Listening on \\.\pipe\codegraph-7c9503c3b86e7788 (pid 34280, v1.6.0). Idle timeout 300000ms.
+[2026-09-24T11:25:27.407Z] [CodeGraph MCP] File watcher active — graph will auto-sync on changes
+[2026-09-24T11:25:27.412Z] [CodeGraph MCP] Query pool: up to 7 worker thread(s) for concurrent reads.
