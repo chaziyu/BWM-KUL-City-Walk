@@ -13,6 +13,7 @@ describe('storage migration', () => {
     localStorage.setItem('jejak_visitor_message_count', '4');
     localStorage.setItem('jejak_visitor_last_active_day', 'Mon Sep 29 2026');
     localStorage.setItem('jejak_demo_message_count', '2');
+    localStorage.setItem('jejak_admin_visited', 'not-json');
 
     migrateData();
 
@@ -21,5 +22,6 @@ describe('storage migration', () => {
     expect(localStorage.getItem('jejak_visitor_message_count')).toBeNull();
     expect(localStorage.getItem('jejak_visitor_last_active_day')).toBeNull();
     expect(localStorage.getItem('jejak_demo_message_count')).toBeNull();
+    expect(localStorage.getItem('jejak_admin_visited')).toBe('[]');
   });
 });
