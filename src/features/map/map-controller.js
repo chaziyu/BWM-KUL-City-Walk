@@ -69,6 +69,7 @@ export function createMapController({
     map = L.map('map', {
       zoomControl: false,
       minZoom: 14,
+      maxZoom: 20,
       maxBounds: [
         [3.13, 101.67],
         [3.17, 101.72],
