@@ -1,6 +1,4 @@
 export function installGoogleTranslateLoader(buttonId = 'loadTranslateBtn') {
-  loadGoogleTranslate();
-
   const button = document.getElementById(buttonId);
   if (!button || button.dataset.bound === 'true') return;
   button.dataset.bound = 'true';
