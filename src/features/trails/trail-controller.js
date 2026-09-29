@@ -15,8 +15,6 @@ export function createTrailController({
     document.querySelectorAll('[data-trail-duration]').forEach((button) => {
       const isActive = Number(button.dataset.trailDuration) === durationMinutes;
       button.setAttribute('aria-pressed', String(isActive));
-      button.classList.toggle('ui-button--secondary', isActive);
-      button.classList.toggle('ui-button--quiet', !isActive);
     });
   }
 
@@ -52,30 +50,53 @@ export function createTrailController({
       return;
     }
 
-    const completionNote = plan.isFullThread ? 'full thread' : `${plan.requestedMinutes}-minute version`;
-    summary.textContent = `${plan.summary} About ${plan.estimatedMinutes} minutes · ${plan.stops.length} stops · ${completionNote}.`;
+    const completionNote = plan.isFullThread ? 'Full story' : `${plan.requestedMinutes}-minute version`;
+    const meta = document.createElement('p');
+    meta.className = 'trail-summary__meta';
+    meta.textContent = `${plan.theme} · about ${plan.estimatedMinutes} min · ${plan.stops.length} stops · ${completionNote}`;
+
+    const copy = document.createElement('p');
+    copy.className = 'trail-summary__copy';
+    copy.textContent = plan.summary;
+    summary.replaceChildren(meta, copy);
 
     plan.stops.forEach((stop, index) => {
       const item = document.createElement('li');
+      item.className = 'trail-stop';
+
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'w-full text-left rounded-xl border border-gray-200 bg-white p-3 hover:bg-gray-50 transition';
+      button.className = 'trail-stop__button';
+
+      const marker = document.createElement('span');
+      marker.className = 'trail-stop__marker';
+      marker.setAttribute('aria-hidden', 'true');
+      marker.textContent = String(index + 1);
+
+      const content = document.createElement('span');
+      content.className = 'trail-stop__content';
 
       const heading = document.createElement('strong');
-      heading.className = 'block text-sm text-gray-900';
-      heading.textContent = `${index + 1}. ${stop.site.name}`;
+      heading.className = 'trail-stop__title';
+      heading.textContent = stop.site.name;
 
       const timing = document.createElement('span');
-      timing.className = 'block text-xs text-gray-500 mt-1';
+      timing.className = 'trail-stop__timing';
       timing.textContent = index === 0
         ? `Explore about ${stop.visitMinutes} min`
         : `${stop.walkMinutesFromPrevious} min walk · explore about ${stop.visitMinutes} min`;
 
       const chapter = document.createElement('span');
-      chapter.className = 'block text-sm text-gray-700 mt-2';
+      chapter.className = 'trail-stop__chapter';
       chapter.textContent = stop.chapter;
 
-      button.append(heading, timing, chapter);
+      const chevron = document.createElement('span');
+      chevron.className = 'trail-stop__chevron';
+      chevron.setAttribute('aria-hidden', 'true');
+      chevron.textContent = '›';
+
+      content.append(heading, timing, chapter);
+      button.append(marker, content, chevron);
       button.addEventListener('click', () => {
         modalManager.close('trailModal');
         onSiteSelected?.(stop.site);
@@ -95,7 +116,12 @@ export function createTrailController({
   async function open() {
     modalManager.open('trailModal');
     const summary = document.getElementById('trailSummary');
-    if (summary) summary.textContent = 'Building your heritage thread...';
+    if (summary) {
+      const loading = document.createElement('p');
+      loading.className = 'trail-summary__meta';
+      loading.textContent = 'Building your story walk…';
+      summary.replaceChildren(loading);
+    }
 
     try {
       await ensureLoaded();
@@ -103,7 +129,10 @@ export function createTrailController({
     } catch (error) {
       console.error('Unable to load heritage threads:', error);
       if (summary) {
-        summary.textContent = 'Heritage threads could not be loaded. You can still explore sites directly from the map.';
+        const errorMessage = document.createElement('p');
+        errorMessage.className = 'trail-summary__copy';
+        errorMessage.textContent = 'Story walks could not be loaded. You can still explore sites directly from the map.';
+        summary.replaceChildren(errorMessage);
       }
     }
   }

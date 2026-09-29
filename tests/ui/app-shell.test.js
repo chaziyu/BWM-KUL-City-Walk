@@ -19,6 +19,9 @@ describe('app shell', () => {
     expect(document.querySelectorAll('#passportModal')).toHaveLength(1);
     expect(document.querySelectorAll('#challengeModal')).toHaveLength(1);
     expect(document.querySelectorAll('#trailModal')).toHaveLength(1);
+    expect(document.getElementById('btnTrails')?.textContent).toContain('Story Walks');
+    expect(document.querySelector('#trailModal .trail-panel')).toBeTruthy();
+    expect(document.querySelector('#trailModal .trail-stop-list')).toBeTruthy();
     expect(document.getElementById('previewCard')).toBeNull();
     expect(document.querySelector('[data-app-region="floating-controls"]').classList.contains('hidden')).toBe(true);
     expect(document.querySelectorAll('[data-map-chrome]').length).toBeGreaterThan(0);
