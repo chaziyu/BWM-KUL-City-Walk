@@ -63,7 +63,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **Friendly Persona:** Helpful local guide character
 *   **Smart Limits:** Server-side quotas, hourly rate limits, and in-memory answer caching help control API costs
 *   **Safe Rendering:** AI Markdown is sanitized before display to reduce XSS risk
-*   **Structured Responses:** Validates Gemini JSON, source site IDs, confidence, and unsupported-question fallbacks
+*   **Structured Responses:** Requests JSON mode from Gemini, defensively parses fallback-model JSON, and validates source site IDs, confidence, and unsupported-question fallbacks
 *   **Source Chips:** Answers can show verified trail source labels below the chat message
 
 ### 🎨 **7. Premium UI/UX**
@@ -191,7 +191,7 @@ The endpoint uses low-temperature factual calls and tries models in this order:
 ```js
 [
   "gemini-3.5-flash-lite",
-  "gemma-4-26b-a4-b-it",
+  "gemma-4-26b-a4b-it",
   "gemma-4-31b-it"
 ]
 ```
