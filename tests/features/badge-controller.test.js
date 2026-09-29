@@ -57,8 +57,8 @@ describe('badge controller', () => {
     const image = document.getElementById('badgeProfileImage');
     Object.defineProperty(image, 'complete', { value: true, configurable: true });
     Object.defineProperty(image, 'naturalWidth', { value: 1, configurable: true });
-    window.html2canvas = vi.fn().mockRejectedValue(new Error('capture failed'));
     window.alert = vi.fn();
+    const captureBadge = vi.fn().mockRejectedValue(new Error('capture failed'));
 
     const controller = createBadgeController({
       modalManager: { close: vi.fn(), open: vi.fn() },
@@ -66,12 +66,14 @@ describe('badge controller', () => {
         getCompletionState: () => ({ count: 1, total: 11, isComplete: false }),
       },
       strings: STRINGS,
+      captureBadge,
     });
 
     controller.bind();
     await controller.generate();
 
     const button = document.getElementById('btnGenerateBadge');
+    expect(captureBadge).toHaveBeenCalledOnce();
     expect(image.src).toBe(DEFAULT_BADGE_AVATAR);
     expect(button.disabled).toBe(false);
     expect(button.textContent).toBe(STRINGS.game.generateBadge);
