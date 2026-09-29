@@ -15,6 +15,26 @@ describe('response contract', () => {
     });
   });
 
+  it('parses fenced JSON responses from fallback models', () => {
+    expect(parseModelResponse(`\`\`\`json
+{"answer":"Done","sourceSiteIds":["1"],"confidence":"high","notFound":false}
+\`\`\``)).toEqual({
+      answer: 'Done',
+      sourceSiteIds: ['1'],
+      confidence: 'high',
+      notFound: false,
+    });
+  });
+
+  it('extracts a JSON object wrapped in provider text', () => {
+    expect(parseModelResponse('Result: {"answer":"Done","sourceSiteIds":["1"],"confidence":"medium","notFound":false}')).toEqual({
+      answer: 'Done',
+      sourceSiteIds: ['1'],
+      confidence: 'medium',
+      notFound: false,
+    });
+  });
+
   it('rejects invalid JSON', () => {
     expect(() => parseModelResponse('plain text')).toThrow();
   });
