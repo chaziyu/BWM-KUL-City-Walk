@@ -101,7 +101,7 @@ describe('chat controller history', () => {
     expect(messageCount).toBe(2);
   });
 
-  it('disables chat from a server quota error', async () => {
+  it('keeps chat available for cached queries after a server quota error', async () => {
     let messageCount = 0;
     const setMessageCount = vi.fn((next) => {
       messageCount = next;
@@ -134,6 +134,8 @@ describe('chat controller history', () => {
     await controller.sendMessage();
 
     expect(setMessageCount).toHaveBeenCalledWith(5);
-    expect(setDisabled).toHaveBeenCalledWith(true);
+    expect(setDisabled).not.toHaveBeenCalledWith(true);
+    expect(document.getElementById('chatInput').disabled).toBe(false);
+    expect(document.getElementById('chatSendBtn').disabled).toBe(false);
   });
 });
