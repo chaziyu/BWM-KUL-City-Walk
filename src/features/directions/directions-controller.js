@@ -31,7 +31,11 @@ export function createDirectionsController({ modalManager }) {
     const externalMapsLink = document.getElementById('externalMapsLink');
 
     const title = titleFor(mode, site.name);
-    if (directionsTitle) directionsTitle.innerHTML = `<span>${title.icon}</span> ${title.text}`;
+    if (directionsTitle) {
+      const icon = document.createElement('span');
+      icon.textContent = title.icon;
+      directionsTitle.replaceChildren(icon, document.createTextNode(` ${title.text}`));
+    }
     if (externalMapsLink) externalMapsLink.href = externalUrl;
     if (directionsIframe) {
       directionsLoading?.classList.remove('hidden');
@@ -45,7 +49,7 @@ export function createDirectionsController({ modalManager }) {
 
   return {
     bind,
-    openDirections: (site) => open(site, 'directions'),
+    openDirections: (site) => open(site, 'walk'),
     openNearbySearch: (site, kind) => open(site, kind === 'hotel' ? 'hotels' : 'restaurants'),
   };
 }
