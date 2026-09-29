@@ -246,7 +246,7 @@ function getChatLimit() {
 function loadScopedState() {
   progressService.load();
   chatHistory = readScopedJSON('chat_history', [], getProgressNamespace());
-  userMessageCount = readScopedNumber('message_count', 0, getProgressNamespace());
+  userMessageCount = 0;
   solvedRiddle = readScopedJSON('solved_riddle', {}, getProgressNamespace());
 }
 
@@ -559,7 +559,6 @@ async function showMapExperience() {
   notifyLifecycle({ activeView: 'map' });
   applySessionChrome();
   loadScopedState();
-  resetDailyChatIfNeeded();
 
   showOnly([]);
   document.getElementById('progress-container')?.classList.remove('hidden');
