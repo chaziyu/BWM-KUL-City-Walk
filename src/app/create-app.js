@@ -44,6 +44,7 @@ import { createModalManager } from '../ui/modal-manager.js';
 import { showToast } from '../ui/toast.js';
 import { createTextSizeController } from '../ui/text-size-controller.js';
 import { createAccessFlow } from './access-flow.js';
+import { createGameUiBindings } from './game-ui-bindings.js';
 import { createViewController } from './view-controller.js';
 
 let appStartPromise = null;
@@ -53,7 +54,6 @@ let mainSites = [];
 let chatHistory = [];
 let userMessageCount = 0;
 let solvedRiddle = {};
-let gameUIBound = false;
 let deviceId = localStorage.getItem('bwm_device_id');
 if (!deviceId) {
   const generatedId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 15);
@@ -233,6 +233,22 @@ const adminAccess = createAdminAccess({
   },
 });
 
+const gameUiBindings = createGameUiBindings({
+  badgeController,
+  challengeController,
+  chatController,
+  directionsController,
+  getSession: () => activeSession,
+  modalManager,
+  onShowAdmin: showAdminExperience,
+  passportController,
+  resetDemoProgress() {
+    clearScopedProgress('demo');
+  },
+  siteModalController,
+  textSizeController,
+});
+
 let lifecycleHandler = null;
 
 function notifyLifecycle(patch) {
@@ -270,116 +286,6 @@ function loadScopedState() {
 
 function saveChatHistory() {
   writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
-}
-
-function setupGameUIListeners() {
-  if (gameUIBound) return;
-  gameUIBound = true;
-
-  document.getElementById('logoOverlay')?.addEventListener('click', () => {
-    window.open('https://badanwarisanmalaysia.org/', '_blank');
-  });
-
-  const siteModal = document.getElementById('siteModal');
-  const passportModal = document.getElementById('passportModal');
-  const congratsModal = document.getElementById('congratsModal');
-
-  siteModalController.bind({
-    modal: siteModal,
-    image: document.getElementById('siteModalImage'),
-    label: document.getElementById('siteModalLabel'),
-    title: document.getElementById('siteModalTitle'),
-    info: document.getElementById('siteModalInfo'),
-    quizArea: document.getElementById('siteModalQuizArea'),
-    quizQuestion: document.getElementById('siteModalQuizQ'),
-    quizOptions: document.getElementById('siteModalQuizOptions'),
-    quizResult: document.getElementById('siteModalQuizResult'),
-    closeButton: document.getElementById('closeSiteModal'),
-    askAI: document.getElementById('siteModalAskAI'),
-    directions: document.getElementById('siteModalDirections'),
-    checkIn: document.getElementById('siteModalCheckInBtn'),
-    solveChallenge: document.getElementById('siteModalSolveChallengeBtn'),
-    more: document.getElementById('siteModalMore'),
-    moreButton: document.getElementById('siteModalMoreBtn'),
-    moreContent: document.getElementById('siteModalMoreContent'),
-    food: document.getElementById('siteModalFoodBtn'),
-    hotel: document.getElementById('siteModalHotelBtn'),
-    hintText: document.getElementById('siteModalHintText'),
-  });
-
-  passportController.bind({
-    btnPassport: document.getElementById('btnPassport'),
-    passportModal,
-    closePassportModal: document.getElementById('closePassportModal'),
-    passportInfo: document.getElementById('passportInfo'),
-    passportGrid: document.getElementById('passportGrid'),
-    progressBar: document.getElementById('progressBar'),
-    progressText: document.getElementById('progressText'),
-  });
-
-  chatController.bind();
-  challengeController.bind();
-  badgeController.bind();
-  directionsController.bind();
-
-  const closeCongrats = document.getElementById('closeCongratsModal');
-  if (closeCongrats && closeCongrats.dataset.bound !== 'true') {
-    closeCongrats.dataset.bound = 'true';
-    closeCongrats.addEventListener('click', () => modalManager.close(congratsModal));
-  }
-
-  const sharePassportBtn = document.getElementById('sharePassportBtn');
-  if (sharePassportBtn && sharePassportBtn.dataset.bound !== 'true') {
-    sharePassportBtn.dataset.bound = 'true';
-    sharePassportBtn.addEventListener('click', () => {
-      const payload = passportController.buildSharePayload();
-      if (navigator.share) {
-        navigator.share({ title: 'BWM KUL City Walk', text: payload.text, url: payload.url }).catch(console.error);
-        return;
-      }
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nJoin the adventure: ${payload.url}`)}`, '_blank');
-    });
-  }
-
-  const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
-  if (shareWhatsAppBtn && shareWhatsAppBtn.dataset.bound !== 'true') {
-    shareWhatsAppBtn.dataset.bound = 'true';
-    shareWhatsAppBtn.addEventListener('click', () => {
-    const payload = passportController.buildSharePayload();
-    if (navigator.share) {
-      navigator.share({ title: 'Mission Accomplished!', text: payload.text, url: payload.url }).catch(console.error);
-      return;
-    }
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${payload.text}\n\nDiscover KL's history and start your own adventure here: ${payload.url}`)}`, '_blank');
-    });
-  }
-
-  const btnAdminToggle = document.getElementById('btnAdminToggle');
-  if (btnAdminToggle && btnAdminToggle.dataset.bound !== 'true') {
-    btnAdminToggle.dataset.bound = 'true';
-    btnAdminToggle.addEventListener('click', () => {
-      if (activeSession?.role === 'admin') showAdminExperience();
-    });
-  }
-
-  const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
-  if (resetDemoProgressBtn && resetDemoProgressBtn.dataset.bound !== 'true') {
-    resetDemoProgressBtn.dataset.bound = 'true';
-    resetDemoProgressBtn.addEventListener('click', () => {
-      if (activeSession?.role !== 'demo') return;
-      const confirmed = window.confirm('Reset your demo stamps, quiz progress, challenge progress, and local AI history on this device?');
-      if (!confirmed) return;
-      clearScopedProgress('demo');
-      window.location.reload();
-    });
-  }
-
-  window.addEventListener('popstate', () => {
-    modalManager.closeTopmost();
-  });
-
-  textSizeController.bind();
-  chatController.loadHistory();
 }
 
 function bindAdminUI() {
@@ -433,7 +339,7 @@ async function showMapExperience() {
   loadScopedState();
   viewController.transitionTo('map');
 
-  setupGameUIListeners();
+  gameUiBindings.bind();
   await mapController.initMap();
   bindMapUI({ controller: mapController, defaultCenter: DEFAULT_CENTER, defaultZoom: ZOOM });
   passportController.refreshProgress();
