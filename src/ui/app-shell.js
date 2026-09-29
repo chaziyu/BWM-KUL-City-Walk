@@ -26,11 +26,11 @@ export function renderAppShell(appRoot = document.getElementById('app')) {
     <div data-app-region="access">${createAccessTemplate()}</div>
     <div data-app-region="map">${createMapTemplate()}</div>
     <div data-app-region="translation">${createTranslationTemplate()}</div>
-    <div data-app-region="floating-controls" data-map-chrome aria-hidden="true" class="hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 z-[2500] flex gap-2">
+    <nav data-app-region="floating-controls" data-map-chrome aria-hidden="true" aria-label="Trail actions" class="hidden map-action-dock">
       ${createChallengeControlTemplate()}
       ${createPassportControlTemplate()}
       ${createChatControlTemplate()}
-    </div>
+    </nav>
     <div data-app-region="modals">
       ${createOnboardingTemplate()}
       <div id="challengeMount">${createChallengeModalTemplate()}</div>
