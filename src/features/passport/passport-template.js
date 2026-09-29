@@ -1,5 +1,12 @@
 export function createPassportControlTemplate() {
-  return '<button id="btnPassport" aria-label="My Passport" class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">🛂</button>';
+  return `<button id="btnPassport" aria-label="Open my passport" class="map-action-button">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="5" y="3" width="14" height="18" rx="2"></rect>
+      <circle cx="12" cy="10" r="3"></circle>
+      <path d="M9 16h6"></path>
+    </svg>
+    <span>Passport</span>
+  </button>`;
 }
 
 export function createPassportModalTemplate() {
