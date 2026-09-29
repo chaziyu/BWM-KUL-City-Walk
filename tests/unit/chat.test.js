@@ -246,6 +246,7 @@ describe('chat API quota ordering', () => {
     expect(gemini.create.mock.calls[0][0].model).toBe('gemini-3.5-flash-lite');
     expect(gemini.create.mock.calls[1][0].model).toBe('gemma-4-26b-a4b-it');
     expect(gemini.create.mock.calls[1][0].config.responseMimeType).toBeUndefined();
+    expect(gemini.create.mock.calls[1][0].config.responseJsonSchema).toBeUndefined();
     expect(result.body.reply).toBe('Recovered');
   });
 
@@ -256,7 +257,7 @@ describe('chat API quota ordering', () => {
     expect(gemini.create.mock.calls[0][0].config.temperature).toBe(0.2);
     expect(gemini.create.mock.calls[0][0].config.systemInstruction).toContain('Return only JSON');
     expect(gemini.create.mock.calls[0][0].config.responseMimeType).toBe('application/json');
-    expect(gemini.create.mock.calls[0][0].config.responseSchema.required).toEqual([
+    expect(gemini.create.mock.calls[0][0].config.responseJsonSchema.required).toEqual([
       'answer',
       'sourceSiteIds',
       'confidence',
