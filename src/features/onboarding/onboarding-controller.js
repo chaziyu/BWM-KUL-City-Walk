@@ -4,6 +4,17 @@ export function createOnboardingController({ getCurrentSession, modalManager }) 
   let deferredPrompt = null;
   let bound = false;
 
+  function canOfferInstall() {
+    if (getCurrentSession()?.authenticated) return false;
+    const dismissedUntil = Number.parseInt(localStorage.getItem('pwa_prompt_dismissed') || '0', 10);
+    return !dismissedUntil || Date.now() >= dismissedUntil;
+  }
+
+  function refreshInstallPrompt() {
+    if (!canOfferInstall()) return;
+    configurePwaPrompt({ deferredPrompt });
+  }
+
   function bind() {
     if (bound) return;
     bound = true;
@@ -16,15 +27,11 @@ export function createOnboardingController({ getCurrentSession, modalManager }) 
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
       deferredPrompt = event;
+      refreshInstallPrompt();
     });
 
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (getCurrentSession()?.authenticated) return;
-        const dismissedUntil = localStorage.getItem('pwa_prompt_dismissed');
-        if (dismissedUntil && Date.now() < Number.parseInt(dismissedUntil, 10)) return;
-        configurePwaPrompt({ deferredPrompt });
-      }, 1000);
+      setTimeout(refreshInstallPrompt, 1000);
     });
 
     document.getElementById('pwaInstallBtn')?.addEventListener('click', async () => {
