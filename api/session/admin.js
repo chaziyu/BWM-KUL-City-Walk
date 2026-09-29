@@ -1,48 +1,51 @@
+const { readInteger, readString } = require('../_shared/config');
+const { getClientIp, requireMethod, sendError } = require('../_shared/http');
+const { attachRequestContext, logEvent, sanitizeLogValue } = require('../_shared/observability');
+const { isRateLimited } = require('../_shared/rate-limit');
+const { requireSameOrigin } = require('../_shared/security');
 const {
     createQuotaSubject,
     createSessionPayload,
     getSafeSessionDetails,
-    setSessionCookie
+    setSessionCookie,
 } = require('../_shared/session');
-const { isRateLimited } = require('../_shared/rate-limit');
 
 module.exports = async (request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
+    const requestId = attachRequestContext(request, response);
+    if (!requireMethod(request, response, 'POST')) return;
+    if (!requireSameOrigin(request, response)) return;
 
     try {
         const { password } = request.body || {};
-        const correctPassword = process.env.ADMIN_PASSWORD;
+        const correctPassword = readString('ADMIN_PASSWORD');
+        const ip = getClientIp(request);
 
-        const forwardedFor = request.headers['x-forwarded-for'];
-        const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
-        
-        // Rate limit: Max 5 attempts per IP per 10 minutes
-        const isLimited = await isRateLimited(`login:admin:${ip}`, 5, 10 * 60 * 1000);
-        if (isLimited) {
-            return response.status(429).json({ error: 'Too many attempts. Please try again later.' });
+        if (await isRateLimited(`login:admin:${ip}`, 5, 10 * 60 * 1000)) {
+            return sendError(response, 429, 'RATE_LIMITED', 'Too many attempts. Please try again later.');
         }
 
         if (!correctPassword) {
-            return response.status(500).json({ error: 'Server misconfigured: admin password missing.' });
+            return sendError(response, 500, 'SERVER_MISCONFIGURED', 'Server misconfigured: admin password missing.');
         }
 
         if (!password || password !== correctPassword) {
-            return response.status(401).json({ error: 'Invalid admin password.' });
+            return sendError(response, 401, 'INVALID_ADMIN_PASSWORD', 'Invalid admin password.');
         }
 
-        const maxAge = Number(process.env.ADMIN_SESSION_MAX_AGE) || 60 * 60;
+        const maxAge = readInteger('ADMIN_SESSION_MAX_AGE', 60 * 60, { min: 60 });
         const session = createSessionPayload('admin', {
             accessType: 'project-admin-prototype',
             maxAge,
-            quotaSubject: createQuotaSubject('project-admin')
+            quotaSubject: createQuotaSubject('project-admin'),
         });
 
         setSessionCookie(response, session, maxAge);
         return response.status(200).json(getSafeSessionDetails(session));
     } catch (error) {
-        console.error('Error creating admin session:', error);
-        return response.status(500).json({ error: 'Unable to create admin session.' });
+        logEvent('error', 'session:admin-create-failed', {
+            requestId,
+            message: sanitizeLogValue(error.message || error),
+        });
+        return sendError(response, 500, 'SESSION_CREATE_FAILED', 'Unable to create admin session.');
     }
 };
