@@ -131,7 +131,10 @@ module.exports = async (request, response) => {
     const deterministic = getDeterministicAnswer(cleanQuery, contextSites);
     if (deterministic) {
         return response.status(200).json({
-            ...deterministic,
+            reply: sanitizeText(deterministic.answer, 5000),
+            sourceSiteIds: deterministic.sourceSiteIds,
+            confidence: deterministic.confidence,
+            notFound: deterministic.notFound,
             remainingQuota,
         });
     }
