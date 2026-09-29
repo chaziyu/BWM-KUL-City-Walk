@@ -103,7 +103,7 @@ test.describe('Responsive and Accessibility', () => {
     const bodyMetrics = await body.evaluate((element) => ({
       clientHeight: element.clientHeight,
       scrollHeight: element.scrollHeight,
-      overflowY: getComputedStyle(element).overflowY,
+      overflowY: window.getComputedStyle(element).overflowY,
     }));
     expect(['auto', 'scroll']).toContain(bodyMetrics.overflowY);
     expect(bodyMetrics.scrollHeight).toBeGreaterThanOrEqual(bodyMetrics.clientHeight);
