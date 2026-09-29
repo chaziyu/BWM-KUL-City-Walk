@@ -25,6 +25,7 @@ import { getMustVisitSites } from '../features/sites/site-domain.js';
 import { createSiteModalController } from '../features/sites/site-modal.js';
 import { createTranslationController } from '../features/translation/translation-controller.js';
 import { STRINGS } from '../config/localization.js';
+import { fireConfetti, renderMarkdown } from '../services/runtime-libs.js';
 import { migrateData } from '../services/storage-migration.js';
 import {
   endSession,
@@ -104,11 +105,10 @@ const passportController = createPassportController({
   modalManager,
   getCongratsModal: () => document.getElementById('congratsModal'),
   playCelebration() {
-    if (typeof confetti !== 'function') return;
     const end = Date.now() + 3000;
     (function frame() {
-      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+      void fireConfetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+      void fireConfetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
       if (Date.now() < end) requestAnimationFrame(frame);
     })();
   },
@@ -122,6 +122,7 @@ const chatController = createChatController({
   getSiteName: (siteId) => allSiteData.find((site) => String(site.id) === String(siteId))?.name,
   historyWindowSize: HISTORY_WINDOW_SIZE,
   modalManager,
+  renderMarkdown,
   onSourceClick(siteId) {
     const site = allSiteData.find((item) => String(item.id) === String(siteId));
     if (!site) return;
@@ -153,9 +154,7 @@ const challengeController = createChallengeController({
   modalManager,
   onSolved(next) {
     writeScopedJSON('solved_riddle', next, getProgressNamespace());
-    if (typeof confetti === 'function') {
-      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    }
+    void fireConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
   },
   setSolvedRiddle(next) {
     solvedRiddle = next;
