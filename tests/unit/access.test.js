@@ -7,7 +7,8 @@ describe('Access Control', () => {
     expect(getScopedKey('visited', 'demo')).toBe('jejak_demo_visited');
   });
 
-  it('falls back unknown client modes to visitor storage', () => {
-    expect(getScopedKey('visited', 'admin')).toBe('jejak_visitor_visited');
+  it('keeps admin progress separate from visitor storage', () => {
+    expect(getScopedKey('visited', 'admin')).toBe('jejak_admin_visited');
+    expect(getScopedKey('visited', 'unknown')).toBe('jejak_visitor_visited');
   });
 });
