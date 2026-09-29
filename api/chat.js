@@ -194,21 +194,22 @@ module.exports = async (request, response) => {
                 };
                 if (supportsJsonMode(modelName)) {
                     config.responseMimeType = 'application/json';
-                    config.responseSchema = {
-                        type: 'OBJECT',
+                    config.responseJsonSchema = {
+                        type: 'object',
                         properties: {
-                            answer: { type: 'STRING' },
+                            answer: { type: 'string' },
                             sourceSiteIds: {
-                                type: 'ARRAY',
-                                items: { type: 'STRING' },
+                                type: 'array',
+                                items: { type: 'string' },
                             },
                             confidence: {
-                                type: 'STRING',
+                                type: 'string',
                                 enum: ['high', 'medium', 'low'],
                             },
-                            notFound: { type: 'BOOLEAN' },
+                            notFound: { type: 'boolean' },
                         },
                         required: ['answer', 'sourceSiteIds', 'confidence', 'notFound'],
+                        additionalProperties: false,
                     };
                 }
 
