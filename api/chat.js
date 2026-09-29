@@ -110,14 +110,14 @@ function buildNoMatchReply(query) {
     }
 
     if (hasIdentityIntent) {
-        return 'I’m your AI Tour Guide. I can help with places to visit, route ideas, and stories from the BMW KUL City Walk.';
+        return 'I’m your AI Tour Guide. I can help with places to visit, route ideas, and stories from the BWM KUL City Walk.';
     }
 
     if (hasRouteIntent) {
         return 'A good place to start is Bangunan Sultan Abdul Samad, Masjid Jamek, or Central Market. If you want, I can also suggest a quick route.';
     }
 
-    return 'I’m here to help with the BMW KUL City Walk. You can ask about places to visit, route ideas, or the story behind a stop.';
+    return 'I’m here to help with the BWM KUL City Walk. You can ask about places to visit, route ideas, or the story behind a stop.';
 }
 
 module.exports = async (request, response) => {
@@ -171,6 +171,14 @@ module.exports = async (request, response) => {
         return response.status(429).json({ reply: 'You have reached the AI chat limit for now. Please try again later.' });
     }
 
+    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+    if (!GOOGLE_API_KEY) {
+        return response.status(500).json({
+            reply: 'Server configuration error: API key is missing.',
+            remainingQuota
+        });
+    }
+
     const quota = await consumeQuota(quotaKey, limit);
     if (quota.exceeded) {
         return response.status(429).json({
@@ -182,11 +190,6 @@ module.exports = async (request, response) => {
     const cleanHistory = normalizeHistory(history);
 
     try {
-        const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-        if (!GOOGLE_API_KEY) {
-            return response.status(500).json({ reply: "Server configuration error: API key is missing." });
-        }
-
         const client = new GoogleGenAI({ apiKey: GOOGLE_API_KEY });
 
         const MODELS = [
