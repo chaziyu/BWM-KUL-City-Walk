@@ -228,8 +228,13 @@
 }
 
 .passport-panel {
-  width: min(94%, 34rem);
-  padding: 1.4rem;
+  width: min(calc(100vw - 2rem), 34rem);
+  max-height: 92vh;
+  max-height: 92dvh;
+  padding: clamp(1rem, 4vw, 1.4rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   text-align: left;
 }
 
@@ -253,7 +258,9 @@
 }
 
 .passport-panel__grid {
-  max-height: min(54dvh, 25rem);
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: none;
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -276,6 +283,7 @@
 
 .passport-panel--complete {
   max-width: 30rem;
+  overflow-y: auto;
   text-align: center;
 }
 
@@ -307,6 +315,8 @@
   .passport-panel {
     width: 100%;
     max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
     border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0;
   }
 
@@ -573,5 +583,348 @@
 
   .trail-stop:not(:last-child)::after {
     left: 1rem;
+  }
+}
+
+
+/* Responsive user guide */
+.user-guide-panel {
+  width: min(calc(100vw - 2rem), 34rem);
+  max-height: 92vh;
+  max-height: min(92dvh, 46rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-guide__header {
+  position: relative;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--ui-border);
+  padding:
+    clamp(0.9rem, 2.5vh, 1.25rem)
+    clamp(3.75rem, 12vw, 4.5rem)
+    clamp(0.8rem, 2vh, 1rem)
+    clamp(1rem, 4vw, 1.35rem);
+}
+
+.user-guide__heading {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.65rem, 2.5vw, 0.9rem);
+  min-width: 0;
+}
+
+.user-guide__icon {
+  flex: 0 0 auto;
+  font-size: clamp(1.65rem, 7vw, 2.35rem);
+  line-height: 1;
+}
+
+.user-guide__header .ui-title {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.35rem, 5.5vw, 1.8rem);
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.user-guide__close {
+  position: absolute;
+  top: clamp(0.7rem, 2vh, 0.95rem);
+  right: clamp(0.7rem, 2.5vw, 0.95rem);
+  width: 2.55rem;
+  height: 2.55rem;
+  font-size: 1.35rem;
+}
+
+.user-guide__body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding:
+    clamp(0.8rem, 2.5vh, 1.15rem)
+    clamp(0.9rem, 4vw, 1.35rem);
+  color: var(--ui-ink-soft);
+  scrollbar-gutter: stable;
+}
+
+.user-guide__body > * + * {
+  margin-top: clamp(0.85rem, 2.5vh, 1.15rem);
+}
+
+.user-guide__callout,
+.user-guide__tip {
+  border: 1px solid rgba(165, 106, 42, 0.2);
+  border-left: 3px solid var(--ui-accent);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-accent-soft);
+  padding: clamp(0.75rem, 3vw, 1rem);
+}
+
+.user-guide__section h3,
+.user-guide__callout h3 {
+  margin: 0 0 0.45rem;
+  color: var(--ui-ink);
+  font-size: clamp(0.9rem, 3.8vw, 1rem);
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.user-guide__section p,
+.user-guide__callout p,
+.user-guide__steps,
+.user-guide__features {
+  margin: 0;
+  font-size: clamp(0.78rem, 3.4vw, 0.9rem);
+  line-height: 1.55;
+}
+
+.user-guide__steps {
+  padding-left: 1.25rem;
+}
+
+.user-guide__steps li + li {
+  margin-top: 0.5rem;
+}
+
+.user-guide__features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.user-guide__features li {
+  min-width: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface-soft);
+  padding: 0.65rem;
+}
+
+.user-guide__features strong,
+.user-guide__features span {
+  display: block;
+}
+
+.user-guide__features strong {
+  color: var(--ui-ink);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.user-guide__features span {
+  margin-top: 0.2rem;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.user-guide__footer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--ui-border);
+  background: white;
+  padding:
+    0.8rem
+    clamp(0.9rem, 4vw, 1.35rem)
+    max(0.8rem, env(safe-area-inset-bottom));
+}
+
+.user-guide__footer .ui-button {
+  min-height: 3rem;
+}
+
+@media (max-width: 480px) {
+  .user-guide-backdrop {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+
+  .user-guide-panel {
+    width: 100%;
+    max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
+    border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0;
+  }
+
+  .user-guide__features {
+    grid-template-columns: 1fr;
+  }
+
+  .user-guide__features li {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 0.8fr) minmax(0, 1.2fr);
+    gap: 0.55rem;
+    align-items: start;
+  }
+
+  .user-guide__features span {
+    margin-top: 0;
+  }
+}
+
+@media (max-height: 650px) {
+  .user-guide-panel {
+    max-height: calc(100vh - 0.5rem);
+    max-height: calc(100dvh - 0.5rem);
+  }
+
+  .user-guide__header {
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .user-guide__icon {
+    display: none;
+  }
+
+  .user-guide__body {
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .user-guide__body > * + * {
+    margin-top: 0.7rem;
+  }
+
+  .user-guide__footer {
+    padding-top: 0.55rem;
+    padding-bottom: max(0.55rem, env(safe-area-inset-bottom));
+  }
+
+  .user-guide__footer .ui-button {
+    min-height: 2.65rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .user-guide__header .ui-kicker {
+    display: none;
+  }
+
+  .user-guide__header .ui-title {
+    margin-top: 0;
+    font-size: 1.25rem;
+  }
+
+  .user-guide__features li {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .user-guide__features span {
+    margin-top: 0.2rem;
+  }
+}
+
+
+/* Compact responsive overlays that still use legacy utility markup. */
+#pwaInstallPrompt,
+#pwaExplanationModal,
+#badgeInputModal {
+  padding:
+    max(0.75rem, env(safe-area-inset-top))
+    max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom))
+    max(0.75rem, env(safe-area-inset-left));
+}
+
+#pwaInstallPrompt > div,
+#pwaExplanationModal > div,
+#badgeInputModal > div {
+  box-sizing: border-box;
+  width: min(calc(100vw - 1.5rem), 32rem);
+  max-width: none;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+#pwaInstallPrompt > div,
+#badgeInputModal > div {
+  max-width: 28rem;
+}
+
+#pwaInstallPrompt .text-6xl,
+#pwaExplanationModal .text-6xl,
+#challengeModal .text-6xl {
+  font-size: clamp(2.2rem, 10vw, 3.75rem);
+  line-height: 1;
+}
+
+#pwaInstallPrompt h2,
+#pwaExplanationModal h2,
+#welcomeModal h2,
+#challengeModal h2 {
+  font-size: clamp(1.25rem, 5.5vw, 1.6rem);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+#welcomeModal .classic-modal-content,
+#challengeModal .classic-modal-content {
+  box-sizing: border-box;
+  width: min(calc(100vw - 2rem), 30rem);
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+#badgeInputModal input[type="file"] {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  #pwaInstallPrompt,
+  #pwaExplanationModal,
+  #badgeInputModal {
+    align-items: flex-end;
+    padding:
+      max(0.5rem, env(safe-area-inset-top))
+      0
+      0;
+  }
+
+  #pwaInstallPrompt > div,
+  #pwaExplanationModal > div,
+  #badgeInputModal > div,
+  #welcomeModal .classic-modal-content,
+  #challengeModal .classic-modal-content {
+    width: 100%;
+    max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
+    border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0;
+  }
+}
+
+@media (max-height: 650px) {
+  #pwaInstallPrompt > div,
+  #pwaExplanationModal > div,
+  #badgeInputModal > div,
+  #welcomeModal .classic-modal-content,
+  #challengeModal .classic-modal-content,
+  .passport-panel {
+    max-height: calc(100vh - 0.5rem);
+    max-height: calc(100dvh - 0.5rem);
+  }
+
+  #pwaInstallPrompt > div,
+  #pwaExplanationModal > div,
+  #badgeInputModal > div {
+    padding-block: 0.85rem;
+  }
+
+  #pwaInstallPrompt .text-6xl,
+  #pwaExplanationModal .text-6xl,
+  #challengeModal .text-6xl {
+    font-size: 2rem;
   }
 }

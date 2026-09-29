@@ -1,7 +1,7 @@
-export function bindMapUI({ controller, defaultCenter, defaultZoom }) {
+export function bindMapUI({ controller, defaultCenter, defaultZoom, uiScaleController }) {
   const recenterButton = document.getElementById('btnRecenter');
-  const zoomInButton = document.getElementById('btnUIZoomIn');
-  const zoomOutButton = document.getElementById('btnUIZoomOut');
+  const scaleUpButton = document.getElementById('btnUIScaleUp');
+  const scaleDownButton = document.getElementById('btnUIScaleDown');
   const tabMustVisit = document.getElementById('tabMustVisit');
   const tabRecommended = document.getElementById('tabRecommended');
 
@@ -18,14 +18,14 @@ export function bindMapUI({ controller, defaultCenter, defaultZoom }) {
     recenterButton.addEventListener('click', () => controller.recenter(defaultCenter, defaultZoom));
   }
 
-  if (zoomInButton && zoomInButton.dataset.bound !== 'true') {
-    zoomInButton.dataset.bound = 'true';
-    zoomInButton.addEventListener('click', () => controller.zoomIn());
+  if (scaleUpButton && scaleUpButton.dataset.bound !== 'true') {
+    scaleUpButton.dataset.bound = 'true';
+    scaleUpButton.addEventListener('click', () => uiScaleController?.increase());
   }
 
-  if (zoomOutButton && zoomOutButton.dataset.bound !== 'true') {
-    zoomOutButton.dataset.bound = 'true';
-    zoomOutButton.addEventListener('click', () => controller.zoomOut());
+  if (scaleDownButton && scaleDownButton.dataset.bound !== 'true') {
+    scaleDownButton.dataset.bound = 'true';
+    scaleDownButton.addEventListener('click', () => uiScaleController?.decrease());
   }
 
   if (tabMustVisit && tabMustVisit.dataset.bound !== 'true') {

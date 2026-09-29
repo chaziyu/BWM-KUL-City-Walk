@@ -65,6 +65,129 @@ test.describe('Responsive and Accessibility', () => {
     await expect(help).toBeVisible();
   });
 
+
+  test('user guide stays contained and usable across mobile ratios at 120% UI scale', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(() => {
+      localStorage.setItem('jejak_ui_scale', '120');
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await page.locator('#btnPreLoginHelp').click();
+
+    const modal = page.locator('#userGuideModal');
+    const panel = modal.locator('.user-guide-panel');
+    const body = modal.locator('.user-guide__body');
+    const footer = modal.locator('.user-guide__footer');
+
+    await expect(modal).toBeVisible();
+    await expect(footer).toBeVisible();
+
+    const portrait = await panel.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        bottom: box.bottom,
+        left: box.left,
+        right: box.right,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(portrait.top).toBeGreaterThanOrEqual(-1);
+    expect(portrait.bottom).toBeLessThanOrEqual(portrait.viewportHeight + 1);
+    expect(portrait.left).toBeGreaterThanOrEqual(-1);
+    expect(portrait.right).toBeLessThanOrEqual(portrait.viewportWidth + 1);
+
+    const bodyMetrics = await body.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+      overflowY: window.getComputedStyle(element).overflowY,
+    }));
+    expect(['auto', 'scroll']).toContain(bodyMetrics.overflowY);
+    expect(bodyMetrics.scrollHeight).toBeGreaterThanOrEqual(bodyMetrics.clientHeight);
+
+    await page.setViewportSize({ width: 844, height: 390 });
+
+    const landscape = await panel.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        bottom: box.bottom,
+        left: box.left,
+        right: box.right,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(landscape.top).toBeGreaterThanOrEqual(-1);
+    expect(landscape.bottom).toBeLessThanOrEqual(landscape.viewportHeight + 1);
+    expect(landscape.left).toBeGreaterThanOrEqual(-1);
+    expect(landscape.right).toBeLessThanOrEqual(landscape.viewportWidth + 1);
+    await expect(footer).toBeVisible();
+  });
+
+  test('core overlays and map dock stay within a compact mobile viewport at 120% UI scale', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.addInitScript(() => {
+      localStorage.setItem('jejak_ui_scale', '120');
+    });
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/');
+
+    const overlaySelectors = [
+      ['#pwaInstallPrompt', '#pwaInstallPrompt > div'],
+      ['#pwaExplanationModal', '#pwaExplanationModal > div'],
+      ['#welcomeModal', '#welcomeModal .classic-modal-content'],
+      ['#challengeModal', '#challengeModal .classic-modal-content'],
+      ['#badgeInputModal', '#badgeInputModal > div'],
+      ['#passportModal', '#passportModal .passport-panel'],
+      ['#directionsModal', '#directionsModal .modern-modal-content'],
+    ];
+
+    for (const [modalSelector, panelSelector] of overlaySelectors) {
+      await page.locator(modalSelector).evaluate((element) => element.classList.remove('hidden'));
+      const panel = page.locator(panelSelector);
+      await expect(panel).toBeVisible();
+
+      const bounds = await panel.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        return {
+          top: box.top,
+          bottom: box.bottom,
+          left: box.left,
+          right: box.right,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+        };
+      });
+
+      expect(bounds.top).toBeGreaterThanOrEqual(-1);
+      expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewportHeight + 1);
+      expect(bounds.left).toBeGreaterThanOrEqual(-1);
+      expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth + 1);
+
+      await page.locator(modalSelector).evaluate((element) => element.classList.add('hidden'));
+    }
+
+    const dock = page.locator('.map-action-dock');
+    await dock.evaluate((element) => element.classList.remove('hidden'));
+    const dockBounds = await dock.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        left: box.left,
+        right: box.right,
+        viewportWidth: window.innerWidth,
+      };
+    });
+
+    expect(dockBounds.left).toBeGreaterThanOrEqual(-1);
+    expect(dockBounds.right).toBeLessThanOrEqual(dockBounds.viewportWidth + 1);
+  });
+
   test('keyboard navigation reaches the primary visitor login action', async ({ page }) => {
     await page.goto('/');
     const primaryAction = page.locator('#btnVisitor');

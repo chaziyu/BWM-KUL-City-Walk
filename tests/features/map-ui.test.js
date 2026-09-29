@@ -6,8 +6,8 @@ describe('map UI', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <button id="btnRecenter"></button>
-      <button id="btnUIZoomIn"></button>
-      <button id="btnUIZoomOut"></button>
+      <button id="btnUIScaleUp"></button>
+      <button id="btnUIScaleDown"></button>
       <button id="tabMustVisit" class="map-filter-tab" aria-pressed="true"></button>
       <button id="tabRecommended" class="map-filter-tab" aria-pressed="false"></button>
     `;
@@ -43,27 +43,30 @@ describe('map UI', () => {
     expect(mustVisit.classList.contains('map-filter-tab')).toBe(true);
   });
 
-  it('keeps utility controls wired to the map controller', () => {
+  it('uses plus and minus for UI scale while keeping recenter on the map controller', () => {
     const controller = {
       recenter: vi.fn(),
-      zoomIn: vi.fn(),
-      zoomOut: vi.fn(),
       getFilterMode: vi.fn(() => 'must_visit'),
       setFilterMode: vi.fn(),
+    };
+    const uiScaleController = {
+      increase: vi.fn(),
+      decrease: vi.fn(),
     };
 
     bindMapUI({
       controller,
       defaultCenter: [3.14, 101.69],
       defaultZoom: 16,
+      uiScaleController,
     });
 
-    document.getElementById('btnUIZoomIn').click();
-    document.getElementById('btnUIZoomOut').click();
+    document.getElementById('btnUIScaleUp').click();
+    document.getElementById('btnUIScaleDown').click();
     document.getElementById('btnRecenter').click();
 
-    expect(controller.zoomIn).toHaveBeenCalledOnce();
-    expect(controller.zoomOut).toHaveBeenCalledOnce();
+    expect(uiScaleController.increase).toHaveBeenCalledOnce();
+    expect(uiScaleController.decrease).toHaveBeenCalledOnce();
     expect(controller.recenter).toHaveBeenCalledWith([3.14, 101.69], 16);
   });
 });
