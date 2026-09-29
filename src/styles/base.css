@@ -73,8 +73,9 @@ textarea:focus-visible {
   width: 100%;
   color: var(--ui-ink);
   background:
-    radial-gradient(circle at top right, rgba(165, 106, 42, 0.10), transparent 32rem),
-    linear-gradient(180deg, #fff 0%, var(--ui-surface-warm) 100%);
+    linear-gradient(rgba(255, 255, 255, 0.86), rgba(251, 250, 247, 0.94)),
+    url('/images/branding/cream-paper.png');
+  background-size: auto, 360px 360px;
 }
 
 .ui-surface {

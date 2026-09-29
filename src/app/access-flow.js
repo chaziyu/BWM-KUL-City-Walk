@@ -7,6 +7,11 @@ const TEST_IDS = Object.freeze([
   ['platformWarningModal', 'platform-warning'],
   ['continueLoginBtn', 'platform-warning-continue'],
   ['map', 'map-experience'],
+  ['btnStaff', 'project-admin-entry'],
+  ['adminLoginForm', 'admin-login-form'],
+  ['adminPasswordInput', 'admin-password-input'],
+  ['adminLoginBtn', 'admin-login-submit'],
+  ['adminResult', 'admin-tools'],
 ]);
 
 export function createAccessFlow({

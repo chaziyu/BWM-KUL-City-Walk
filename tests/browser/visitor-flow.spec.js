@@ -10,6 +10,56 @@ test.describe('Visitor flow', () => {
 
   });
 
+  test('project admin stays locked until prototype admin authentication', async ({ page }) => {
+    let authenticated = false;
+
+    const guestSession = {
+      authenticated: false,
+      role: 'guest',
+      progressNamespace: null,
+      chatLimit: 0,
+      allowedUI: ['landing'],
+    };
+    const adminSession = {
+      authenticated: true,
+      role: 'admin',
+      progressNamespace: 'admin',
+      chatLimit: 30,
+      remainingQuota: 30,
+      allowedUI: ['map', 'chat', 'passport', 'challenge', 'share', 'admin'],
+    };
+
+    await page.route('**/api/session/current', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(authenticated ? adminSession : guestSession),
+      });
+    });
+
+    await page.route('**/api/session/admin', async (route) => {
+      authenticated = true;
+      expect(route.request().postDataJSON().password).toBe('prototype-password');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(adminSession),
+      });
+    });
+
+    await page.goto('/');
+    await page.getByTestId('project-admin-entry').click();
+
+    await expect(page.getByTestId('admin-login-form')).toBeVisible();
+    await expect(page.getByTestId('admin-tools')).toBeHidden();
+
+    await page.getByTestId('admin-password-input').fill('prototype-password');
+    await page.getByTestId('admin-login-submit').click();
+
+    await expect(page.getByTestId('admin-login-form')).toBeHidden();
+    await expect(page.getByTestId('admin-tools')).toBeVisible();
+  });
+
   test('visitor can join with a passkey', async ({ page }) => {
     let visitorSessionCalled = false;
     let authenticated = false;
