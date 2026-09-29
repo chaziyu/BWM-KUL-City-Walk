@@ -124,7 +124,12 @@ export function createDirectionsController({ modalManager, onError }) {
       urls = getDirectionsUrls(site, mode);
     } catch (error) {
       console.error('Unable to build Google Maps URL:', error);
-      onError?.('Nearby search is unavailable for this location.');
+      const isNearbySearch = mode === 'restaurants' || mode === 'hotels';
+      onError?.(
+        isNearbySearch
+          ? 'Nearby search is unavailable for this location.'
+          : 'Directions are unavailable for this location.',
+      );
       return false;
     }
 
