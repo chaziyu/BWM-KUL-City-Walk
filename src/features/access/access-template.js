@@ -79,7 +79,7 @@ export function createVisitorGateTemplate() {
                 </div>
 
                 <div class="access-card__panel">
-                    <form class="access-form" onsubmit="return false">
+                    <div class="access-form">
                         <label for="passcodeInput" class="ui-field-label">Visitor passkey</label>
                         <input
                             type="text"
@@ -97,7 +97,7 @@ export function createVisitorGateTemplate() {
                             <span aria-hidden="true">→</span>
                         </button>
                         <p id="errorMsg" class="access-error hidden" role="alert">Invalid passkey.</p>
-                    </form>
+                    </div>
 
                     <p class="access-privacy-note">A local device identifier is used for access validation. No account is required.</p>
                 </div>
