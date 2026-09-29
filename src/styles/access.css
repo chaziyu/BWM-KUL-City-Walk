@@ -347,6 +347,60 @@
   text-underline-offset: 0.15rem;
 }
 
+
+@media (min-width: 900px) and (min-height: 600px) {
+  .landing-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, 27rem);
+    grid-template-areas:
+      "hero actions"
+      "footer footer";
+    align-content: center;
+    column-gap: clamp(2.5rem, 6vw, 5rem);
+    row-gap: 1.2rem;
+  }
+
+  .landing-hero {
+    grid-area: hero;
+    text-align: left;
+  }
+
+  .landing-hero .ui-title {
+    font-size: clamp(3.2rem, 5.2vw, 4.75rem);
+  }
+
+  .landing-lead {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .landing-meta {
+    justify-content: flex-start;
+  }
+
+  .landing-actions {
+    grid-area: actions;
+    margin: 0;
+  }
+
+  .landing-footer {
+    grid-area: footer;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .landing-footer .prototype-notice {
+    max-width: 46rem;
+  }
+
+  .landing-footer > p {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
 @media (max-height: 720px) {
   .landing-shell {
     justify-content: flex-start;
