@@ -534,8 +534,7 @@ async function checkForURLPasskey() {
 
   const cleanUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
   window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-  showOnly(['gatekeeper']);
-  notifyLifecycle({ activeView: 'gatekeeper' });
+  viewController.transitionTo('gatekeeper');
   const input = document.getElementById('passcodeInput');
   if (input) input.value = code;
   await showPlatformWarning();
