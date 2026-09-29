@@ -17,6 +17,10 @@ import {
 } from '../features/passport/passport-template.js';
 import { createSiteModalTemplate } from '../features/sites/site-modal-template.js';
 import { createTranslationTemplate } from '../features/translation/translation-template.js';
+import {
+  createTrailControlTemplate,
+  createTrailModalTemplate,
+} from '../features/trails/trail-template.js';
 
 export function renderAppShell(appRoot = document.getElementById('app')) {
   if (!appRoot || appRoot.dataset.mounted === 'true') return;
@@ -28,6 +32,7 @@ export function renderAppShell(appRoot = document.getElementById('app')) {
     <div data-app-region="translation">${createTranslationTemplate()}</div>
     <nav data-app-region="floating-controls" data-map-chrome aria-hidden="true" aria-label="Trail actions" class="hidden map-action-dock">
       ${createChallengeControlTemplate()}
+      ${createTrailControlTemplate()}
       ${createPassportControlTemplate()}
       ${createChatControlTemplate()}
     </nav>
@@ -35,6 +40,7 @@ export function renderAppShell(appRoot = document.getElementById('app')) {
       ${createOnboardingTemplate()}
       <div id="challengeMount">${createChallengeModalTemplate()}</div>
       <div id="passportMount">${createPassportModalTemplate()}</div>
+      ${createTrailModalTemplate()}
       <div id="chatMount">${createChatModalTemplate()}</div>
       ${createSiteModalTemplate()}
       ${createDirectionsTemplate()}

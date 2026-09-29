@@ -120,6 +120,19 @@ describe('chat API quota ordering', () => {
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
+  it('answers supported factual questions without Gemini or quota use', async () => {
+    const cookie = createCookie();
+
+    const result = await postChat(cookie, {
+      userQuery: 'When was Sultan Abdul Samad Building built?',
+    });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body.reply).toContain('1894-1897');
+    expect(result.body.remainingQuota).toBe(5);
+    expect(gemini.sendMessage).not.toHaveBeenCalled();
+  });
+
   it('does not call Gemini or consume quota for retrieval misses', async () => {
     const cookie = createCookie();
 

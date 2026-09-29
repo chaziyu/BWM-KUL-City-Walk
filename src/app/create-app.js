@@ -24,6 +24,8 @@ import { loadSiteData } from '../features/sites/site-data.js';
 import { getMustVisitSites } from '../features/sites/site-domain.js';
 import { createSiteModalController } from '../features/sites/site-modal.js';
 import { createTranslationController } from '../features/translation/translation-controller.js';
+import { createTrailController } from '../features/trails/trail-controller.js';
+import { loadTrailData } from '../features/trails/trail-data.js';
 import { STRINGS } from '../config/localization.js';
 import { fireConfetti, renderMarkdown } from '../services/runtime-libs.js';
 import { migrateData } from '../services/storage-migration.js';
@@ -144,6 +146,15 @@ const directionsController = createDirectionsController({
     showToast(message, { severity: 'error' });
   },
 });
+
+const trailController = createTrailController({
+  getSites: () => allSiteData,
+  loadTrails: loadTrailData,
+  modalManager,
+  onSiteSelected(site) {
+    siteModalController.open(site);
+  },
+});
 const badgeController = createBadgeController({ modalManager, progressService, strings: STRINGS });
 const onboardingController = createOnboardingController({ getCurrentSession, modalManager });
 const translationController = createTranslationController();
@@ -247,6 +258,7 @@ const gameUiBindings = createGameUiBindings({
   },
   siteModalController,
   textSizeController,
+  trailController,
 });
 
 let lifecycleHandler = null;

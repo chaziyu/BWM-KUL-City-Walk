@@ -10,6 +10,7 @@ export function createGameUiBindings({
   resetDemoProgress,
   siteModalController,
   textSizeController,
+  trailController,
 }) {
   let bound = false;
 
@@ -77,6 +78,7 @@ export function createGameUiBindings({
     challengeController.bind();
     badgeController.bind();
     directionsController.bind();
+    trailController?.bind();
 
     const closeCongrats = document.getElementById('closeCongratsModal');
     if (closeCongrats && closeCongrats.dataset.bound !== 'true') {

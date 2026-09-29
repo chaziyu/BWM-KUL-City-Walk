@@ -8,5 +8,6 @@ describe('data validation', () => {
     expect(result.ok, result.errors.join('\n')).toBe(true);
     expect(result.counts.must_visit).toBe(11);
     expect(result.counts.total).toBeGreaterThan(result.counts.must_visit);
+    expect(result.counts.trails).toBeGreaterThan(0);
   });
 });

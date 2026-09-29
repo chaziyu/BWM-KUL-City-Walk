@@ -12,9 +12,9 @@
 The project is designed as a low-cost portfolio prototype using Vercel serverless functions and managed third-party services where appropriate.
 
 ### Key Highlights
-*   **📱 Installable App Shell:** Manifest-based PWA install metadata with offline support planned for a later phase
+*   **📱 Offline-capable PWA:** Same-origin app assets and heritage content are cached after use; third-party map tiles remain online-only
 *   **🎓 Interactive Onboarding:** Beautiful guided tour system with spotlight effects to help new users discover features instantly
-*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI with rich knowledge of all heritage sites
+*   **🧭 Heritage Threads:** Curated 30/60/90-minute story walks are planned locally with no routing API cost\n*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI, with deterministic factual answers before model calls
 *   **🛂 Digital Passport:** Collect stamps, check-in to sites, and track your exploration progress
 *   **📍 Interactive Map:** Rich transit routes, food & hotel search, and beautiful site details
 *   **⚡ Performance Aware:** Hardware-accelerated animations, local build assets, and lazy-loaded optional libraries
@@ -61,7 +61,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 ### 🤖 **6. AI Tour Guide**
 *   **Grounded Answers:** Retrieves matching verified site facts from `data/sites.json` before calling Gemini
 *   **Friendly Persona:** Helpful local guide character
-*   **Smart Limits:** Server-side quotas, hourly rate limits, and in-memory answer caching help control API costs
+*   **Smart Limits:** Deterministic factual replies, server-side quotas, hourly rate limits, and optional Upstash-backed shared answer caching help control API costs
 *   **Safe Rendering:** AI Markdown is sanitized before display to reduce XSS risk
 *   **Structured Responses:** Requests JSON mode from Gemini, defensively parses fallback-model JSON, and validates source site IDs, confidence, and unsupported-question fallbacks
 *   **Source Chips:** Answers can show verified trail source labels below the chat message
@@ -90,7 +90,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **AI Engine:** Google GenAI SDK with grounded prompts, structured JSON validation, and multi-model fallback
 
 ### Performance
-*   **PWA:** Installable app shell; full offline behavior is planned for a later phase
+*   **PWA:** Installable app shell with a service worker for same-origin assets and previously loaded heritage content; third-party map tiles remain online-only
 *   **Optimization:** Hardware acceleration, CSS containment, will-change hints
 *   **Caching:** Scoped localStorage for demo and visitor tour progress; authorization is stored in signed cookies
 *   **Load Time:** Optimized for fast initial paint and interaction
@@ -164,7 +164,7 @@ Configure these in Vercel Dashboard for deployment. For local API testing, creat
 
 ### Explore Demo
 
-Use **Explore Demo** on the landing page for portfolio evaluation. It creates a short-lived `demo` session with isolated demo progress and a limited AI quota, so evaluators can test the map, quizzes, passport, daily challenge, badge flow, and sharing without needing a passkey.
+Use **Explore Demo** on the landing page for portfolio evaluation. Public trail features start locally so the map, Heritage Threads, quizzes, passport, and challenges can remain usable during a session-API outage. When online, the client also obtains a short-lived signed `demo` session for protected AI chat.
 
 ### Visitor Passkey Access
 
@@ -198,7 +198,7 @@ The endpoint uses low-temperature factual calls and tries models in this order:
 ]
 ```
 
-Repeated cacheable questions are stored in an in-memory per-instance cache keyed by knowledge version, context, language, and normalized question.
+Supported factual questions are answered directly from verified site fields before Gemini is called. Repeated cacheable generated answers use an in-memory L1 cache and, when Upstash is configured, a shared Redis L2 cache keyed by knowledge version, context, language, and normalized question.
 
 ---
 
@@ -246,7 +246,7 @@ The frontend remains a Vanilla JavaScript modular monolith. Vite builds `src/mai
 
 ## Access Model
 
-**Demo Mode:** `Explore Demo` creates a signed short-lived demo session and stores progress under the demo localStorage namespace.
+**Demo Mode:** `Explore Demo` starts with a local public-demo session and stores progress under the demo localStorage namespace. When the backend is reachable, it also obtains a signed short-lived demo cookie for protected AI requests.
 
 **Visitor Passkey Workflow:** Visitor codes are submitted to `/api/session/visitor`; the server validates the code and issues a signed HttpOnly cookie.
 
@@ -254,7 +254,7 @@ The frontend remains a Vanilla JavaScript modular monolith. Vite builds `src/mai
 
 ## Data Validation
 
-Run `npm run validate:data` before deployment. The validator checks required fields, unique IDs/names, valid coordinates, image references, quiz consistency for main sites, AI context for main sites, and the expected 11 `must_visit` records.
+Run `npm run validate:data` before deployment. The validator checks site schema/IDs, coordinates, image references, quiz consistency, AI context, the expected 11 `must_visit` records, Heritage Thread schema, duplicate thread stops, and cross-referenced site IDs.
 
 ## Security Boundaries
 
@@ -262,11 +262,11 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 
 ## Known Limitations
 
-- Full offline support is planned for a later phase; third-party map tiles are online-only.
+- Offline support covers the app shell and previously loaded same-origin content; third-party map tiles and external services remain online-only.
 - The admin workflow is a portfolio prototype.
 - Recommended sites do not all have quiz content yet.
 - Google Translate is a third-party widget loaded only when requested.
-- AI answer caching is in-memory only; Vercel cold starts or multiple instances do not share cache.
+- Shared AI answer caching requires Upstash configuration; without it, caching falls back to per-instance memory.
 - AI retrieval is lexical and depends on curated `search_terms`; add verified aliases from real visitor questions before considering heavier retrieval.
 - Invalid Gemini JSON fails safely without consuming quota, but may show fallback/error responses more often if the model ignores the response contract.
 - Source chips depend on local client site data, so labels may not render if frontend site data fails to load.
@@ -353,7 +353,7 @@ Update UI strings for internationalization support.
 
 ### Installation
 - Prompts users to install as home screen app
-- Full offline mode planned for a later phase (requires service worker and cache strategy)
+- Same-origin app assets and previously loaded heritage content can be reused offline; external map tiles remain online-only
 - Full-screen immersive mode on mobile
 
 ### Icons

@@ -288,7 +288,8 @@
       "opening_hours": "Exterior viewable 24 hours. Interior restricted.",
       "ticket_fee": "Free (Exterior)",
       "tips": "Come at night to see the building beautifully illuminated with colored lights. The best photo spot is across the street at Dataran Merdeka."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "2",
@@ -386,7 +387,8 @@
       "opening_hours": "9:00 AM - 5:00 PM",
       "ticket_fee": "Free",
       "tips": "Take a photo of the building from the Padang looking towards the building and the many sided stair towers flank both ends of this façade."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "3",
@@ -454,7 +456,8 @@
       "opening_hours": "Exterior viewable 24 hours. Offices are private.",
       "ticket_fee": "Free",
       "tips": "Stand at the corner of Lebuh Pasar Besar to get a photo of the Loke Yew Building's curved Art Deco facade."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "4",
@@ -513,7 +516,8 @@
       "opening_hours": "10:00 AM - 12:30 PM, 2:30 PM - 4:00 PM (Closed to non-Muslims on Fridays)",
       "ticket_fee": "Free",
       "tips": "Robes and headscarves are provided for free at the entrance for tourists. Shoes must be removed."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "5",
@@ -572,7 +576,8 @@
       "opening_hours": "24 Hours (Public Square)",
       "ticket_fee": "Free",
       "tips": "It's a pedestrian-only zone, making it safe for photography. Look for the Art Deco clock tower in the center."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "6",
@@ -646,7 +651,8 @@
       "opening_hours": "7:00 AM - 5:00 PM",
       "ticket_fee": "Free",
       "tips": "You can ask for a fortune stick reading. The staff are usually helpful in explaining the process."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "7",
@@ -721,7 +727,8 @@
       "opening_hours": "Exterior viewable 24 hours.",
       "ticket_fee": "Free",
       "tips": "It's best photographed from the opposite corner to capture its unique triangular shape."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "8",
@@ -787,7 +794,8 @@
       "opening_hours": "Exterior viewable 24 hours. Bank hours apply for interior.",
       "ticket_fee": "Free",
       "tips": "Observe how the curved facade fits the triangular plot of land."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "9",
@@ -868,7 +876,8 @@
       "opening_hours": "Open for prayers. Tourist access limited during prayer times.",
       "ticket_fee": "Free",
       "tips": "Explore the surrounding covered arcade for affordable textiles and spices."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "10",
@@ -927,7 +936,8 @@
       "opening_hours": "10:00 AM - 6:00 PM (Closed Sundays)",
       "ticket_fee": "Free",
       "tips": "Look for the royal crests on the business card or signage, indicating their history as royal jewellers."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "11",
@@ -1009,7 +1019,8 @@
       "opening_hours": "Exterior viewable 24 hours. Interior open during showtimes.",
       "ticket_fee": "Free (Exterior) / Ticketed (Performances)",
       "tips": "Check the schedule for cultural performances or musicals often held here."
-    }
+    },
+    "estimatedVisitMinutes": 8
   },
   {
     "id": "A",
@@ -1077,7 +1088,8 @@
       "opening_hours": "24 Hours",
       "ticket_fee": "Free",
       "tips": "Visit at sunset or night when the surrounding colonial buildings are lit up. Bring water as it can get hot during the day."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "B",
@@ -1242,7 +1254,8 @@
       "opening_hours": "9:00 AM - 6:00 PM Daily",
       "ticket_fee": "Entry fees apply (Different rates for Malaysians/Non-Malaysians)",
       "tips": "It's fully air-conditioned, making it a perfect mid-day stop to cool down while exploring history."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "C",
@@ -1298,7 +1311,8 @@
       "opening_hours": "Exterior viewable 24 hours.",
       "ticket_fee": "Free",
       "tips": "Look for the bicycle garage entrance at the basement level, a unique feature for its time."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "D",
@@ -1354,7 +1368,8 @@
       "opening_hours": "10:00 AM - 10:00 PM Daily",
       "ticket_fee": "Free",
       "tips": "Visit the upper floor food court for affordable local eats and check out the DIY batik painting stalls."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "E",
@@ -1406,7 +1421,8 @@
       "opening_hours": "24 Hours",
       "ticket_fee": "Free",
       "tips": "It's a short connecting street; great for linking the Central Market area to the banking district."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "F",
@@ -1450,7 +1466,8 @@
       "opening_hours": "24 Hours (Shops vary)",
       "ticket_fee": "Free",
       "tips": "Stop by one of the many restaurants here for authentic South Indian Banana Leaf Rice."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "G",
@@ -1506,7 +1523,8 @@
       "opening_hours": "24 Hours",
       "ticket_fee": "Free",
       "tips": "Look for the juxtaposition of traditional Malay architecture on the modern Bank Muamalat building."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "H",
@@ -1550,7 +1568,8 @@
       "opening_hours": "Exterior viewable 24 hours.",
       "ticket_fee": "Free",
       "tips": "These buildings are popular among street photographers for their raw, authentic KL vibe."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "I",
@@ -1602,7 +1621,8 @@
       "opening_hours": "10:00 AM - 8:00 PM Daily",
       "ticket_fee": "Free",
       "tips": "The best place to shop for 'Baju Melayu' and 'Songkok' (traditional headgear) for festivities."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "J",
@@ -1646,7 +1666,8 @@
       "opening_hours": "24 Hours (Shops vary)",
       "ticket_fee": "Free",
       "tips": "Seek out the 100-year-old textile shops for authentic sarongs."
-    }
+    },
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "K",
@@ -1695,7 +1716,8 @@
       "ticket_fee": "Free",
       "tips": "Visit on Saturday evenings for the famous 'Pasar Malam' (Night Market) which takes over the street."
     },
-    "category": "recommended"
+    "category": "recommended",
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "L",
@@ -1815,7 +1837,8 @@
       "ticket_fee": "Free",
       "tips": "Look up to spot the twin 'Chatris' (domes) on the roof."
     },
-    "category": "recommended"
+    "category": "recommended",
+    "estimatedVisitMinutes": 6
   },
   {
     "id": "M",
@@ -1870,6 +1893,7 @@
       "ticket_fee": "Free",
       "tips": "Walk towards the river side to see the grand entrance that faces the water."
     },
-    "category": "recommended"
+    "category": "recommended",
+    "estimatedVisitMinutes": 6
   }
 ]

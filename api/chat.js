@@ -8,7 +8,9 @@ const { isSameOrigin } = require('./_shared/security');
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
 const { consumeQuota, getQuotaRemaining, isRateLimited, refundQuota } = require('./_shared/rate-limit');
 const { getQuotaKey } = require('./_shared/chat-quota');
-const { buildCacheKey, getCachedAnswer, getLanguage, isCacheableQuestion, setCachedAnswer } = require('./_shared/ai/answer-cache');
+const { buildCacheKey, getLanguage, isCacheableQuestion } = require('./_shared/ai/answer-cache');
+const { getDeterministicAnswer } = require('./_shared/ai/deterministic-answer');
+const { getSharedCachedAnswer, setSharedCachedAnswer } = require('./_shared/ai/shared-answer-cache');
 const { buildPrompt } = require('./_shared/ai/build-prompt');
 const { CHAT_MODELS, supportsJsonMode } = require('./_shared/ai/model-config');
 const { retrieveSites } = require('./_shared/ai/retrieve-sites');
@@ -125,6 +127,15 @@ module.exports = async (request, response) => {
     if (!contextSites.length) {
         return response.status(200).json({ reply: buildNoMatchReply(cleanQuery), remainingQuota });
     }
+
+    const deterministic = getDeterministicAnswer(cleanQuery, contextSites);
+    if (deterministic) {
+        return response.status(200).json({
+            ...deterministic,
+            remainingQuota,
+        });
+    }
+
     const cacheKey = buildCacheKey({
         contextType: context?.type === 'site' ? 'site' : 'general',
         siteIds: contextSites.map(site => site.id),
@@ -132,7 +143,7 @@ module.exports = async (request, response) => {
         question: cleanQuery,
     });
     const canCache = isCacheableQuestion(cleanQuery);
-    const cached = canCache ? getCachedAnswer(cacheKey) : null;
+    const cached = canCache ? await getSharedCachedAnswer(cacheKey) : null;
     if (cached) {
         return response.status(200).json({
             reply: cached.answer,
@@ -245,7 +256,7 @@ module.exports = async (request, response) => {
             contract.remainingQuota = await getQuotaRemaining(quotaKey, limit);
         }
 
-        if (canCache) setCachedAnswer(cacheKey, contract);
+        if (canCache) await setSharedCachedAnswer(cacheKey, contract);
 
         return response.status(200).json({
             reply: sanitizeText(contract.answer, 5000),
