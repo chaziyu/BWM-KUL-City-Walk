@@ -13,10 +13,19 @@ export async function loadSiteData() {
   if (loadPromise) return loadPromise;
 
   loadPromise = fetch(new URL('../../../data/sites.json', import.meta.url))
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Unable to load heritage site data (HTTP ${response.status}).`);
+      }
+      return response.json();
+    })
     .then((sites) => {
       siteCache = (sites || []).map(normalizeSite);
       return siteCache;
+    })
+    .catch((error) => {
+      loadPromise = null;
+      throw error;
     });
 
   return loadPromise;
