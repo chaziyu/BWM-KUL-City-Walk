@@ -7,7 +7,6 @@ import {
 } from '../config/app-config.js';
 import { createAdminAccess } from '../features/access/admin-access.js';
 import { createDemoAccess } from '../features/access/demo-access.js';
-import { createLandingScreen } from '../features/access/landing-screen.js';
 import { createPlatformWarningController } from '../features/access/platform-warning-controller.js';
 import { createVisitorAccess } from '../features/access/visitor-access.js';
 import { createOpenFreeMapLayer } from '../features/map/basemap.js';
@@ -44,6 +43,7 @@ import {
 import { createModalManager } from '../ui/modal-manager.js';
 import { showToast } from '../ui/toast.js';
 import { createTextSizeController } from '../ui/text-size-controller.js';
+import { createAccessFlow } from './access-flow.js';
 import { createViewController } from './view-controller.js';
 
 let appStartPromise = null;
@@ -409,23 +409,6 @@ function showAdminTools() {
   document.getElementById('btnAdminToggle')?.classList.remove('hidden');
 }
 
-function showAdminCode() {
-  viewController.transitionTo('admin');
-}
-
-async function checkForURLPasskey() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  if (!code || activeSession?.authenticated) return;
-
-  const cleanUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-  window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-  viewController.transitionTo('gatekeeper');
-  const input = document.getElementById('passcodeInput');
-  if (input) input.value = code;
-  await platformWarningController.open();
-}
-
 async function syncActiveSession() {
   let refreshed;
   try {
@@ -500,66 +483,16 @@ function showLandingPage() {
   viewController.transitionTo('landing');
 }
 
-function setupAccessFlow() {
-  [
-    ['btnVisitor', 'join-event-button'],
-    ['passcodeInput', 'visitor-passkey-input'],
-    ['unlockBtn', 'visitor-passkey-submit'],
-    ['platformWarningModal', 'platform-warning'],
-    ['continueLoginBtn', 'platform-warning-continue'],
-    ['map', 'map-experience'],
-  ].forEach(([id, testId]) => {
-    document.getElementById(id)?.setAttribute('data-testid', testId);
-  });
-
-  const landingScreen = createLandingScreen({
-    notifyLifecycle({ activeView }) {
-      if (activeView) viewController.transitionTo(activeView);
-    },
-    async onExploreDemo() {
-      try {
-        await demoAccess.start();
-      } catch {
-        window.alert('Unable to start the demo session. Please try again.');
-        return;
-      }
-
-      await openMapSafely();
-    },
-    onVisitor() {},
-    onStaff: showAdminCode,
-    onBackHome: showLandingPage,
-    onCloseStaff: showLandingPage,
-  });
-
-  landingScreen.init();
-  bindAdminUI();
-
-  const retryMapBtn = document.getElementById('retryMapBtn');
-  if (retryMapBtn && retryMapBtn.dataset.bound !== 'true') {
-    retryMapBtn.dataset.bound = 'true';
-    retryMapBtn.addEventListener('click', () => void openMapSafely());
-  }
-
-  const mapErrorBackBtn = document.getElementById('mapErrorBackBtn');
-  if (mapErrorBackBtn && mapErrorBackBtn.dataset.bound !== 'true') {
-    mapErrorBackBtn.dataset.bound = 'true';
-    mapErrorBackBtn.addEventListener('click', () => {
-      if (activeSession?.role === 'admin') showAdminExperience();
-      else showLandingPage();
-    });
-  }
-
-  const unlockBtn = document.getElementById('unlockBtn');
-  if (unlockBtn && unlockBtn.dataset.bound !== 'true') {
-    unlockBtn.dataset.bound = 'true';
-    unlockBtn.addEventListener('click', async () => {
-      const passcodeInput = document.getElementById('passcodeInput');
-      if (!passcodeInput?.value.trim()) return;
-      await platformWarningController.open();
-    });
-  }
-}
+const accessFlow = createAccessFlow({
+  bindAdminUI,
+  demoAccess,
+  getSession: () => activeSession,
+  onShowAdmin: showAdminExperience,
+  onShowLanding: showLandingPage,
+  onShowMap: openMapSafely,
+  platformWarningController,
+  viewController,
+});
 
 async function initApp() {
   try {
@@ -569,8 +502,8 @@ async function initApp() {
   }
 
   notifyLifecycle({ session: activeSession });
-  setupAccessFlow();
-  await checkForURLPasskey();
+  accessFlow.bind();
+  await accessFlow.checkForUrlPasskey();
 
   if (activeSession?.authenticated) {
     if (activeSession.role === 'admin') showAdminExperience();
