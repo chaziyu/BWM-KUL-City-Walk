@@ -8,7 +8,6 @@ function getModal(idOrElement) {
 export function createModalManager({ appRoot = document, onModalStateChange } = {}) {
   const stack = [];
   let listening = false;
-  let previousFocus = null;
 
   function top() {
     return stack[stack.length - 1];
@@ -47,13 +46,13 @@ export function createModalManager({ appRoot = document, onModalStateChange } = 
     const modal = getModal(idOrElement);
     if (!modal) return;
     if (!stack.some((entry) => entry.modal === modal)) {
-      previousFocus = document.activeElement;
       stack.push({
         modal,
         id: modal.id,
         trap: createFocusTrap(modal),
         dismissible: options.dismissible,
         backdropClose: options.backdropClose,
+        returnFocus: document.activeElement,
       });
     }
 
@@ -68,12 +67,16 @@ export function createModalManager({ appRoot = document, onModalStateChange } = 
     const modal = getModal(idOrElement);
     if (!modal) return;
     const index = stack.findIndex((entry) => entry.modal === modal);
-    if (index !== -1) stack.splice(index, 1);
+    const wasTopmost = index === stack.length - 1;
+    const [entry] = index !== -1 ? stack.splice(index, 1) : [];
     animateCloseModal(modal);
+
     if (!stack.length) {
       document.body.classList.remove('overflow-hidden');
-      previousFocus?.focus?.();
-      previousFocus = null;
+    }
+
+    if (wasTopmost) {
+      entry?.returnFocus?.focus?.();
     }
     syncListeners();
     onModalStateChange?.({ id: modal.id, open: false });
