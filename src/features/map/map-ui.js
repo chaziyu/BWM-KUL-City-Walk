@@ -8,18 +8,9 @@ export function bindMapUI({ controller, defaultCenter, defaultZoom }) {
   function updateTabStyles(mode) {
     if (!tabMustVisit || !tabRecommended) return;
 
-    if (mode === 'must_visit') {
-      tabMustVisit.className =
-        'w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700';
-      tabRecommended.className =
-        'w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent';
-      return;
-    }
-
-    tabMustVisit.className =
-      'w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-transparent';
-    tabRecommended.className =
-      'w-full md:w-48 h-12 flex items-center justify-center rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all transform scale-105 border-indigo-700';
+    const mustVisitActive = mode === 'must_visit';
+    tabMustVisit.setAttribute('aria-pressed', String(mustVisitActive));
+    tabRecommended.setAttribute('aria-pressed', String(!mustVisitActive));
   }
 
   if (recenterButton && recenterButton.dataset.bound !== 'true') {
