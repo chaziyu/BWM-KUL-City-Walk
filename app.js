@@ -551,16 +551,21 @@ function setMapChromeVisible(visible) {
 }
 
 async function syncActiveSession() {
+  let refreshed;
   try {
-    const refreshed = await refreshSession();
-    if (!refreshed?.authenticated) {
-      throw new Error('Your session has expired. Please sign in again.');
-    }
+    refreshed = await refreshSession();
+  } catch {
+    return;
+  }
+
+  if (!refreshed?.authenticated) {
     activeSession = refreshed;
     notifyLifecycle({ session: activeSession });
-  } catch (error) {
-    if (!activeSession?.authenticated) throw error;
+    throw new Error('Your session has expired. Please sign in again.');
   }
+
+  activeSession = refreshed;
+  notifyLifecycle({ session: activeSession });
 }
 
 async function showMapExperience() {
