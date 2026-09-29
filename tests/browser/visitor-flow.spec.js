@@ -8,37 +8,44 @@ test.describe('Visitor flow', () => {
       localStorage.setItem('pwa_prompt_dismissed', String(Date.now() + 604800000));
     });
 
-    await page.route('**/api/session/current', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          authenticated: false,
-          role: 'guest',
-          progressNamespace: null,
-          chatLimit: 0,
-          allowedUI: ['landing'],
-        }),
-      });
-    });
   });
 
   test('visitor can join with a passkey', async ({ page }) => {
     let visitorSessionCalled = false;
+    let authenticated = false;
+
+    const guestSession = {
+      authenticated: false,
+      role: 'guest',
+      progressNamespace: null,
+      chatLimit: 0,
+      allowedUI: ['landing'],
+    };
+    const visitorSession = {
+      authenticated: true,
+      role: 'visitor',
+      progressNamespace: 'visitor',
+      chatLimit: 15,
+      remainingQuota: 15,
+      allowedUI: ['map', 'chat', 'passport', 'challenge', 'share'],
+    };
+
+    await page.route('**/api/session/current', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(authenticated ? visitorSession : guestSession),
+      });
+    });
 
     await page.route('**/api/session/visitor', async (route) => {
       visitorSessionCalled = true;
+      authenticated = true;
       expect(route.request().postDataJSON().passkey).toBe('AB-12345');
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          authenticated: true,
-          role: 'visitor',
-          progressNamespace: 'visitor',
-          chatLimit: 15,
-          allowedUI: ['map'],
-        }),
+        body: JSON.stringify(visitorSession),
       });
     });
 
