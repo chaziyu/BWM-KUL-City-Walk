@@ -13,8 +13,21 @@ export const DAILY_RIDDLES = [
 ];
 
 export function getDayOfYear(date = new Date()) {
-  const start = new Date(date.getFullYear(), 0, 0);
-  return Math.floor((date - start) / (1000 * 60 * 60 * 24));
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const year = Number(values.year);
+  const month = Number(values.month);
+  const day = Number(values.day);
+  const current = Date.UTC(year, month - 1, day);
+  const start = Date.UTC(year, 0, 0);
+
+  return Math.floor((current - start) / (24 * 60 * 60 * 1000));
 }
 
 export function getDailyRiddle(day = getDayOfYear(), riddles = DAILY_RIDDLES) {
