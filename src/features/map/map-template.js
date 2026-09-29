@@ -24,6 +24,7 @@ export function createMapTemplate() {
       data-map-chrome
       aria-hidden="true"
       class="hidden map-utility-rail"
+      role="group"
       aria-label="Map controls"
     >
       <button id="btnUIZoomIn" aria-label="Zoom in" class="ui-icon-button map-utility-button">
