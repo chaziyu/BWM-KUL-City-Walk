@@ -1,1 +1,263 @@
-/* Map-specific rules will move here as the legacy controller is split. */
+#map {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1;
+  position: absolute;
+  inset: 0;
+}
+
+.map-progress-region {
+  position: fixed;
+  top: calc(0.8rem + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 2200;
+  width: min(calc(100% - 7rem), 31rem);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.map-progress-card {
+  border: 1px solid rgba(203, 213, 225, 0.88);
+  border-radius: var(--ui-radius-lg);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--ui-shadow-md);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0.65rem 0.8rem 0.7rem;
+}
+
+.map-progress-copy {
+  margin-bottom: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.map-progress-copy > span {
+  color: var(--ui-muted);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.map-progress-copy > strong {
+  color: var(--ui-ink);
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.map-progress-track {
+  height: 0.38rem;
+  overflow: hidden;
+  border-radius: var(--ui-radius-pill);
+  background: #e8edf1;
+}
+
+.map-progress-value {
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ui-accent), #c58a45);
+  transition: width 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.map-utility-rail {
+  position: fixed;
+  top: calc(5.7rem + env(safe-area-inset-top));
+  right: 0.8rem;
+  z-index: 2400;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.map-utility-button {
+  width: 2.8rem;
+  height: 2.8rem;
+}
+
+.map-control-glyph {
+  color: currentColor;
+  font-size: 1.45rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.map-utility-divider {
+  width: 1.65rem;
+  height: 1px;
+  margin: 0.05rem auto;
+  background: rgba(100, 116, 139, 0.28);
+}
+
+.map-filter-tabs {
+  position: fixed;
+  bottom: calc(5.6rem + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 2400;
+  width: min(calc(100% - 2rem), 23rem);
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: var(--ui-radius-pill);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--ui-shadow-md);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0.25rem;
+}
+
+.map-filter-tab {
+  min-height: 2.55rem;
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background: transparent;
+  color: var(--ui-muted);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  transition: color var(--ui-transition), background-color var(--ui-transition), box-shadow var(--ui-transition);
+}
+
+.map-filter-tab:hover {
+  color: var(--ui-ink);
+  background: var(--ui-surface-soft);
+}
+
+.map-filter-tab[aria-pressed="true"] {
+  background: var(--ui-primary);
+  color: white;
+  box-shadow: var(--ui-shadow-sm);
+}
+
+.map-action-dock {
+  position: fixed;
+  bottom: calc(0.8rem + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 2500;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: var(--ui-radius-pill);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--ui-shadow-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.32rem;
+}
+
+.map-action-button {
+  min-height: 3rem;
+  min-width: 6.3rem;
+  border: 0;
+  border-radius: var(--ui-radius-pill);
+  background: transparent;
+  color: var(--ui-ink-soft);
+  padding: 0.52rem 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  transition: background-color var(--ui-transition), color var(--ui-transition), transform var(--ui-transition);
+}
+
+.map-action-button:hover {
+  background: var(--ui-surface-soft);
+  color: var(--ui-ink);
+}
+
+.map-action-button:active {
+  transform: scale(0.98);
+}
+
+.map-action-button svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#btnChallenge {
+  display: none !important;
+}
+
+.user-pin-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.user-location-pin {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #246b81;
+  box-shadow: 0 0 0 5px rgba(36, 107, 129, 0.18), 0 3px 10px rgba(15, 23, 42, 0.2);
+  animation: user-location-pulse 1.8s ease-out infinite;
+}
+
+@keyframes user-location-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(36, 107, 129, 0.18), 0 3px 10px rgba(15, 23, 42, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgba(36, 107, 129, 0), 0 3px 10px rgba(15, 23, 42, 0.2);
+  }
+}
+
+.heritage-polygon {
+  filter: drop-shadow(0 1px 3px rgba(85, 58, 35, 0.22));
+  transition: fill-opacity var(--ui-transition);
+}
+
+.heritage-polygon:hover {
+  fill-opacity: 0.78 !important;
+  cursor: pointer;
+}
+
+.marker-visited .pin-head {
+  background-color: var(--ui-accent) !important;
+  border-color: #fff !important;
+}
+
+@media (min-width: 720px) {
+  .map-utility-rail {
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+  }
+
+  .map-progress-region {
+    width: min(calc(100% - 10rem), 34rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .map-progress-region {
+    left: 0.8rem;
+    width: calc(100% - 5.4rem);
+    transform: none;
+  }
+
+  .map-filter-tabs {
+    width: calc(100% - 1.6rem);
+  }
+
+  .map-action-button {
+    min-width: 6rem;
+    padding-inline: 0.7rem;
+  }
+}
