@@ -13,6 +13,10 @@ describe('app shell', () => {
     expect(document.querySelectorAll('#btnPassport')).toHaveLength(1);
     expect(document.querySelector('[data-app-region="floating-controls"]')?.className).toContain('fixed');
     expect(document.getElementById('landing-page')).toBeTruthy();
+    expect(document.getElementById('map-error-screen')).toBeTruthy();
+    expect(document.querySelectorAll('#chatModal')).toHaveLength(1);
+    expect(document.querySelectorAll('#passportModal')).toHaveLength(1);
+    expect(document.querySelectorAll('#challengeModal')).toHaveLength(1);
     expect(document.getElementById('siteModal')).toBeTruthy();
     expect(document.getElementById('hiddenBadgeTemplate')).toBeTruthy();
   });
