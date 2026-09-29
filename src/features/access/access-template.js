@@ -2,8 +2,8 @@ export function createLandingTemplate() {
   return `<div id="landing-page" class="ui-screen fixed inset-0 z-[6000] overflow-y-auto">
         <main class="landing-shell">
             <header class="landing-hero animate-fade-in">
-                <div class="brand-lockup" aria-label="BWM KUL City Walk">
-                    <span class="brand-mark" aria-hidden="true">BWM</span>
+                <div class="brand-lockup">
+                    <img class="brand-logo" src="/images/branding/BWM%20logo.png" alt="Badan Warisan Malaysia">
                     <span class="ui-kicker">Kuala Lumpur Heritage Walk</span>
                 </div>
                 <h1 class="ui-title">BWM KUL City Walk</h1>
@@ -52,11 +52,8 @@ export function createLandingTemplate() {
             </section>
 
             <footer class="landing-footer">
-                <div class="ui-notice prototype-notice">
-                    <strong>Project prototype</strong>
-                    Developed for Badan Warisan Malaysia. The admin workflow demonstrates a proposed organiser experience and is not currently operated by BWM.
-                </div>
-                <p>A SULAM Project by Universiti Malaya &amp; BWM</p>
+                <p>University of Malaya SULAM project · Prepared for Badan Warisan Malaysia</p>
+                <p class="landing-prototype-note">Prototype experience for project demonstration.</p>
             </footer>
         </main>
     </div>`;
@@ -65,40 +62,44 @@ export function createLandingTemplate() {
 export function createVisitorGateTemplate() {
   return `<div id="gatekeeper" class="ui-screen access-screen fixed inset-0 z-[7000] hidden overflow-y-auto">
         <main class="access-shell">
-            <section class="ui-surface access-card animate-fade-scale" aria-labelledby="visitorAccessTitle">
+            <section class="ui-surface access-card access-card--split animate-fade-scale" aria-labelledby="visitorAccessTitle">
                 <button id="backToHome" type="button" class="access-back-button" aria-label="Back to start">
                     <span aria-hidden="true">←</span> Back
                 </button>
 
-                <div class="access-card__header">
+                <div class="access-card__intro">
                     <p class="ui-kicker">Visitor access</p>
-                    <h2 id="visitorAccessTitle" class="ui-title">Enter your passkey</h2>
-                    <p class="ui-copy">Use the code provided by the organiser to unlock the heritage walk on this device.</p>
+                    <h2 id="visitorAccessTitle" class="ui-title">Your heritage walk starts here.</h2>
+                    <p class="ui-copy">Enter the organiser-issued passkey to open the trail, passport, and AI guide on this device.</p>
+                    <div class="access-feature-list" aria-label="Visitor access includes">
+                        <span>Interactive trail map</span>
+                        <span>Digital heritage passport</span>
+                        <span>AI tour guide</span>
+                    </div>
                 </div>
 
-                <div class="access-form">
-                    <label for="passcodeInput" class="ui-field-label">Visitor passkey</label>
-                    <input
-                        type="text"
-                        id="passcodeInput"
-                        placeholder="AB-12345"
-                        autocomplete="one-time-code"
-                        autocapitalize="characters"
-                        spellcheck="false"
-                        class="ui-field access-code-input"
-                    >
-                    <p class="ui-helper">Codes are case-insensitive and usually include a hyphen.</p>
+                <div class="access-card__panel">
+                    <form class="access-form" onsubmit="return false">
+                        <label for="passcodeInput" class="ui-field-label">Visitor passkey</label>
+                        <input
+                            type="text"
+                            id="passcodeInput"
+                            placeholder="AB-12345"
+                            autocomplete="one-time-code"
+                            autocapitalize="characters"
+                            spellcheck="false"
+                            class="ui-field access-code-input"
+                        >
+                        <p class="ui-helper">Use the code exactly as shared by your organiser.</p>
 
-                    <button id="unlockBtn" class="ui-button ui-button--primary">
-                        Verify and continue
-                        <span aria-hidden="true">→</span>
-                    </button>
-                    <p id="errorMsg" class="access-error hidden" role="alert">Invalid passkey.</p>
-                </div>
+                        <button id="unlockBtn" type="button" class="ui-button ui-button--primary">
+                            Continue
+                            <span aria-hidden="true">→</span>
+                        </button>
+                        <p id="errorMsg" class="access-error hidden" role="alert">Invalid passkey.</p>
+                    </form>
 
-                <div class="ui-notice">
-                    <strong>Why a passkey?</strong>
-                    It helps the organiser control access to the event experience and AI usage.
+                    <p class="access-privacy-note">A local device identifier is used for access validation. No account is required.</p>
                 </div>
             </section>
         </main>
@@ -168,53 +169,56 @@ export function createMapErrorTemplate() {
 export function createAdminTemplate() {
   return `<div id="staff-screen" class="ui-screen access-screen fixed inset-0 z-[7000] hidden overflow-y-auto">
         <main class="access-shell">
-            <section class="ui-surface access-card animate-fade-scale" aria-labelledby="adminTitle">
+            <section class="ui-surface access-card access-card--split animate-fade-scale" aria-labelledby="adminTitle">
                 <button id="closeStaffScreen" type="button" class="access-back-button" aria-label="Back to start">
                     <span aria-hidden="true">←</span> Back
                 </button>
 
-                <div class="access-card__header">
+                <div class="access-card__intro">
                     <p class="ui-kicker">Project admin · prototype</p>
-                    <h2 id="adminTitle" class="ui-title">Organiser tools</h2>
-                    <p class="ui-copy">Protected access for demonstrating the proposed visitor-passkey workflow.</p>
+                    <h2 id="adminTitle" class="ui-title">Organiser workflow demo.</h2>
+                    <p class="ui-copy">This area demonstrates how an organiser could issue visitor passkeys and move between admin tools and the public trail.</p>
+                    <div class="ui-notice ui-notice--accent prototype-notice">
+                        <strong>Project-only feature</strong>
+                        This prototype is maintained for your project demonstration. It is not currently an operational BWM admin portal.
+                    </div>
                 </div>
 
-                <div id="adminLoginForm" class="access-form">
-                    <label for="adminPasswordInput" class="ui-field-label">Admin password</label>
-                    <input
-                        type="password"
-                        id="adminPasswordInput"
-                        autocomplete="current-password"
-                        placeholder="Enter admin password"
-                        class="ui-field"
-                    >
-                    <button id="adminLoginBtn" class="ui-button ui-button--primary">Sign in</button>
-                    <p id="adminErrorMsg" class="access-error hidden" role="alert">Wrong password.</p>
-                </div>
-
-                <div id="adminResult" class="hidden">
-                    <div class="ui-notice prototype-notice">
-                        <strong>Prototype workflow</strong>
-                        This interface demonstrates issuing visitor passkeys and managing event access. It is maintained for project demonstration and is not currently operated by BWM.
+                <div class="access-card__panel">
+                    <div id="adminLoginForm" class="access-form">
+                        <label for="adminPasswordInput" class="ui-field-label">Prototype admin password</label>
+                        <input
+                            type="password"
+                            id="adminPasswordInput"
+                            autocomplete="current-password"
+                            placeholder="Enter password"
+                            class="ui-field"
+                        >
+                        <button id="adminLoginBtn" class="ui-button ui-button--primary">Open admin tools</button>
+                        <p id="adminErrorMsg" class="access-error hidden" role="alert">Wrong password.</p>
+                        <p class="access-privacy-note">The tools remain server-protected even though this is a project prototype.</p>
                     </div>
 
-                    <p class="admin-date" id="passkeyDate"></p>
-                    <div class="passkey-result-card">
-                        <p id="passkeyResult">Click “Generate New Passkey” to create a code</p>
-                        <p id="adminStatusMsg" class="hidden" role="status">New code generated</p>
-                    </div>
+                    <div id="adminResult" class="hidden">
+                        <p class="admin-date" id="passkeyDate"></p>
+                        <div class="passkey-result-card">
+                            <span class="passkey-result-label">Current visitor passkey</span>
+                            <p id="passkeyResult">Generate a passkey to begin</p>
+                            <p id="adminStatusMsg" class="hidden" role="status">New code generated</p>
+                        </div>
 
-                    <div class="access-dialog__actions">
-                        <button id="adminGenerateBtn" class="ui-button ui-button--primary">Generate new passkey</button>
-                        <button id="adminShareBtn" class="ui-button ui-button--secondary hidden">Share via email</button>
-                        <button id="adminSwitchToMapBtn" class="ui-button ui-button--secondary">Switch to map</button>
-                        <button id="adminLogoutBtn" class="ui-button ui-button--quiet">Log out</button>
-                    </div>
+                        <div class="access-dialog__actions">
+                            <button id="adminGenerateBtn" class="ui-button ui-button--primary">Generate new passkey</button>
+                            <button id="adminShareBtn" class="ui-button ui-button--secondary hidden">Share via email</button>
+                            <button id="adminSwitchToMapBtn" class="ui-button ui-button--secondary">Switch to map</button>
+                            <button id="adminLogoutBtn" class="ui-button ui-button--quiet">Log out</button>
+                        </div>
 
-                    <p class="admin-footnote">
-                        AI API usage can be reviewed in the
-                        <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" rel="noopener noreferrer">Google Cloud API Dashboard</a>.
-                    </p>
+                        <p class="admin-footnote">
+                            AI API usage can be reviewed in the
+                            <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" rel="noopener noreferrer">Google Cloud API Dashboard</a>.
+                        </p>
+                    </div>
                 </div>
             </section>
         </main>
