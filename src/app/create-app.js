@@ -8,7 +8,6 @@ import {
 import { createAdminAccess } from '../features/access/admin-access.js';
 import { createDemoAccess } from '../features/access/demo-access.js';
 import { createLandingScreen } from '../features/access/landing-screen.js';
-import { showOnly } from '../features/access/access-ui.js';
 import { createVisitorAccess } from '../features/access/visitor-access.js';
 import { createOpenFreeMapLayer } from '../features/map/basemap.js';
 import { createMapController } from '../features/map/map-controller.js';
@@ -42,6 +41,7 @@ import {
 } from '../services/storage.js';
 import { createModalManager } from '../ui/modal-manager.js';
 import { showToast } from '../ui/toast.js';
+import { createViewController } from './view-controller.js';
 
 let appStartPromise = null;
 let activeSession = getCurrentSession();
@@ -67,6 +67,12 @@ const modalManager = createModalManager({
   appRoot: document.getElementById('app') || document,
   onModalStateChange({ activeModal }) {
     notifyLifecycle({ activeModal });
+  },
+});
+
+const viewController = createViewController({
+  onViewChange(activeView) {
+    notifyLifecycle({ activeView });
   },
 });
 
@@ -255,23 +261,6 @@ function loadScopedState() {
 
 function saveChatHistory() {
   writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
-}
-
-function applySessionChrome() {
-  const isAdmin = activeSession?.role === 'admin';
-  const allowedUI = new Set(activeSession?.allowedUI || []);
-
-  document.documentElement.classList.toggle('jejak-hide-staff', !isAdmin);
-
-  [
-    ['btnChat', 'chat'],
-    ['btnPassport', 'passport'],
-    ['btnChallenge', 'challenge'],
-  ].forEach(([id, capability]) => {
-    document.getElementById(id)?.classList.toggle('hidden', !allowedUI.has(capability));
-  });
-
-  document.getElementById('btnAdminToggle')?.classList.toggle('hidden', !isAdmin);
 }
 
 function setupTextSizeControls() {
@@ -535,8 +524,7 @@ function showAdminTools() {
 }
 
 function showAdminCode() {
-  showOnly(['staff-screen']);
-  notifyLifecycle({ activeView: 'admin' });
+  viewController.transitionTo('admin');
 }
 
 async function checkForURLPasskey() {
@@ -551,16 +539,6 @@ async function checkForURLPasskey() {
   const input = document.getElementById('passcodeInput');
   if (input) input.value = code;
   await showPlatformWarning();
-}
-
-function setMapChromeVisible(visible) {
-  document.querySelectorAll('[data-map-chrome]').forEach((element) => {
-    element.classList.toggle('hidden', !visible);
-    element.setAttribute('aria-hidden', String(!visible));
-  });
-  const mapElement = document.getElementById('map');
-  mapElement?.classList.toggle('hidden', !visible);
-  mapElement?.setAttribute('aria-hidden', String(!visible));
 }
 
 async function syncActiveSession() {
@@ -583,12 +561,9 @@ async function syncActiveSession() {
 
 async function showMapExperience() {
   await syncActiveSession();
-  notifyLifecycle({ activeView: 'map' });
-  applySessionChrome();
+  viewController.applySessionCapabilities(activeSession);
   loadScopedState();
-
-  showOnly([]);
-  setMapChromeVisible(true);
+  viewController.transitionTo('map');
 
   setupGameUIListeners();
   await mapController.initMap();
@@ -612,9 +587,7 @@ async function openMapSafely() {
   } catch (error) {
     console.error('Unable to load the heritage map:', error);
     mapController.destroyMap();
-    setMapChromeVisible(false);
-    showOnly(['map-error-screen']);
-    notifyLifecycle({ activeView: 'map-error' });
+    viewController.transitionTo('map-error');
 
     const message = document.getElementById('mapErrorMessage');
     if (message) {
@@ -631,20 +604,15 @@ async function openMapSafely() {
 
 function showAdminExperience() {
   mapController.destroyMap();
-  setMapChromeVisible(false);
-  notifyLifecycle({ activeView: 'admin' });
-  applySessionChrome();
-  showOnly(['staff-screen']);
+  viewController.applySessionCapabilities(activeSession);
+  viewController.transitionTo('admin');
   bindAdminUI();
   showAdminTools();
 }
 
 function showLandingPage() {
   mapController.destroyMap();
-  setMapChromeVisible(false);
-  notifyLifecycle({ activeView: 'landing' });
-  document.documentElement.classList.remove('jejak-hide-staff');
-  showOnly(['landing-page']);
+  viewController.transitionTo('landing');
 }
 
 function setupAccessFlow() {
@@ -660,7 +628,9 @@ function setupAccessFlow() {
   });
 
   const landingScreen = createLandingScreen({
-    notifyLifecycle,
+    notifyLifecycle({ activeView }) {
+      if (activeView) viewController.transitionTo(activeView);
+    },
     async onExploreDemo() {
       try {
         await demoAccess.start();
