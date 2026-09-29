@@ -1,33 +1,68 @@
+export const GOOGLE_MAPS_MODE = Object.freeze({
+  TRANSIT: 'transit',
+  WALK: 'walk',
+  RESTAURANTS: 'restaurants',
+  HOTELS: 'hotels',
+});
+
+function assertCoordinate(value, min, max, label) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < min || number > max) {
+    throw new RangeError(`Invalid ${label} coordinate.`);
+  }
+  return number;
+}
+
+function mapsUrl(path, params) {
+  const url = new URL(path, 'https://www.google.com');
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== '') {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  return url.toString();
+}
+
 export function buildGoogleMapsUrls(lat, lon, mode) {
-  const destination = `${lat},${lon}`;
+  const latitude = assertCoordinate(lat, -90, 90, 'latitude');
+  const longitude = assertCoordinate(lon, -180, 180, 'longitude');
+  const destination = `${latitude},${longitude}`;
 
-  if (mode === 'directions' || mode === 'transit') {
+  if (mode === 'directions' || mode === GOOGLE_MAPS_MODE.TRANSIT) {
     return {
-      externalUrl: `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`,
-      embedUrl: `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=r&output=embed`,
+      kind: 'route',
+      externalUrl: mapsUrl('/maps/dir/', {
+        api: 1,
+        destination,
+        travelmode: 'transit',
+      }),
+      embedUrl: `https://maps.google.com/maps?saddr=My+Location&daddr=${encodeURIComponent(destination)}&t=m&z=15&dirflg=r&output=embed`,
     };
   }
 
-  if (mode === 'walk') {
+  if (mode === GOOGLE_MAPS_MODE.WALK) {
     return {
-      externalUrl: `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`,
-      embedUrl: `https://maps.google.com/maps?saddr=My+Location&daddr=${destination}&t=m&z=15&dirflg=w&output=embed`,
+      kind: 'route',
+      externalUrl: mapsUrl('/maps/dir/', {
+        api: 1,
+        destination,
+        travelmode: 'walking',
+      }),
+      embedUrl: `https://maps.google.com/maps?saddr=My+Location&daddr=${encodeURIComponent(destination)}&t=m&z=15&dirflg=w&output=embed`,
     };
   }
 
-  if (mode === 'restaurants') {
+  if (mode === GOOGLE_MAPS_MODE.RESTAURANTS || mode === GOOGLE_MAPS_MODE.HOTELS) {
+    const label = mode === GOOGLE_MAPS_MODE.RESTAURANTS ? 'restaurants' : 'hotels';
     return {
-      externalUrl: `https://www.google.com/maps/search/restaurants/@${lat},${lon},16z`,
-      embedUrl: `https://maps.google.com/maps?q=restaurants&sll=${lat},${lon}&t=m&z=16&output=embed`,
+      kind: 'search',
+      externalUrl: mapsUrl('/maps/search/', {
+        api: 1,
+        query: `${label} near ${destination}`,
+      }),
+      embedUrl: null,
     };
   }
 
-  if (mode === 'hotels') {
-    return {
-      externalUrl: `https://www.google.com/maps/search/hotels/@${lat},${lon},16z`,
-      embedUrl: `https://maps.google.com/maps?q=hotels&sll=${lat},${lon}&t=m&z=16&output=embed`,
-    };
-  }
-
-  return { externalUrl: '', embedUrl: '' };
+  throw new RangeError(`Unsupported Google Maps mode: ${mode}`);
 }

@@ -18,16 +18,39 @@ describe('scoped storage keys', () => {
 describe('Google Maps URL builder', () => {
   it('builds walking directions URLs', () => {
     const urls = buildGoogleMapsUrls(3.1484, 101.6947, 'walk');
+    const external = new URL(urls.externalUrl);
 
-    expect(urls.externalUrl).toContain('travelmode=walking');
+    expect(urls.kind).toBe('route');
+    expect(external.pathname).toBe('/maps/dir/');
+    expect(external.searchParams.get('api')).toBe('1');
+    expect(external.searchParams.get('destination')).toBe('3.1484,101.6947');
+    expect(external.searchParams.get('travelmode')).toBe('walking');
     expect(urls.embedUrl).toContain('dirflg=w');
   });
 
-  it('builds nearby restaurant search URLs centered on the site', () => {
+  it('builds keyless restaurant search URLs centered on the site', () => {
     const urls = buildGoogleMapsUrls(3.1484, 101.6947, 'restaurants');
+    const external = new URL(urls.externalUrl);
 
-    expect(urls.externalUrl).toContain('/search/restaurants/@3.1484,101.6947,16z');
-    expect(urls.embedUrl).toContain('sll=3.1484,101.6947');
+    expect(urls.kind).toBe('search');
+    expect(external.pathname).toBe('/maps/search/');
+    expect(external.searchParams.get('api')).toBe('1');
+    expect(external.searchParams.get('query')).toBe('restaurants near 3.1484,101.6947');
+    expect(urls.embedUrl).toBeNull();
+  });
+
+  it('builds keyless hotel search URLs centered on the site', () => {
+    const urls = buildGoogleMapsUrls(3.1484, 101.6947, 'hotels');
+    const external = new URL(urls.externalUrl);
+
+    expect(external.searchParams.get('query')).toBe('hotels near 3.1484,101.6947');
+    expect(urls.embedUrl).toBeNull();
+  });
+
+  it('rejects invalid coordinates and unsupported modes', () => {
+    expect(() => buildGoogleMapsUrls(91, 101.6947, 'restaurants')).toThrow('Invalid latitude coordinate');
+    expect(() => buildGoogleMapsUrls(3.1484, 181, 'hotels')).toThrow('Invalid longitude coordinate');
+    expect(() => buildGoogleMapsUrls(3.1484, 101.6947, 'banana')).toThrow('Unsupported Google Maps mode');
   });
 });
 

@@ -22,8 +22,8 @@ describe('Site Modal Logic', () => {
       <div id="more"></div>
       <button id="moreButton"></button>
       <div id="moreContent"></div>
-      <a id="food"></a>
-      <a id="hotel"></a>
+      <button id="food"></button>
+      <button id="hotel"></button>
       <p id="hintText"></p>
     `;
 
@@ -95,8 +95,8 @@ describe('Site Modal Logic', () => {
       <div id="more"></div>
       <button id="moreButton"></button>
       <div id="moreContent"></div>
-      <a id="food"></a>
-      <a id="hotel"></a>
+      <button id="food"></button>
+      <button id="hotel"></button>
       <p id="hintText"></p>
     `;
 
@@ -165,8 +165,8 @@ describe('Site Modal Logic', () => {
       <div id="more"></div>
       <button id="moreButton"></button>
       <div id="moreContent"></div>
-      <a id="food"></a>
-      <a id="hotel"></a>
+      <button id="food"></button>
+      <button id="hotel"></button>
       <p id="hintText"></p>
     `;
     const actions = {
@@ -214,5 +214,7 @@ describe('Site Modal Logic', () => {
     expect(actions.openDirections).toHaveBeenCalledWith(site);
     expect(actions.openFood).toHaveBeenCalledWith(site);
     expect(actions.openHotels).toHaveBeenCalledWith(site);
+    expect(document.getElementById('food').tagName).toBe('BUTTON');
+    expect(document.getElementById('hotel').tagName).toBe('BUTTON');
   });
 });
