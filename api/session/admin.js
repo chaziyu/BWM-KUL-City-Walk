@@ -1,4 +1,5 @@
 const {
+    createQuotaSubject,
     createSessionPayload,
     getSafeSessionDetails,
     setSessionCookie
@@ -34,7 +35,8 @@ module.exports = async (request, response) => {
         const maxAge = Number(process.env.ADMIN_SESSION_MAX_AGE) || 60 * 60;
         const session = createSessionPayload('admin', {
             accessType: 'project-admin-prototype',
-            maxAge
+            maxAge,
+            quotaSubject: createQuotaSubject('project-admin')
         });
 
         setSessionCookie(response, session, maxAge);
