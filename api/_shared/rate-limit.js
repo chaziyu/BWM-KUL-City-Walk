@@ -112,6 +112,10 @@ async function getQuotaRemaining(key, maxQuota) {
 
 async function consumeQuota(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
     const exceeded = await isQuotaExceeded(key, maxQuota, expireMs);
+    if (exceeded && maxQuota > 0) {
+        await refundQuota(key);
+    }
+
     return {
         exceeded,
         remaining: await getQuotaRemaining(key, maxQuota),
