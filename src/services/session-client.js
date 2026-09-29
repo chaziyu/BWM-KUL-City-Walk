@@ -1,5 +1,10 @@
+// @ts-check
+
+/** @typedef {import('../types/domain.js').AppSession} AppSession */
+
 import { parseApiResponse } from './api-client.js';
 
+/** @type {AppSession} */
 const DEFAULT_SESSION = {
     authenticated: false,
     role: 'guest',
@@ -11,6 +16,10 @@ const DEFAULT_SESSION = {
 
 let currentSession = { ...DEFAULT_SESSION };
 
+/**
+ * @param {Partial<AppSession> | null | undefined} session
+ * @returns {AppSession}
+ */
 function normalizeSession(session) {
     if (!session || !session.authenticated) return { ...DEFAULT_SESSION };
     return {
@@ -25,6 +34,10 @@ export function getCurrentSession() {
     return currentSession;
 }
 
+/**
+ * @param {Partial<AppSession> | null | undefined} session
+ * @returns {AppSession}
+ */
 export function setCurrentSession(session) {
     currentSession = normalizeSession(session);
     return currentSession;
