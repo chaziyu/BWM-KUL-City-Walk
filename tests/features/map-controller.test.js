@@ -37,6 +37,8 @@ describe('map controller', () => {
     const groups = [];
     const markers = [];
     const polygons = [];
+    const basemapLayer = { addTo: vi.fn() };
+    const createBasemapLayer = vi.fn(() => basemapLayer);
     const L = {
       layerGroup: vi.fn(() => {
         const layer = createLayer();
@@ -101,12 +103,34 @@ describe('map controller', () => {
     const controller = createMapController({
       L,
       loadSites: () => Promise.resolve(sites),
+      createBasemapLayer,
       getIsCompleted: () => false,
       onSiteSelected,
     });
 
-    return { controller, groups, mapLayers, markers, onSiteSelected, polygons };
+    return {
+      basemapLayer,
+      controller,
+      createBasemapLayer,
+      groups,
+      L,
+      map,
+      mapLayers,
+      markers,
+      onSiteSelected,
+      polygons,
+    };
   }
+
+  it('uses the injected vector basemap instead of a CARTO raster tile layer', async () => {
+    const { basemapLayer, controller, createBasemapLayer, L, map } = setup(15);
+
+    await controller.initMap();
+
+    expect(createBasemapLayer).toHaveBeenCalledOnce();
+    expect(basemapLayer.addTo).toHaveBeenCalledWith(map);
+    expect(L.tileLayer).not.toHaveBeenCalled();
+  });
 
   it('shows filtered markers below the polygon threshold', async () => {
     const { controller, groups, mapLayers, markers } = setup(15);
