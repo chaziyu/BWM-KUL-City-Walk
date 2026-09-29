@@ -1,54 +1,68 @@
 const { Redis } = require('@upstash/redis');
+const { getRedisConfig, isProduction } = require('./config');
+const { logEvent, sanitizeLogValue } = require('./observability');
 
-// Initialize Redis if URL and token are present
 let redis = null;
-try {
-    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-        redis = new Redis({
-            url: process.env.KV_REST_API_URL,
-            token: process.env.KV_REST_API_TOKEN,
-        });
-    }
-} catch (error) {
-    console.warn('Failed to initialize Upstash Redis. Falling back to memory.', error);
+let degradedStorageLogged = false;
+
+function reportDegradedStorage(reason, error) {
+    if (!isProduction() || degradedStorageLogged) return;
+    degradedStorageLogged = true;
+    logEvent('warn', 'quota:storage-degraded', {
+        backend: 'memory',
+        reason,
+        error: error ? sanitizeLogValue(error.message || error) : null,
+    });
 }
 
-// In-memory fallbacks for development/missing KV
+const redisConfig = getRedisConfig();
+try {
+    if (redisConfig.configured) {
+        redis = new Redis({
+            url: redisConfig.url,
+            token: redisConfig.token,
+        });
+    } else {
+        reportDegradedStorage(
+            redisConfig.partiallyConfigured ? 'redis-partially-configured' : 'redis-not-configured',
+        );
+    }
+} catch (error) {
+    reportDegradedStorage('redis-initialization-failed', error);
+}
+
 const rateBuckets = new Map();
 const quotaBuckets = new Map();
 
-/**
- * Validates against a sliding window rate limit.
- * @param {string} key Identifier (e.g., IP address)
- * @param {number} maxRequests Max requests allowed in the window
- * @param {number} windowMs Window length in milliseconds
- * @returns {Promise<boolean>} True if rate limited (exceeded max)
- */
 async function isRateLimited(key, maxRequests, windowMs) {
     const now = Date.now();
-    
+
     if (redis) {
         try {
-            // Redis sorted set approach for sliding window
             const redisKey = `ratelimit:${key}`;
             const windowStart = now - windowMs;
-            
-            const pipeline = redis.pipeline();
-            pipeline.zremrangebyscore(redisKey, 0, windowStart);
-            pipeline.zcard(redisKey);
-            pipeline.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` });
-            pipeline.pexpire(redisKey, windowMs);
-            
-            const results = await pipeline.exec();
-            const count = results[1]; // The zcard result
-            
-            return count >= maxRequests;
+
+            const cleanup = redis.pipeline();
+            cleanup.zremrangebyscore(redisKey, 0, windowStart);
+            cleanup.zcard(redisKey);
+            const cleanupResults = await cleanup.exec();
+            const count = Number(cleanupResults[1]) || 0;
+
+            if (count >= maxRequests) return true;
+
+            const record = redis.pipeline();
+            record.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` });
+            record.pexpire(redisKey, windowMs);
+            await record.exec();
+            return false;
         } catch (error) {
-            console.error('Redis rate limiting error, falling back to memory:', error);
+            logEvent('error', 'quota:redis-rate-limit-error', {
+                message: sanitizeLogValue(error.message || error),
+            });
+            reportDegradedStorage('redis-rate-limit-error', error);
         }
     }
 
-    // In-memory fallback
     const bucket = rateBuckets.get(key) || [];
     const recent = bucket.filter(timestamp => now - timestamp < windowMs);
 
@@ -62,13 +76,6 @@ async function isRateLimited(key, maxRequests, windowMs) {
     return false;
 }
 
-/**
- * Validates against a quota limit for a given key over a fixed duration.
- * @param {string} key Unique identifier for the quota bucket (e.g., session + date)
- * @param {number} maxQuota Max items allowed in the quota
- * @param {number} expireMs Optional expiration for the quota bucket
- * @returns {Promise<boolean>} True if quota exceeded
- */
 async function isQuotaExceeded(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
     if (maxQuota <= 0) return true;
 
@@ -76,18 +83,20 @@ async function isQuotaExceeded(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
         try {
             const redisKey = `quota:${key}`;
             const count = await redis.incr(redisKey);
-            
+
             if (count === 1 && expireMs) {
                 await redis.pexpire(redisKey, expireMs);
             }
-            
+
             return count > maxQuota;
         } catch (error) {
-            console.error('Redis quota error, falling back to memory:', error);
+            logEvent('error', 'quota:redis-consume-error', {
+                message: sanitizeLogValue(error.message || error),
+            });
+            reportDegradedStorage('redis-consume-error', error);
         }
     }
 
-    // In-memory fallback
     const count = quotaBuckets.get(key) || 0;
     const nextCount = count + 1;
     quotaBuckets.set(key, nextCount);
@@ -102,7 +111,10 @@ async function getQuotaRemaining(key, maxQuota) {
             const count = Number(await redis.get(`quota:${key}`)) || 0;
             return Math.max(0, maxQuota - count);
         } catch (error) {
-            console.error('Redis quota read error, falling back to memory:', error);
+            logEvent('error', 'quota:redis-read-error', {
+                message: sanitizeLogValue(error.message || error),
+            });
+            reportDegradedStorage('redis-read-error', error);
         }
     }
 
@@ -129,7 +141,10 @@ async function refundQuota(key) {
             if (count < 0) await redis.set(redisKey, 0);
             return;
         } catch (error) {
-            console.error('Redis quota refund error, falling back to memory:', error);
+            logEvent('error', 'quota:redis-refund-error', {
+                message: sanitizeLogValue(error.message || error),
+            });
+            reportDegradedStorage('redis-refund-error', error);
         }
     }
 
@@ -140,6 +155,7 @@ async function refundQuota(key) {
 function resetMemoryBucketsForTests() {
     rateBuckets.clear();
     quotaBuckets.clear();
+    degradedStorageLogged = false;
 }
 
 module.exports = {
@@ -148,5 +164,5 @@ module.exports = {
     isRateLimited,
     isQuotaExceeded,
     refundQuota,
-    resetMemoryBucketsForTests
+    resetMemoryBucketsForTests,
 };

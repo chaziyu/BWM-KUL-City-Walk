@@ -6,7 +6,6 @@ function shuffle(items) {
 }
 
 export function createSiteModalController({
-  strings,
   actions,
   progressService,
   getChallengeState,

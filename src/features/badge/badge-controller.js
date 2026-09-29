@@ -1,7 +1,12 @@
 import { captureAndDownloadBadge } from './badge-exporter.js';
 import { BadgeUploadError, DEFAULT_BADGE_AVATAR, readFileAsDataUrl, waitForImage } from './badge-renderer.js';
 
-export function createBadgeController({ modalManager, progressService, strings }) {
+export function createBadgeController({
+  modalManager,
+  progressService,
+  strings,
+  captureBadge = captureAndDownloadBadge,
+}) {
   function bind() {
     const openButtons = [
       document.getElementById('createBadgeFromPassportBtn'),
@@ -53,7 +58,7 @@ export function createBadgeController({ modalManager, progressService, strings }
       badgeDate.textContent = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
       badgePhoto.src = photoInput?.files?.[0] ? await readFileAsDataUrl(photoInput.files[0]) : DEFAULT_BADGE_AVATAR;
       await waitForImage(badgePhoto);
-      await captureAndDownloadBadge({ progressService, strings });
+      await captureBadge({ progressService, strings });
       document.getElementById('chaChingSound')?.play?.();
     } catch (error) {
       console.error('Badge generation failed', error);

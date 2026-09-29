@@ -31,8 +31,9 @@ describe('admin access sharing', () => {
     });
 
     document.getElementById('generate').click();
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.waitFor(() => {
+      expect(document.getElementById('result').textContent).toBe('AB-12345');
+    });
     document.getElementById('share').click();
 
     const url = window.open.mock.calls[0][0];

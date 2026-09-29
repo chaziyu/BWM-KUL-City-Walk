@@ -1,3 +1,5 @@
+import { parseApiResponse } from './api-client.js';
+
 const DEFAULT_SESSION = {
     authenticated: false,
     role: 'guest',
@@ -8,14 +10,6 @@ const DEFAULT_SESSION = {
 };
 
 let currentSession = { ...DEFAULT_SESSION };
-
-async function parseJson(response) {
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(data.error || data.reply || 'Session request failed.');
-    }
-    return data;
-}
 
 function normalizeSession(session) {
     if (!session || !session.authenticated) return { ...DEFAULT_SESSION };
@@ -41,7 +35,7 @@ export async function refreshSession() {
         method: 'GET',
         credentials: 'same-origin'
     });
-    return setCurrentSession(await parseJson(response));
+    return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
 export async function startDemoSession() {
@@ -49,7 +43,7 @@ export async function startDemoSession() {
         method: 'POST',
         credentials: 'same-origin'
     });
-    return setCurrentSession(await parseJson(response));
+    return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
 export async function startVisitorSession(passkey, deviceId) {
@@ -59,7 +53,7 @@ export async function startVisitorSession(passkey, deviceId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passkey, deviceId })
     });
-    return setCurrentSession(await parseJson(response));
+    return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
 export async function startAdminSession(password) {
@@ -69,7 +63,7 @@ export async function startAdminSession(password) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
     });
-    return setCurrentSession(await parseJson(response));
+    return setCurrentSession(await parseApiResponse(response, 'Session request failed.'));
 }
 
 export async function endSession() {

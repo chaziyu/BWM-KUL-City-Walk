@@ -2,8 +2,11 @@
 // Vite only exposes client variables prefixed with VITE_.
 const env = import.meta.env || {};
 
-function numberSetting(name, fallback) {
-  const value = Number(env[name]);
+export function numberSetting(name, fallback) {
+  const raw = env[name];
+  if (raw === undefined || raw === null || String(raw).trim() === '') return fallback;
+
+  const value = Number(raw);
   return Number.isFinite(value) ? value : fallback;
 }
 

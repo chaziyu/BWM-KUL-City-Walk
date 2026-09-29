@@ -10,13 +10,14 @@ export function createChatController({
   getSiteName,
   modalManager,
   onSourceClick,
+  renderMarkdown,
   saveHistory,
   setHistory,
   setMessageCount,
   strings,
 }) {
   const service = createChatService({ deviceId });
-  const ui = createChatUI({ strings, getSiteName, onSourceClick });
+  const ui = createChatUI({ strings, getSiteName, onSourceClick, renderMarkdown });
   let activeContext = { type: 'general' };
 
   function getScopeKey(context = activeContext) {

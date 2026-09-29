@@ -39,9 +39,6 @@ export default [
         FileReader: 'readonly',
         alert: 'readonly',
         L: 'readonly',
-        confetti: 'readonly',
-        html2canvas: 'readonly',
-        marked: 'readonly',
       },
     },
     rules: {
@@ -51,7 +48,7 @@ export default [
     },
   },
   {
-    files: ['api/**/*.js', 'scripts/**/*.js', 'general_knowledge.js'],
+    files: ['api/**/*.js', 'scripts/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: {
@@ -68,6 +65,16 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
       },
+    },
+  },
+  {
+    files: ['src/**/*.js', 'api/**/*.js'],
+    rules: {
+      'no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   {

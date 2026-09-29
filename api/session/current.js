@@ -1,16 +1,17 @@
+const { requireMethod } = require('../_shared/http');
+const { attachRequestContext, logEvent, sanitizeLogValue } = require('../_shared/observability');
+const { getQuotaRemaining } = require('../_shared/rate-limit');
+const { getQuotaKey } = require('../_shared/chat-quota');
 const {
     ROLE_LIMITS,
     clearSessionCookie,
     getSafeSessionDetails,
-    getSessionFromRequest
+    getSessionFromRequest,
 } = require('../_shared/session');
-const { getQuotaRemaining } = require('../_shared/rate-limit');
-const { getQuotaKey } = require('../_shared/chat-quota');
 
 module.exports = async (request, response) => {
-    if (request.method !== 'GET') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
+    const requestId = attachRequestContext(request, response);
+    if (!requireMethod(request, response, 'GET')) return;
 
     try {
         const session = getSessionFromRequest(request);
@@ -22,11 +23,14 @@ module.exports = async (request, response) => {
         const details = getSafeSessionDetails(session);
         details.remainingQuota = await getQuotaRemaining(
             getQuotaKey(session),
-            ROLE_LIMITS[session.role] || 0
+            ROLE_LIMITS[session.role] || 0,
         );
         return response.status(200).json(details);
     } catch (error) {
-        console.error('Error reading session:', error);
+        logEvent('error', 'session:read-failed', {
+            requestId,
+            message: sanitizeLogValue(error.message || error),
+        });
         clearSessionCookie(response);
         return response.status(200).json(getSafeSessionDetails(null));
     }

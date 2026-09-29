@@ -131,10 +131,8 @@ Use `vercel dev` for passkey, admin, and chat testing because those flows depend
 ### Build and Test Commands
 
 ```bash
-npm run lint
-npm run test
-npm run validate:data
-npm run build
+npm run check
+npm run test:browser
 npm run preview
 ```
 
@@ -216,17 +214,17 @@ BWM-KUL-City-Walk/
 │       └── sites/          # Heritage site photos
 ├── src/
 │   ├── main.js             # Browser dependency bootstrap
-│   ├── app/                # App bootstrap and shared app helpers
-│   ├── config/             # Runtime configuration
+│   ├── app/                # Composition root, app state, lifecycle, and view controller
+│   ├── config/             # Runtime configuration and localization
 │   ├── features/           # Feature modules split by domain
 │   ├── services/           # Browser service clients and storage helpers
 │   ├── styles/             # Tailwind, Leaflet, and app CSS imports
 │   └── utils/              # Extracted low-risk utility modules
-├── app.js                  # Legacy app controller, being modularized gradually
 ├── scripts/validate-data.js
 ├── tests/                  # Vitest unit/data tests
 ├── api/
-│   ├── _shared/            # Shared serverless helpers
+│   ├── _shared/            # Config, HTTP, security, observability, quota and AI helpers
+│   ├── health.js           # Secret-free deployment/config health status
 │   ├── chat.js             # Serverless AI chat endpoint
 │   ├── session/            # Demo, visitor, admin, current, logout session APIs
 │   └── admin/              # Protected admin prototype APIs
@@ -238,9 +236,9 @@ BWM-KUL-City-Walk/
 
 ## Architecture
 
-The frontend remains Vanilla JavaScript. Vite builds the browser entry, bundles local dependencies, and emits hashed production assets in `dist/`. The large legacy controller is still present, but Phase 2 extraction has started with shared utility modules, browser services, app bootstrap helpers, and feature folders.
+The frontend remains a Vanilla JavaScript modular monolith. Vite builds `src/main.js`, while `src/app/` owns composition, lifecycle state, and view transitions. Feature controllers live under `src/features/`; browser infrastructure is isolated under `src/services/` and `src/ui/`.
 
-`api/` remains outside `src/` because those files are Vercel serverless functions.
+`api/` remains outside `src/` because those files are Vercel serverless functions. Shared API concerns such as environment parsing, HTTP contracts, same-origin enforcement, request correlation, quota storage, and AI provider logic live under `api/_shared/`.
 
 ## Access Model
 
@@ -327,7 +325,7 @@ Edit this file to add/modify heritage sites:
 }
 ```
 
-### Localization (`localization.js`)
+### Localization (`src/config/localization.js`)
 Update UI strings for internationalization support.
 
 ---

@@ -1,3 +1,5 @@
+import { parseApiResponse } from '../../services/api-client.js';
+
 export function createChatService({ deviceId, fetchImpl = fetch }) {
   return {
     async send({ userQuery, context, history }) {
@@ -10,17 +12,16 @@ export function createChatService({ deviceId, fetchImpl = fetch }) {
         },
         body: JSON.stringify({ userQuery, context, history }),
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const error = new Error(data.reply || data.error || 'AI server error');
-        error.status = response.status;
-        const hasRemainingQuota = data.remainingQuota !== null
-          && data.remainingQuota !== undefined
-          && Number.isFinite(Number(data.remainingQuota));
-        if (hasRemainingQuota) error.remainingQuota = Number(data.remainingQuota);
+      try {
+        return await parseApiResponse(response, 'AI server error');
+      } catch (error) {
+        const remainingQuota = error?.data?.remainingQuota;
+        const hasRemainingQuota = remainingQuota !== null
+          && remainingQuota !== undefined
+          && Number.isFinite(Number(remainingQuota));
+        if (hasRemainingQuota) error.remainingQuota = Number(remainingQuota);
         throw error;
       }
-      return data;
     },
   };
 }

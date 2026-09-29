@@ -1,3 +1,4 @@
+import { parseApiResponse } from '../../services/api-client.js';
 import { bindEnterKey, setButtonState, setMessage } from './access-ui.js';
 
 export function createAdminAccess({
@@ -44,8 +45,8 @@ export function createAdminAccess({
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
           });
-          const result = await response.json();
-          if (!response.ok || !result.success) throw new Error(result.error || 'Check password');
+          const result = await parseApiResponse(response, 'Passkey generation failed.');
+          if (!result.success) throw new Error(result.error || 'Passkey generation failed.');
           lastGeneratedCode = result.passkey || result.code;
           if (resultText) resultText.textContent = lastGeneratedCode;
           if (statusMsg) {

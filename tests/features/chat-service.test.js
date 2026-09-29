@@ -25,12 +25,18 @@ describe('chat service', () => {
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: false,
       status: 401,
-      json: () => Promise.resolve({ reply: 'Session expired' }),
+      headers: { get: () => 'req-session' },
+      json: () => Promise.resolve({ code: 'AUTH_REQUIRED', reply: 'Session expired' }),
     });
     const service = createChatService({ deviceId: 'device-1', fetchImpl });
 
     await expect(service.send({ userQuery: 'Hello', context: {}, history: [] }))
-      .rejects.toMatchObject({ message: 'Session expired', status: 401 });
+      .rejects.toMatchObject({
+        message: 'Session expired',
+        status: 401,
+        code: 'AUTH_REQUIRED',
+        requestId: 'req-session',
+      });
     try {
       await service.send({ userQuery: 'Hello', context: {}, history: [] });
     } catch (error) {

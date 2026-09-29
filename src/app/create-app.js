@@ -4,29 +4,29 @@ import {
   MAX_FONT_SIZE,
   MAX_MESSAGES_PER_SESSION,
   ZOOM,
-} from './src/config/app-config.js';
-import { createAdminAccess } from './src/features/access/admin-access.js';
-import { createDemoAccess } from './src/features/access/demo-access.js';
-import { createLandingScreen } from './src/features/access/landing-screen.js';
-import { showOnly } from './src/features/access/access-ui.js';
-import { createVisitorAccess } from './src/features/access/visitor-access.js';
-import { createOpenFreeMapLayer } from './src/features/map/basemap.js';
-import { createMapController } from './src/features/map/map-controller.js';
-import { bindMapUI } from './src/features/map/map-ui.js';
-import { createBadgeController } from './src/features/badge/badge-controller.js';
-import { createChallengeController } from './src/features/challenges/challenge-controller.js';
-import { createChatController } from './src/features/chat/chat-controller.js';
-import { createDirectionsController } from './src/features/directions/directions-controller.js';
-import { createOnboardingController } from './src/features/onboarding/onboarding-controller.js';
-import { createPassportController } from './src/features/passport/passport-controller.js';
-import { createProgressService } from './src/features/passport/progress-service.js';
-import { createSiteActions } from './src/features/sites/site-actions.js';
-import { loadSiteData } from './src/features/sites/site-data.js';
-import { getMustVisitSites } from './src/features/sites/site-domain.js';
-import { createSiteModalController } from './src/features/sites/site-modal.js';
-import { createTranslationController } from './src/features/translation/translation-controller.js';
-import { STRINGS } from './localization.js';
-import { migrateData } from './src/services/storage-migration.js';
+} from '../config/app-config.js';
+import { createAdminAccess } from '../features/access/admin-access.js';
+import { createDemoAccess } from '../features/access/demo-access.js';
+import { createPlatformWarningController } from '../features/access/platform-warning-controller.js';
+import { createVisitorAccess } from '../features/access/visitor-access.js';
+import { createOpenFreeMapLayer } from '../features/map/basemap.js';
+import { createMapController } from '../features/map/map-controller.js';
+import { bindMapUI } from '../features/map/map-ui.js';
+import { createBadgeController } from '../features/badge/badge-controller.js';
+import { createChallengeController } from '../features/challenges/challenge-controller.js';
+import { createChatController } from '../features/chat/chat-controller.js';
+import { createDirectionsController } from '../features/directions/directions-controller.js';
+import { createOnboardingController } from '../features/onboarding/onboarding-controller.js';
+import { createPassportController } from '../features/passport/passport-controller.js';
+import { createProgressService } from '../features/passport/progress-service.js';
+import { createSiteActions } from '../features/sites/site-actions.js';
+import { loadSiteData } from '../features/sites/site-data.js';
+import { getMustVisitSites } from '../features/sites/site-domain.js';
+import { createSiteModalController } from '../features/sites/site-modal.js';
+import { createTranslationController } from '../features/translation/translation-controller.js';
+import { STRINGS } from '../config/localization.js';
+import { fireConfetti, renderMarkdown } from '../services/runtime-libs.js';
+import { migrateData } from '../services/storage-migration.js';
 import {
   endSession,
   getCurrentSession,
@@ -34,16 +34,19 @@ import {
   startAdminSession,
   startDemoSession,
   startVisitorSession,
-} from './src/services/session-client.js';
+} from '../services/session-client.js';
 import {
   clearScopedProgress,
   readScopedJSON,
   writeScopedJSON,
-} from './src/services/storage.js';
-import { createModalManager } from './src/ui/modal-manager.js';
-import { showToast } from './src/ui/toast.js';
+} from '../services/storage.js';
+import { createModalManager } from '../ui/modal-manager.js';
+import { showToast } from '../ui/toast.js';
+import { createTextSizeController } from '../ui/text-size-controller.js';
+import { createAccessFlow } from './access-flow.js';
+import { createViewController } from './view-controller.js';
 
-let legacyStartPromise = null;
+let appStartPromise = null;
 let activeSession = getCurrentSession();
 let allSiteData = [];
 let mainSites = [];
@@ -52,9 +55,6 @@ let userMessageCount = 0;
 let solvedRiddle = {};
 let gameUIBound = false;
 let deviceId = localStorage.getItem('bwm_device_id');
-const UI_TEXT_SIZE_KEY = 'jejak_ui_text_size';
-const LEGACY_UI_TEXT_SIZE_KEY = 'ui_text_size';
-
 if (!deviceId) {
   const generatedId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 15);
   deviceId = `device-${generatedId}`;
@@ -67,6 +67,12 @@ const modalManager = createModalManager({
   appRoot: document.getElementById('app') || document,
   onModalStateChange({ activeModal }) {
     notifyLifecycle({ activeModal });
+  },
+});
+
+const viewController = createViewController({
+  onViewChange(activeView) {
+    notifyLifecycle({ activeView });
   },
 });
 
@@ -98,11 +104,10 @@ const passportController = createPassportController({
   modalManager,
   getCongratsModal: () => document.getElementById('congratsModal'),
   playCelebration() {
-    if (typeof confetti !== 'function') return;
     const end = Date.now() + 3000;
     (function frame() {
-      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+      void fireConfetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+      void fireConfetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
       if (Date.now() < end) requestAnimationFrame(frame);
     })();
   },
@@ -116,6 +121,7 @@ const chatController = createChatController({
   getSiteName: (siteId) => allSiteData.find((site) => String(site.id) === String(siteId))?.name,
   historyWindowSize: HISTORY_WINDOW_SIZE,
   modalManager,
+  renderMarkdown,
   onSourceClick(siteId) {
     const site = allSiteData.find((item) => String(item.id) === String(siteId));
     if (!site) return;
@@ -147,9 +153,7 @@ const challengeController = createChallengeController({
   modalManager,
   onSolved(next) {
     writeScopedJSON('solved_riddle', next, getProgressNamespace());
-    if (typeof confetti === 'function') {
-      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    }
+    void fireConfetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
   },
   setSolvedRiddle(next) {
     solvedRiddle = next;
@@ -174,7 +178,6 @@ const siteActions = createSiteActions({
 });
 
 const siteModalController = createSiteModalController({
-  strings: STRINGS,
   actions: siteActions,
   progressService,
   modalManager,
@@ -202,6 +205,18 @@ const visitorAccess = createVisitorAccess({
   onSession(session) {
     activeSession = session;
     notifyLifecycle({ session: activeSession });
+  },
+});
+
+const textSizeController = createTextSizeController({
+  maxFontSize: MAX_FONT_SIZE,
+});
+
+const platformWarningController = createPlatformWarningController({
+  modalManager,
+  visitorAccess,
+  onAuthenticated() {
+    return openMapSafely();
   },
 });
 
@@ -256,146 +271,6 @@ function loadScopedState() {
 function saveChatHistory() {
   writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
 }
-
-function applySessionChrome() {
-  const isAdmin = activeSession?.role === 'admin';
-  const allowedUI = new Set(activeSession?.allowedUI || []);
-
-  document.documentElement.classList.toggle('jejak-hide-staff', !isAdmin);
-
-  [
-    ['btnChat', 'chat'],
-    ['btnPassport', 'passport'],
-    ['btnChallenge', 'challenge'],
-  ].forEach(([id, capability]) => {
-    document.getElementById(id)?.classList.toggle('hidden', !allowedUI.has(capability));
-  });
-
-  document.getElementById('btnAdminToggle')?.classList.toggle('hidden', !isAdmin);
-}
-
-function setupTextSizeControls() {
-  const btnTextSizeReset = document.getElementById('btnTextSizeReset');
-  const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
-  const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
-  let currentTextSize = Number.parseInt(
-    localStorage.getItem(UI_TEXT_SIZE_KEY) || localStorage.getItem(LEGACY_UI_TEXT_SIZE_KEY) || '100',
-    10,
-  );
-  if (!Number.isFinite(currentTextSize)) currentTextSize = 100;
-
-  function applyTextSize(nextSize) {
-    currentTextSize = Math.min(MAX_FONT_SIZE, Math.max(80, nextSize));
-    document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
-    localStorage.setItem(UI_TEXT_SIZE_KEY, String(currentTextSize));
-  }
-
-  applyTextSize(currentTextSize);
-
-  function bindTextSizeButton(button, delta) {
-    if (!button || button.dataset.bound === 'true') return;
-    button.dataset.bound = 'true';
-    button.addEventListener('click', () => applyTextSize(currentTextSize + delta));
-  }
-
-  bindTextSizeButton(btnTextSizeSmall, -10);
-  bindTextSizeButton(btnTextSizeLarge, 10);
-
-  if (btnTextSizeReset && btnTextSizeReset.dataset.bound !== 'true') {
-    btnTextSizeReset.dataset.bound = 'true';
-    btnTextSizeReset.addEventListener('click', () => applyTextSize(100));
-  }
-}
-
-function setupPlatformWarning() {
-  let pendingPasskey = '';
-
-  function isPwaMode() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
-  }
-
-  function showPwaExplanation() {
-    modalManager.open('pwaExplanationModal');
-    document.getElementById('closePWAExplanation')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
-    document.getElementById('gotItPWABtn')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
-  }
-
-  function getElements() {
-    return {
-      modal: document.getElementById('platformWarningModal'),
-      warningContent: document.querySelector('#warningContent p'),
-      continueBtn: document.getElementById('continueLoginBtn'),
-      cancelBtn: document.getElementById('cancelLoginBtn'),
-      passkeyDisplay: document.getElementById('passkeyDisplay'),
-      copyBtn: document.getElementById('copyPasskeyBtn'),
-      copySuccess: document.getElementById('copySuccess'),
-      whatIsPWABtn: document.getElementById('whatIsPWABtn'),
-    };
-  }
-
-  function bindWarningActions(elements) {
-    const { modal, continueBtn, cancelBtn, passkeyDisplay, copyBtn, copySuccess, whatIsPWABtn } = elements;
-
-    if (copyBtn && copyBtn.dataset.bound !== 'true') {
-      copyBtn.dataset.bound = 'true';
-      copyBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(pendingPasskey);
-          copySuccess?.classList.remove('hidden');
-          setTimeout(() => copySuccess?.classList.add('hidden'), 2000);
-        } catch {
-          passkeyDisplay?.select();
-          document.execCommand('copy');
-        }
-      });
-    }
-
-    if (continueBtn && continueBtn.dataset.bound !== 'true') {
-      continueBtn.dataset.bound = 'true';
-      continueBtn.addEventListener('click', async () => {
-        modalManager.close(modal);
-        const session = await visitorAccess.submit(pendingPasskey, {
-          button: document.getElementById('unlockBtn'),
-          errorElement: document.getElementById('errorMsg'),
-        });
-        if (session?.authenticated) await openMapSafely();
-      });
-    }
-
-    if (cancelBtn && cancelBtn.dataset.bound !== 'true') {
-      cancelBtn.dataset.bound = 'true';
-      cancelBtn.addEventListener('click', () => {
-        modalManager.close(modal);
-        const passcodeInput = document.getElementById('passcodeInput');
-        if (passcodeInput) passcodeInput.value = '';
-      });
-    }
-
-    if (whatIsPWABtn && whatIsPWABtn.dataset.bound !== 'true') {
-      whatIsPWABtn.dataset.bound = 'true';
-      whatIsPWABtn.addEventListener('click', showPwaExplanation);
-    }
-  }
-
-  return async function showPlatformWarning() {
-    const elements = getElements();
-    const { modal, warningContent, passkeyDisplay } = elements;
-    const passcodeInput = document.getElementById('passcodeInput');
-    pendingPasskey = passcodeInput?.value || '';
-    if (passkeyDisplay) passkeyDisplay.value = pendingPasskey;
-
-    if (warningContent) {
-      warningContent.textContent = isPwaMode()
-        ? 'You are using the installed app view. Your passkey will be validated with this device.'
-        : 'You are using the browser view. Your passkey will be validated with this device.';
-    }
-
-    modalManager.open(modal);
-    bindWarningActions(elements);
-  };
-}
-
-const showPlatformWarning = setupPlatformWarning();
 
 function setupGameUIListeners() {
   if (gameUIBound) return;
@@ -503,7 +378,7 @@ function setupGameUIListeners() {
     modalManager.closeTopmost();
   });
 
-  setupTextSizeControls();
+  textSizeController.bind();
   chatController.loadHistory();
 }
 
@@ -534,35 +409,6 @@ function showAdminTools() {
   document.getElementById('btnAdminToggle')?.classList.remove('hidden');
 }
 
-function showAdminCode() {
-  showOnly(['staff-screen']);
-  notifyLifecycle({ activeView: 'admin' });
-}
-
-async function checkForURLPasskey() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  if (!code || activeSession?.authenticated) return;
-
-  const cleanUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-  window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-  showOnly(['gatekeeper']);
-  notifyLifecycle({ activeView: 'gatekeeper' });
-  const input = document.getElementById('passcodeInput');
-  if (input) input.value = code;
-  await showPlatformWarning();
-}
-
-function setMapChromeVisible(visible) {
-  document.querySelectorAll('[data-map-chrome]').forEach((element) => {
-    element.classList.toggle('hidden', !visible);
-    element.setAttribute('aria-hidden', String(!visible));
-  });
-  const mapElement = document.getElementById('map');
-  mapElement?.classList.toggle('hidden', !visible);
-  mapElement?.setAttribute('aria-hidden', String(!visible));
-}
-
 async function syncActiveSession() {
   let refreshed;
   try {
@@ -583,12 +429,9 @@ async function syncActiveSession() {
 
 async function showMapExperience() {
   await syncActiveSession();
-  notifyLifecycle({ activeView: 'map' });
-  applySessionChrome();
+  viewController.applySessionCapabilities(activeSession);
   loadScopedState();
-
-  showOnly([]);
-  setMapChromeVisible(true);
+  viewController.transitionTo('map');
 
   setupGameUIListeners();
   await mapController.initMap();
@@ -612,9 +455,7 @@ async function openMapSafely() {
   } catch (error) {
     console.error('Unable to load the heritage map:', error);
     mapController.destroyMap();
-    setMapChromeVisible(false);
-    showOnly(['map-error-screen']);
-    notifyLifecycle({ activeView: 'map-error' });
+    viewController.transitionTo('map-error');
 
     const message = document.getElementById('mapErrorMessage');
     if (message) {
@@ -631,80 +472,27 @@ async function openMapSafely() {
 
 function showAdminExperience() {
   mapController.destroyMap();
-  setMapChromeVisible(false);
-  notifyLifecycle({ activeView: 'admin' });
-  applySessionChrome();
-  showOnly(['staff-screen']);
+  viewController.applySessionCapabilities(activeSession);
+  viewController.transitionTo('admin');
   bindAdminUI();
   showAdminTools();
 }
 
 function showLandingPage() {
   mapController.destroyMap();
-  setMapChromeVisible(false);
-  notifyLifecycle({ activeView: 'landing' });
-  document.documentElement.classList.remove('jejak-hide-staff');
-  showOnly(['landing-page']);
+  viewController.transitionTo('landing');
 }
 
-function setupAccessFlow() {
-  [
-    ['btnVisitor', 'join-event-button'],
-    ['passcodeInput', 'visitor-passkey-input'],
-    ['unlockBtn', 'visitor-passkey-submit'],
-    ['platformWarningModal', 'platform-warning'],
-    ['continueLoginBtn', 'platform-warning-continue'],
-    ['map', 'map-experience'],
-  ].forEach(([id, testId]) => {
-    document.getElementById(id)?.setAttribute('data-testid', testId);
-  });
-
-  const landingScreen = createLandingScreen({
-    notifyLifecycle,
-    async onExploreDemo() {
-      try {
-        await demoAccess.start();
-      } catch {
-        window.alert('Unable to start the demo session. Please try again.');
-        return;
-      }
-
-      await openMapSafely();
-    },
-    onVisitor() {},
-    onStaff: showAdminCode,
-    onBackHome: showLandingPage,
-    onCloseStaff: showLandingPage,
-  });
-
-  landingScreen.init();
-  bindAdminUI();
-
-  const retryMapBtn = document.getElementById('retryMapBtn');
-  if (retryMapBtn && retryMapBtn.dataset.bound !== 'true') {
-    retryMapBtn.dataset.bound = 'true';
-    retryMapBtn.addEventListener('click', () => void openMapSafely());
-  }
-
-  const mapErrorBackBtn = document.getElementById('mapErrorBackBtn');
-  if (mapErrorBackBtn && mapErrorBackBtn.dataset.bound !== 'true') {
-    mapErrorBackBtn.dataset.bound = 'true';
-    mapErrorBackBtn.addEventListener('click', () => {
-      if (activeSession?.role === 'admin') showAdminExperience();
-      else showLandingPage();
-    });
-  }
-
-  const unlockBtn = document.getElementById('unlockBtn');
-  if (unlockBtn && unlockBtn.dataset.bound !== 'true') {
-    unlockBtn.dataset.bound = 'true';
-    unlockBtn.addEventListener('click', async () => {
-      const passcodeInput = document.getElementById('passcodeInput');
-      if (!passcodeInput?.value.trim()) return;
-      await showPlatformWarning();
-    });
-  }
-}
+const accessFlow = createAccessFlow({
+  bindAdminUI,
+  demoAccess,
+  getSession: () => activeSession,
+  onShowAdmin: showAdminExperience,
+  onShowLanding: showLandingPage,
+  onShowMap: openMapSafely,
+  platformWarningController,
+  viewController,
+});
 
 async function initApp() {
   try {
@@ -714,8 +502,8 @@ async function initApp() {
   }
 
   notifyLifecycle({ session: activeSession });
-  setupAccessFlow();
-  await checkForURLPasskey();
+  accessFlow.bind();
+  await accessFlow.checkForUrlPasskey();
 
   if (activeSession?.authenticated) {
     if (activeSession.role === 'admin') showAdminExperience();
@@ -726,11 +514,11 @@ async function initApp() {
   showLandingPage();
 }
 
-export function startLegacyApp(options = {}) {
-  if (legacyStartPromise) return legacyStartPromise;
+export function createApp(options = {}) {
+  if (appStartPromise) return appStartPromise;
 
   lifecycleHandler = options.onLifecycleChange;
-  legacyStartPromise = new Promise((resolve, reject) => {
+  appStartPromise = new Promise((resolve, reject) => {
     onDomReady(() => {
       try {
         onboardingController.bind();
@@ -742,5 +530,5 @@ export function startLegacyApp(options = {}) {
     });
   });
 
-  return legacyStartPromise;
+  return appStartPromise;
 }

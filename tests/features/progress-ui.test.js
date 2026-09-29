@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, expect, it } from 'vitest';
-import { STRINGS } from '../../localization.js';
+import { STRINGS } from '../../src/config/localization.js';
 import { applyBadgeStatus } from '../../src/features/passport/progress-ui.js';
 
 describe('progress ui', () => {

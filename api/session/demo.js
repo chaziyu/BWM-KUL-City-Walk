@@ -1,25 +1,32 @@
+const { readInteger } = require('../_shared/config');
+const { requireMethod, sendError } = require('../_shared/http');
+const { attachRequestContext, logEvent, sanitizeLogValue } = require('../_shared/observability');
+const { requireSameOrigin } = require('../_shared/security');
 const {
     createSessionPayload,
     getSafeSessionDetails,
-    setSessionCookie
+    setSessionCookie,
 } = require('../_shared/session');
 
 module.exports = async (request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
+    const requestId = attachRequestContext(request, response);
+    if (!requireMethod(request, response, 'POST')) return;
+    if (!requireSameOrigin(request, response)) return;
 
     try {
-        const maxAge = Number(process.env.DEMO_SESSION_MAX_AGE) || 2 * 60 * 60;
+        const maxAge = readInteger('DEMO_SESSION_MAX_AGE', 2 * 60 * 60, { min: 60 });
         const session = createSessionPayload('demo', {
             accessType: 'portfolio-demo',
-            maxAge
+            maxAge,
         });
 
         setSessionCookie(response, session, maxAge);
         return response.status(200).json(getSafeSessionDetails(session));
     } catch (error) {
-        console.error('Error creating demo session:', error);
-        return response.status(500).json({ error: 'Unable to create demo session.' });
+        logEvent('error', 'session:demo-create-failed', {
+            requestId,
+            message: sanitizeLogValue(error.message || error),
+        });
+        return sendError(response, 500, 'SESSION_CREATE_FAILED', 'Unable to create demo session.');
     }
 };

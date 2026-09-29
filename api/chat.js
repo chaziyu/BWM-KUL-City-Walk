@@ -1,6 +1,10 @@
 // File: /api/chat.js
 const { GoogleGenAI } = require("@google/genai");
 
+const { readInteger, readString } = require('./_shared/config');
+const { getClientIp, requireMethod } = require('./_shared/http');
+const { attachRequestContext, logEvent, sanitizeLogValue } = require('./_shared/observability');
+const { isSameOrigin } = require('./_shared/security');
 const { ROLE_LIMITS, getSessionFromRequest } = require('./_shared/session');
 const { consumeQuota, getQuotaRemaining, isRateLimited, refundQuota } = require('./_shared/rate-limit');
 const { getQuotaKey } = require('./_shared/chat-quota');
@@ -11,11 +15,11 @@ const { retrieveSites } = require('./_shared/ai/retrieve-sites');
 const { parseModelResponse, validateResponse } = require('./_shared/ai/response-contract');
 const { getSiteById } = require('./_shared/ai/site-catalog');
 
-const MAX_QUERY_CHARS = Number(process.env.CHAT_MAX_QUERY_CHARS) || 1000;
-const MAX_HISTORY_MESSAGES = Number(process.env.CHAT_HISTORY_MESSAGES) || 10;
-const MAX_HISTORY_TEXT_CHARS = Number(process.env.CHAT_HISTORY_TEXT_CHARS) || 1500;
-const RATE_LIMIT_WINDOW_MS = Number(process.env.CHAT_RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000;
-const RATE_LIMIT_MAX = Number(process.env.CHAT_RATE_LIMIT_MAX) || 30;
+const MAX_QUERY_CHARS = readInteger('CHAT_MAX_QUERY_CHARS', 1000, { min: 1 });
+const MAX_HISTORY_MESSAGES = readInteger('CHAT_HISTORY_MESSAGES', 10, { min: 0 });
+const MAX_HISTORY_TEXT_CHARS = readInteger('CHAT_HISTORY_TEXT_CHARS', 1500, { min: 1 });
+const RATE_LIMIT_WINDOW_MS = readInteger('CHAT_RATE_LIMIT_WINDOW_MS', 60 * 60 * 1000, { min: 1000 });
+const RATE_LIMIT_MAX = readInteger('CHAT_RATE_LIMIT_MAX', 30, { min: 1 });
 
 // --- CONTEXT ENGINEERING LAYER: SANITIZATION ---
 function sanitizeText(str, maxLength = 4000) {
@@ -39,26 +43,9 @@ function normalizeHistory(history) {
     }).filter(Boolean);
 }
 
-function isSameOrigin(request) {
-    const host = request.headers.host;
-    const origin = request.headers.origin;
-    const referer = request.headers.referer;
-
-    try {
-        if (origin && new URL(origin).host === host) return true;
-        if (referer && new URL(referer).host === host) return true;
-    } catch (e) {
-        return false;
-    }
-
-    return false;
-}
-
 function getClientKey(request) {
-    const forwardedFor = request.headers['x-forwarded-for'];
-    const ip = Array.isArray(forwardedFor) ? forwardedFor[0] : (forwardedFor || request.socket?.remoteAddress || 'unknown');
     const device = sanitizeText(request.headers['x-jejak-device'] || 'unknown-device', 80);
-    return `${ip.split(',')[0].trim()}|${device}`;
+    return `${getClientIp(request)}|${device}`;
 }
 
 async function checkRateLimit(key) {
@@ -110,12 +97,14 @@ function buildNoMatchReply(query) {
 }
 
 module.exports = async (request, response) => {
-    if (request.method !== 'POST') {
-        return response.status(405).json({ error: 'Method not allowed' });
-    }
+    const requestId = attachRequestContext(request, response);
+    if (!requireMethod(request, response, 'POST')) return;
 
     if (!isSameOrigin(request)) {
-        return response.status(403).json({ reply: 'Chat access is only available from the app.' });
+        return response.status(403).json({
+            code: 'SAME_ORIGIN_REQUIRED',
+            reply: 'Chat access is only available from the app.',
+        });
     }
 
     const session = getSessionFromRequest(request);
@@ -162,7 +151,7 @@ module.exports = async (request, response) => {
         });
     }
 
-    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+    const GOOGLE_API_KEY = readString('GOOGLE_API_KEY');
     if (!GOOGLE_API_KEY) {
         return response.status(500).json({
             reply: 'Server configuration error: API key is missing.',
@@ -228,18 +217,20 @@ module.exports = async (request, response) => {
                 break;
 
             } catch (error) {
-                console.warn('[chat:model-failure]', {
+                logEvent('warn', 'chat:model-failure', {
+                    requestId,
                     model: modelName,
                     status: Number(error?.status) || null,
                     code: error?.code || null,
-                    message: sanitizeText(error?.message || 'Unknown provider error', 300),
+                    message: sanitizeLogValue(error?.message || 'Unknown provider error'),
                 });
                 lastError = error;
             }
         }
 
         if (!contract) {
-            console.error('[chat:all-models-failed]', {
+            logEvent('error', 'chat:all-models-failed', {
+                requestId,
                 models: CHAT_MODELS,
                 lastStatus: Number(lastError?.status) || null,
                 lastCode: lastError?.code || null,
@@ -265,10 +256,11 @@ module.exports = async (request, response) => {
         });
 
     } catch (error) {
-        console.error('[chat:provider-error]', {
+        logEvent('error', 'chat:provider-error', {
+            requestId,
             status: Number(error?.status) || null,
             code: error?.code || null,
-            message: sanitizeText(error?.message || 'Unknown provider error', 300),
+            message: sanitizeLogValue(error?.message || 'Unknown provider error'),
         });
         await refundQuota(quotaKey);
         const refundedRemainingQuota = await getQuotaRemaining(quotaKey, limit);

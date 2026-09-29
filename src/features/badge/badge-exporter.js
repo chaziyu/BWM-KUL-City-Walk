@@ -1,6 +1,7 @@
+import { captureElement } from '../../services/runtime-libs.js';
 import { applyBadgeStatus } from '../passport/progress-ui.js';
 
-export async function captureAndDownloadBadge({ progressService, strings }) {
+export async function captureAndDownloadBadge({ progressService, strings, capture = captureElement }) {
   const badgeElement = document.getElementById('hiddenBadgeTemplate');
   if (!badgeElement) throw new Error('Badge template not found.');
 
@@ -22,7 +23,7 @@ export async function captureAndDownloadBadge({ progressService, strings }) {
     applyCanvasSafeBadgeStyles(badgeElement);
     restoreDocumentColors = neutraliseOklchCustomProperties(document.documentElement, true);
 
-    const canvas = await html2canvas(badgeElement, { scale: 2, backgroundColor: null });
+    const canvas = await capture(badgeElement, { scale: 2, backgroundColor: null });
     const filename = `Heritage-Explorer-${Date.now()}.png`;
     const triggerDownload = (href) => {
       const link = document.createElement('a');

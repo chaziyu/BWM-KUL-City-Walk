@@ -16,7 +16,7 @@ export function readScopedJSON(name, fallback, mode) {
         const raw = localStorage.getItem(getScopedKey(name, mode));
         if (!raw) return fallback;
         return JSON.parse(raw);
-    } catch (error) {
+    } catch {
         return fallback;
     }
 }

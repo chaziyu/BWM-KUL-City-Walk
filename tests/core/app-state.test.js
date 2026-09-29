@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getState, resetState, setState } from '../../src/core/app-state.js';
+import { getState, resetState, setState } from '../../src/app/app-state.js';
 
 const DEFAULT_STATE = {
   session: null,
