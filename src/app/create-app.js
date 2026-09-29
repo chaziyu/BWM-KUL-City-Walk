@@ -178,7 +178,6 @@ const siteActions = createSiteActions({
 });
 
 const siteModalController = createSiteModalController({
-  strings: STRINGS,
   actions: siteActions,
   progressService,
   modalManager,
