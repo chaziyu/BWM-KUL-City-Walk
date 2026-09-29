@@ -5,8 +5,30 @@ const SAFE_FALLBACK = Object.freeze({
     notFound: true,
 });
 
+function extractJsonText(text) {
+    const raw = String(text || '').trim();
+    if (!raw) throw new SyntaxError('AI response was empty.');
+
+    const fenced = raw.match(/^\`\`\`(?:json)?\s*([\s\S]*?)\s*\`\`\`$/i);
+    const candidate = (fenced?.[1] || raw).trim();
+
+    try {
+        JSON.parse(candidate);
+        return candidate;
+    } catch (initialError) {
+        const start = candidate.indexOf('{');
+        const end = candidate.lastIndexOf('}');
+        if (start !== -1 && end > start) {
+            const extracted = candidate.slice(start, end + 1);
+            JSON.parse(extracted);
+            return extracted;
+        }
+        throw initialError;
+    }
+}
+
 function parseModelResponse(text) {
-    const parsed = JSON.parse(String(text || '').trim());
+    const parsed = JSON.parse(extractJsonText(text));
     return {
         answer: String(parsed.answer || ''),
         sourceSiteIds: Array.isArray(parsed.sourceSiteIds) ? parsed.sourceSiteIds.map(String) : [],
@@ -27,6 +49,7 @@ function validateResponse(contract, allowedSites) {
 }
 
 module.exports = {
+    extractJsonText,
     parseModelResponse,
     SAFE_FALLBACK,
     validateResponse,
