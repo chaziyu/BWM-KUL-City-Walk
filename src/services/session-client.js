@@ -38,6 +38,7 @@ function getStorage() {
     }
 }
 
+/** @param {boolean} active */
 function setDemoActive(active) {
     const storage = getStorage();
     if (!storage) return;
