@@ -51,7 +51,7 @@ export default [
     },
   },
   {
-    files: ['api/**/*.js', 'scripts/**/*.js', 'general_knowledge.js'],
+    files: ['api/**/*.js', 'scripts/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: {
@@ -68,6 +68,16 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
       },
+    },
+  },
+  {
+    files: ['src/**/*.js', 'api/**/*.js'],
+    rules: {
+      'no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   {
