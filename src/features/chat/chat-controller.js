@@ -107,7 +107,7 @@ export function createChatController({
       const result = await service.send({
         userQuery,
         context: activeContext,
-        history: getScopedHistory().slice(-Math.min(historyWindowSize, 6)),
+        history: getScopedHistory().slice(-Math.min(historyWindowSize, 4)),
       });
       const reply = result.reply || '';
       const scopeKey = getScopeKey();

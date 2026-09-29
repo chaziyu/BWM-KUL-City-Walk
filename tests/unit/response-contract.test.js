@@ -6,31 +6,32 @@ const { parseModelResponse, SAFE_FALLBACK, validateResponse } = require('../../a
 const { getSiteById } = require('../../api/_shared/ai/site-catalog.js');
 
 describe('response contract', () => {
-  it('parses Gemini JSON responses', () => {
-    expect(parseModelResponse('{"answer":"Done","sourceSiteIds":["1"],"confidence":"high","notFound":false}')).toEqual({
+  it('parses the compact Gemini JSON response', () => {
+    expect(parseModelResponse('{"answer":"Done","sourceSiteIds":["1"],"notFound":false}')).toEqual({
       answer: 'Done',
       sourceSiteIds: ['1'],
-      confidence: 'high',
       notFound: false,
     });
   });
 
-  it('parses fenced JSON responses from fallback models', () => {
-    expect(parseModelResponse(`\`\`\`json
-{"answer":"Done","sourceSiteIds":["1"],"confidence":"high","notFound":false}
-\`\`\``)).toEqual({
+  it('parses fenced JSON responses defensively', () => {
+    const fenced = [
+      '```json',
+      '{"answer":"Done","sourceSiteIds":["1"],"notFound":false}',
+      '```',
+    ].join('\n');
+
+    expect(parseModelResponse(fenced)).toEqual({
       answer: 'Done',
       sourceSiteIds: ['1'],
-      confidence: 'high',
       notFound: false,
     });
   });
 
   it('extracts a JSON object wrapped in provider text', () => {
-    expect(parseModelResponse('Result: {"answer":"Done","sourceSiteIds":["1"],"confidence":"medium","notFound":false}')).toEqual({
+    expect(parseModelResponse('Result: {"answer":"Done","sourceSiteIds":["1"],"notFound":false}')).toEqual({
       answer: 'Done',
       sourceSiteIds: ['1'],
-      confidence: 'medium',
       notFound: false,
     });
   });
@@ -39,21 +40,20 @@ describe('response contract', () => {
     expect(() => parseModelResponse('plain text')).toThrow();
   });
 
+  it('assigns confidence on the server instead of trusting the model', () => {
+    const contract = { answer: 'x', sourceSiteIds: ['1'], notFound: false };
+    expect(validateResponse(contract, [getSiteById('1')], 'high').confidence).toBe('high');
+  });
+
   it('rejects unknown source IDs', () => {
-    const contract = { answer: 'x', sourceSiteIds: ['999'], confidence: 'high', notFound: false };
-
-    expect(validateResponse(contract, [getSiteById('1')])).toEqual(SAFE_FALLBACK);
+    const contract = { answer: 'x', sourceSiteIds: ['999'], notFound: false };
+    expect(validateResponse(contract, [getSiteById('1')], 'high')).toEqual(SAFE_FALLBACK);
   });
 
-  it('rejects empty source lists for factual answers', () => {
-    const contract = { answer: 'x', sourceSiteIds: [], confidence: 'high', notFound: false };
-
-    expect(validateResponse(contract, [getSiteById('1')])).toEqual(SAFE_FALLBACK);
-  });
-
-  it('rejects duplicate source IDs', () => {
-    const contract = { answer: 'x', sourceSiteIds: ['1', '1'], confidence: 'high', notFound: false };
-
-    expect(validateResponse(contract, [getSiteById('1')])).toEqual(SAFE_FALLBACK);
+  it('rejects empty and duplicate source lists for factual answers', () => {
+    expect(validateResponse({ answer: 'x', sourceSiteIds: [], notFound: false }, [getSiteById('1')]))
+      .toEqual(SAFE_FALLBACK);
+    expect(validateResponse({ answer: 'x', sourceSiteIds: ['1', '1'], notFound: false }, [getSiteById('1')]))
+      .toEqual(SAFE_FALLBACK);
   });
 });

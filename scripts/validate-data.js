@@ -65,6 +65,25 @@ function validateUniqueField(records, field, errors, label = field) {
   });
 }
 
+function validateAiAliases(sites, errors) {
+  const seen = new Map();
+
+  sites.forEach(site => {
+    const candidates = [site.name, ...(site.search_terms || []), ...(site.aliases || [])];
+    candidates.forEach(candidate => {
+      const key = String(candidate || '').normalize('NFKC').trim().toLowerCase();
+      if (!key) return;
+
+      const owner = seen.get(key);
+      if (owner && owner !== site.id) {
+        errors.push(`${site.id}: AI alias "${candidate}" is already used by site ${owner}`);
+        return;
+      }
+      seen.set(key, site.id);
+    });
+  });
+}
+
 function validateImage(site, errors) {
   if (!hasText(site.image)) return;
 
@@ -122,6 +141,7 @@ function validateSites(options = {}) {
 
   validateUniqueField(sites, 'id', errors);
   validateUniqueField(sites, 'name', errors);
+  validateAiAliases(sites, errors);
 
   sites.forEach(site => {
     validateImage(site, errors);

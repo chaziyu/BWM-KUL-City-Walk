@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 const gemini = {
   create: vi.fn(),
   sendMessage: vi.fn(),
+  clientOptions: [],
 };
 
 const genaiPath = require.resolve('@google/genai');
@@ -14,7 +15,8 @@ require.cache[genaiPath] = {
   filename: genaiPath,
   loaded: true,
   exports: {
-    GoogleGenAI: function GoogleGenAI() {
+    GoogleGenAI: function GoogleGenAI(options) {
+      gemini.clientOptions.push(options);
       this.chats = {
         create: gemini.create.mockImplementation(() => ({
           sendMessage: gemini.sendMessage,
@@ -72,19 +74,24 @@ async function postChat(cookie, body) {
 async function exhaustDemoQuota(cookie) {
   const statuses = [];
   for (let index = 0; index < 5; index += 1) {
-    statuses.push((await postChat(cookie, { userQuery: `Tell me about Sultan Abdul Samad Building ${index}` })).statusCode);
+    statuses.push((await postChat(cookie, {
+      userQuery: `Why is Sultan Abdul Samad Building important? ${index}`,
+    })).statusCode);
   }
   return statuses;
 }
 
-describe('chat API quota ordering', () => {
+describe('chat API quota ordering and Flash-Lite tuning', () => {
   beforeEach(() => {
     process.env.GOOGLE_API_KEY = 'test-key';
     resetMemoryBucketsForTests();
     resetAnswerCacheForTests();
     gemini.create.mockClear();
     gemini.sendMessage.mockReset();
-    gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Answer', sourceSiteIds: ['1'], confidence: 'high', notFound: false }) });
+    gemini.clientOptions.length = 0;
+    gemini.sendMessage.mockResolvedValue({
+      text: JSON.stringify({ answer: 'Answer', sourceSiteIds: ['1'], notFound: false }),
+    });
   });
 
   it('does not consume quota for empty queries', async () => {
@@ -101,88 +108,104 @@ describe('chat API quota ordering', () => {
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
-  it('consumes quota for valid answered requests', async () => {
+  it('consumes quota only for model-backed requests', async () => {
     const cookie = createCookie();
 
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
-    expect((await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' })).statusCode).toBe(429);
+    expect((await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building architecturally important?',
+    })).statusCode).toBe(429);
   });
 
-  it('refunds quota when every provider attempt fails', async () => {
+  it('refunds quota when the provider fails', async () => {
     const cookie = createCookie();
     gemini.sendMessage.mockRejectedValue(new Error('provider down'));
 
-    const failed = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+    const failed = await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+    });
     expect(failed.statusCode).toBe(500);
     expect(failed.body.code).toBe('AI_PROVIDER_UNAVAILABLE');
 
-    gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], confidence: 'high', notFound: false }) });
+    gemini.sendMessage.mockResolvedValue({
+      text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], notFound: false }),
+    });
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
-  it('answers supported factual questions without Gemini or quota use', async () => {
+  it('answers structured factual questions without Gemini or quota I/O', async () => {
     const cookie = createCookie();
 
-    const result = await postChat(cookie, {
+    const built = await postChat(cookie, {
       userQuery: 'When was Sultan Abdul Samad Building built?',
     });
+    const architect = await postChat(cookie, {
+      userQuery: 'Who designed Sultan Abdul Samad Building?',
+    });
 
-    expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toContain('1894-1897');
-    expect(result.body.remainingQuota).toBe(5);
+    expect(built.statusCode).toBe(200);
+    expect(built.body.reply).toContain('1894-1897');
+    expect(built.body.remainingQuota).toBeNull();
+    expect(architect.body.reply).toContain('A.B. Hubback');
+    expect(architect.body.remainingQuota).toBeNull();
+    expect(gemini.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('answers multilingual structured facts without Gemini', async () => {
+    const cookie = createCookie();
+
+    const chinese = await postChat(cookie, { userQuery: '中央市场几点开？' });
+    const malay = await postChat(cookie, { userQuery: 'siapa arkitek Masjid Jamek?' });
+
+    expect(chinese.statusCode).toBe(200);
+    expect(chinese.body.reply).toContain('开放时间');
+    expect(chinese.body.sourceSiteIds).toEqual(['D']);
+    expect(malay.statusCode).toBe(200);
+    expect(malay.body.reply).toContain('direka oleh');
+    expect(malay.body.sourceSiteIds).toEqual(['4']);
     expect(gemini.sendMessage).not.toHaveBeenCalled();
   });
 
   it('does not call Gemini or consume quota for retrieval misses', async () => {
     const cookie = createCookie();
 
-    const result = await postChat(cookie, { userQuery: 'Can you recommend stock investments for this week?' });
+    const result = await postChat(cookie, {
+      userQuery: 'Can you recommend stock investments for this week?',
+    });
 
     expect(result.statusCode).toBe(200);
+    expect(result.body.remainingQuota).toBeNull();
     expect(result.body.reply).toBe('I’m here to help with the BWM KUL City Walk. You can ask about places to visit, route ideas, or the story behind a stop.');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
-  it('uses a guide-introduction reply for identity questions outside the verified notes', async () => {
+  it('uses local replies for identity and broad navigation questions', async () => {
     const cookie = createCookie();
 
-    const result = await postChat(cookie, { userQuery: 'siapa awak?' });
+    const identity = await postChat(cookie, { userQuery: 'siapa awak?' });
+    const route = await postChat(cookie, { userQuery: 'where can i go?' });
+    const combined = await postChat(cookie, {
+      userQuery: 'who are you, suggest where to visit',
+    });
 
-    expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I’m your AI Tour Guide. I can help with places to visit, route ideas, and stories from the BWM KUL City Walk.');
+    expect(identity.body.reply).toContain('AI Tour Guide');
+    expect(route.body.reply).toContain('good place to start');
+    expect(combined.body.reply).toContain('AI Tour Guide');
     expect(gemini.sendMessage).not.toHaveBeenCalled();
   });
 
-  it('uses a route prompt for broad navigation questions outside the verified notes', async () => {
-    const cookie = createCookie();
-
-    const result = await postChat(cookie, { userQuery: 'where can i go?' });
-
-    expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('A good place to start is Bangunan Sultan Abdul Samad, Masjid Jamek, or Central Market. If you want, I can also suggest a quick route.');
-    expect(gemini.sendMessage).not.toHaveBeenCalled();
-    expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
-  });
-
-  it('answers combined identity and visit questions in one normal reply', async () => {
-    const cookie = createCookie();
-
-    const result = await postChat(cookie, { userQuery: 'who are you, suggest where to visit' });
-
-    expect(result.statusCode).toBe(200);
-    expect(result.body.reply).toBe('I’m your AI Tour Guide. A good place to start is Bangunan Sultan Abdul Samad, Masjid Jamek, or Central Market if you want a shorter wander.');
-    expect(gemini.sendMessage).not.toHaveBeenCalled();
-    expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
-  });
-
-  it('does not consume quota for invalid JSON', async () => {
+  it('does not consume quota for invalid provider JSON', async () => {
     const cookie = createCookie();
     gemini.sendMessage.mockResolvedValue({ text: 'plain text' });
 
-    expect((await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' })).statusCode).toBe(500);
+    expect((await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+    })).statusCode).toBe(500);
 
-    gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], confidence: 'high', notFound: false }) });
+    gemini.sendMessage.mockResolvedValue({
+      text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], notFound: false }),
+    });
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
@@ -200,16 +223,22 @@ describe('chat API quota ordering', () => {
     expect(result.body.sourceSiteIds).toEqual(['1']);
   });
 
-  it('does not consume quota for invalid source IDs', async () => {
+  it('refunds quota for invalid source IDs and returns a safe not-found contract', async () => {
     const cookie = createCookie();
-    gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Wrong source', sourceSiteIds: ['999'], confidence: 'high', notFound: false }) });
+    gemini.sendMessage.mockResolvedValue({
+      text: JSON.stringify({ answer: 'Wrong source', sourceSiteIds: ['999'], notFound: false }),
+    });
 
-    const invalid = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+    const invalid = await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+    });
 
     expect(invalid.statusCode).toBe(200);
     expect(invalid.body.notFound).toBe(true);
 
-    gemini.sendMessage.mockResolvedValue({ text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], confidence: 'high', notFound: false }) });
+    gemini.sendMessage.mockResolvedValue({
+      text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], notFound: false }),
+    });
     expect(await exhaustDemoQuota(cookie)).toEqual([200, 200, 200, 200, 200]);
   });
 
@@ -222,10 +251,16 @@ describe('chat API quota ordering', () => {
       const firstSession = createCookie('visitor', { quotaSubject });
       const secondSession = createCookie('visitor', { quotaSubject });
 
-      expect((await postChat(firstSession, { userQuery: 'Tell me about Sultan Abdul Samad Building visitor one' })).statusCode).toBe(200);
-      expect((await postChat(secondSession, { userQuery: 'Tell me about Sultan Abdul Samad Building visitor two' })).statusCode).toBe(200);
+      expect((await postChat(firstSession, {
+        userQuery: 'Why is Sultan Abdul Samad Building important? visitor one',
+      })).statusCode).toBe(200);
+      expect((await postChat(secondSession, {
+        userQuery: 'Why is Sultan Abdul Samad Building important? visitor two',
+      })).statusCode).toBe(200);
 
-      const blocked = await postChat(secondSession, { userQuery: 'Tell me about Sultan Abdul Samad Building visitor three' });
+      const blocked = await postChat(secondSession, {
+        userQuery: 'Why is Sultan Abdul Samad Building important? visitor three',
+      });
       expect(blocked.statusCode).toBe(429);
       expect(blocked.body.remainingQuota).toBe(0);
     } finally {
@@ -233,48 +268,93 @@ describe('chat API quota ordering', () => {
     }
   });
 
-  it('uses cached answers without calling Gemini or consuming quota again', async () => {
+  it('uses cached answers without another Gemini call or quota update', async () => {
     const cookie = createCookie();
-    const question = 'Who designed Sultan Abdul Samad Building?';
+    const question = 'Why is Sultan Abdul Samad Building important?';
 
     const first = await postChat(cookie, { userQuery: question });
     const second = await postChat(cookie, { userQuery: question });
 
     expect(first.body.remainingQuota).toBe(4);
-    expect(second.body.remainingQuota).toBe(4);
+    expect(second.body.remainingQuota).toBeNull();
     expect(gemini.sendMessage).toHaveBeenCalledTimes(1);
   });
 
-  it('uses Gemma fallbacks without Gemini-only JSON configuration', async () => {
+  it('uses one structured Flash-Lite fallback for retriable provider errors', async () => {
     const cookie = createCookie();
     gemini.sendMessage
-      .mockRejectedValueOnce(Object.assign(new Error('primary unavailable'), { status: 404 }))
+      .mockRejectedValueOnce(Object.assign(new Error('primary unavailable'), { status: 503 }))
       .mockResolvedValueOnce({
-        text: '```json\n{"answer":"Recovered","sourceSiteIds":["1"],"confidence":"high","notFound":false}\n```',
+        text: JSON.stringify({ answer: 'Recovered', sourceSiteIds: ['1'], notFound: false }),
       });
 
-    const result = await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' });
+    const result = await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+    });
 
     expect(result.statusCode).toBe(200);
     expect(gemini.create.mock.calls[0][0].model).toBe('gemini-3.5-flash-lite');
-    expect(gemini.create.mock.calls[1][0].model).toBe('gemma-4-26b-a4b-it');
-    expect(gemini.create.mock.calls[1][0].config.responseMimeType).toBeUndefined();
-    expect(gemini.create.mock.calls[1][0].config.responseJsonSchema).toBeUndefined();
+    expect(gemini.create.mock.calls[1][0].model).toBe('gemini-3.1-flash-lite');
+    expect(gemini.create.mock.calls[1][0].config.responseMimeType).toBe('application/json');
     expect(result.body.reply).toBe('Recovered');
   });
 
-  it('uses structured low-temperature Gemini calls', async () => {
+  it('does not cascade to fallback models for non-retriable errors', async () => {
+    const cookie = createCookie();
+    gemini.sendMessage.mockRejectedValueOnce(
+      Object.assign(new Error('bad request'), { status: 400 }),
+    );
+
+    const result = await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+    });
+
+    expect(result.statusCode).toBe(500);
+    expect(gemini.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses minimal thinking, bounded output, timeout, structured JSON, and no sampling override', async () => {
     const cookie = createCookie();
 
-    expect((await postChat(cookie, { userQuery: 'Who designed Sultan Abdul Samad Building?' })).statusCode).toBe(200);
-    expect(gemini.create.mock.calls[0][0].config.temperature).toBe(0.2);
-    expect(gemini.create.mock.calls[0][0].config.systemInstruction).toContain('Return only JSON');
-    expect(gemini.create.mock.calls[0][0].config.responseMimeType).toBe('application/json');
-    expect(gemini.create.mock.calls[0][0].config.responseJsonSchema.required).toEqual([
+    expect((await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+    })).statusCode).toBe(200);
+
+    const config = gemini.create.mock.calls[0][0].config;
+    expect(config.temperature).toBeUndefined();
+    expect(config.topP).toBeUndefined();
+    expect(config.topK).toBeUndefined();
+    expect(config.thinkingConfig).toEqual({ thinkingLevel: 'minimal' });
+    expect(config.maxOutputTokens).toBe(512);
+    expect(config.systemInstruction).toContain('Use only the verified site fields below.');
+    expect(config.responseMimeType).toBe('application/json');
+    expect(config.responseJsonSchema.required).toEqual([
       'answer',
       'sourceSiteIds',
-      'confidence',
       'notFound',
     ]);
+    expect(gemini.clientOptions[0].httpOptions.timeout).toBe(5000);
+  });
+
+  it('drops history for standalone questions and keeps it for dependent follow-ups', async () => {
+    const cookie = createCookie();
+    const history = [
+      { role: 'user', parts: [{ text: 'Tell me about Masjid Jamek' }] },
+      { role: 'model', parts: [{ text: 'Earlier answer' }] },
+    ];
+
+    await postChat(cookie, {
+      userQuery: 'Why is Sultan Abdul Samad Building important?',
+      history,
+    });
+    expect(gemini.create.mock.calls[0][0].history).toEqual([]);
+
+    gemini.create.mockClear();
+    await postChat(cookie, {
+      userQuery: 'tell me more',
+      context: { type: 'site', siteId: '1' },
+      history,
+    });
+    expect(gemini.create.mock.calls[0][0].history).toHaveLength(2);
   });
 });

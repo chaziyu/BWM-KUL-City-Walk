@@ -122,14 +122,46 @@ async function getQuotaRemaining(key, maxQuota) {
 }
 
 async function consumeQuota(key, maxQuota, expireMs = 24 * 60 * 60 * 1000) {
-    const exceeded = await isQuotaExceeded(key, maxQuota, expireMs);
-    if (exceeded && maxQuota > 0) {
-        await refundQuota(key);
+    if (maxQuota <= 0) {
+        return { exceeded: true, remaining: 0 };
     }
 
+    if (redis) {
+        try {
+            const redisKey = `quota:${key}`;
+            const count = Number(await redis.incr(redisKey));
+
+            if (count === 1 && expireMs) {
+                await redis.pexpire(redisKey, expireMs);
+            }
+
+            if (count > maxQuota) {
+                await redis.decr(redisKey);
+                return { exceeded: true, remaining: 0 };
+            }
+
+            return {
+                exceeded: false,
+                remaining: Math.max(0, maxQuota - count),
+            };
+        } catch (error) {
+            logEvent('error', 'quota:redis-consume-error', {
+                message: sanitizeLogValue(error.message || error),
+            });
+            reportDegradedStorage('redis-consume-error', error);
+        }
+    }
+
+    const count = quotaBuckets.get(key) || 0;
+    if (count >= maxQuota) {
+        return { exceeded: true, remaining: 0 };
+    }
+
+    const nextCount = count + 1;
+    quotaBuckets.set(key, nextCount);
     return {
-        exceeded,
-        remaining: await getQuotaRemaining(key, maxQuota),
+        exceeded: false,
+        remaining: Math.max(0, maxQuota - nextCount),
     };
 }
 

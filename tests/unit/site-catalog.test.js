@@ -14,8 +14,10 @@ describe('site catalog', () => {
       category: 'must_visit',
     });
     expect(site.searchTerms).toContain('Sultan Abdul Samad Building');
+    expect(site.aliases).toContain('苏丹阿都沙末大厦');
     expect(site.built).toBe('1894-1897');
     expect(site.estimatedVisitMinutes).toBe(8);
+    expect(site.faq.ticketFee).toBe('Free (Exterior)');
     expect(site.aiContext).toContain('Bangunan Sultan Abdul Samad');
     expect(site.searchableText).toContain('clock tower');
     expect(site.image).toBeUndefined();

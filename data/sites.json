@@ -289,7 +289,11 @@
       "ticket_fee": "Free (Exterior)",
       "tips": "Come at night to see the building beautifully illuminated with colored lights. The best photo spot is across the street at Dataran Merdeka."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "苏丹阿都沙末大厦",
+      "苏丹阿都沙末大楼"
+    ]
   },
   {
     "id": "2",
@@ -388,7 +392,12 @@
       "ticket_fee": "Free",
       "tips": "Take a photo of the building from the Padang looking towards the building and the many sided stair towers flank both ends of this façade."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "Pejabat Pos Lama",
+      "旧邮政局",
+      "吉隆坡旧邮政局"
+    ]
   },
   {
     "id": "3",
@@ -457,7 +466,11 @@
       "ticket_fee": "Free",
       "tips": "Stand at the corner of Lebuh Pasar Besar to get a photo of the Loke Yew Building's curved Art Deco facade."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "陆佑大厦",
+      "海峡贸易大厦"
+    ]
   },
   {
     "id": "4",
@@ -517,7 +530,11 @@
       "ticket_fee": "Free",
       "tips": "Robes and headscarves are provided for free at the entrance for tourists. Shoes must be removed."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "占美清真寺",
+      "嘉美清真寺"
+    ]
   },
   {
     "id": "5",
@@ -577,7 +594,11 @@
       "ticket_fee": "Free",
       "tips": "It's a pedestrian-only zone, making it safe for photography. Look for the Art Deco clock tower in the center."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "旧市场广场",
+      "老市场广场"
+    ]
   },
   {
     "id": "6",
@@ -652,7 +673,12 @@
       "ticket_fee": "Free",
       "tips": "You can ask for a fortune stick reading. The staff are usually helpful in explaining the process."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "Sin Sze Si Ya Temple",
+      "仙四师爷庙",
+      "仙师爷庙"
+    ]
   },
   {
     "id": "7",
@@ -728,7 +754,10 @@
       "ticket_fee": "Free",
       "tips": "It's best photographed from the opposite corner to capture its unique triangular shape."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "Federal Stores Triangle"
+    ]
   },
   {
     "id": "8",
@@ -795,7 +824,10 @@
       "ticket_fee": "Free",
       "tips": "Observe how the curved facade fits the triangular plot of land."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "东方大厦"
+    ]
   },
   {
     "id": "9",
@@ -877,7 +909,10 @@
       "ticket_fee": "Free",
       "tips": "Explore the surrounding covered arcade for affordable textiles and spices."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "印度清真寺"
+    ]
   },
   {
     "id": "10",
@@ -937,7 +972,10 @@
       "ticket_fee": "Free",
       "tips": "Look for the royal crests on the business card or signage, indicating their history as royal jewellers."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "P H Hendry Royal Jewellers"
+    ]
   },
   {
     "id": "11",
@@ -1020,7 +1058,12 @@
       "ticket_fee": "Free (Exterior) / Ticketed (Performances)",
       "tips": "Check the schedule for cultural performances or musicals often held here."
     },
-    "estimatedVisitMinutes": 8
+    "estimatedVisitMinutes": 8,
+    "aliases": [
+      "Dewan Bandaraya Lama",
+      "旧市政厅",
+      "市政剧场"
+    ]
   },
   {
     "id": "A",
@@ -1089,7 +1132,10 @@
       "ticket_fee": "Free",
       "tips": "Visit at sunset or night when the surrounding colonial buildings are lit up. Bring water as it can get hot during the day."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "独立广场"
+    ]
   },
   {
     "id": "B",
@@ -1255,7 +1301,11 @@
       "ticket_fee": "Entry fees apply (Different rates for Malaysians/Non-Malaysians)",
       "tips": "It's fully air-conditioned, making it a perfect mid-day stop to cool down while exploring history."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Muzium Tekstil Negara",
+      "国家纺织博物馆"
+    ]
   },
   {
     "id": "C",
@@ -1312,7 +1362,10 @@
       "ticket_fee": "Free",
       "tips": "Look for the bicycle garage entrance at the basement level, a unique feature for its time."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "华侨银行大厦"
+    ]
   },
   {
     "id": "D",
@@ -1369,7 +1422,11 @@
       "ticket_fee": "Free",
       "tips": "Visit the upper floor food court for affordable local eats and check out the DIY batik painting stalls."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "中央市场",
+      "中央艺术坊"
+    ]
   },
   {
     "id": "E",
@@ -1422,7 +1479,11 @@
       "ticket_fee": "Free",
       "tips": "It's a short connecting street; great for linking the Central Market area to the banking district."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Yap Ah Loy Street",
+      "叶亚来路"
+    ]
   },
   {
     "id": "F",
@@ -1467,7 +1528,11 @@
       "ticket_fee": "Free",
       "tips": "Stop by one of the many restaurants here for authentic South Indian Banana Leaf Rice."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Ampang Street",
+      "安邦街"
+    ]
   },
   {
     "id": "G",
@@ -1524,7 +1589,11 @@
       "ticket_fee": "Free",
       "tips": "Look for the juxtaposition of traditional Malay architecture on the modern Bank Muamalat building."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Malacca Street",
+      "马六甲街"
+    ]
   },
   {
     "id": "H",
@@ -1569,7 +1638,13 @@
       "ticket_fee": "Free",
       "tips": "These buildings are popular among street photographers for their raw, authentic KL vibe."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Selangor Mansion",
+      "Malayan Mansion",
+      "雪兰莪大厦",
+      "马来亚大厦"
+    ]
   },
   {
     "id": "I",
@@ -1667,7 +1742,11 @@
       "ticket_fee": "Free",
       "tips": "Seek out the 100-year-old textile shops for authentic sarongs."
     },
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Malay Street",
+      "马来街"
+    ]
   },
   {
     "id": "K",
@@ -1717,7 +1796,11 @@
       "tips": "Visit on Saturday evenings for the famous 'Pasar Malam' (Night Market) which takes over the street."
     },
     "category": "recommended",
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "峇都路",
+      "东姑阿都拉曼路"
+    ]
   },
   {
     "id": "L",
@@ -1838,7 +1921,11 @@
       "tips": "Look up to spot the twin 'Chatris' (domes) on the roof."
     },
     "category": "recommended",
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Pejabat Ukur Lama",
+      "旧测量局"
+    ]
   },
   {
     "id": "M",
@@ -1894,6 +1981,10 @@
       "tips": "Walk towards the river side to see the grand entrance that faces the water."
     },
     "category": "recommended",
-    "estimatedVisitMinutes": 6
+    "estimatedVisitMinutes": 6,
+    "aliases": [
+      "Mahkamah Tinggi Lama",
+      "旧高等法院"
+    ]
   }
 ]
