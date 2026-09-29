@@ -44,6 +44,7 @@ import {
   writeScopedString,
 } from './src/services/storage.js';
 import { createModalManager } from './src/ui/modal-manager.js';
+import { showToast } from './src/ui/toast.js';
 
 let legacyStartPromise = null;
 let activeSession = getCurrentSession();
@@ -84,6 +85,9 @@ const mapController = createMapController({
     mainSites = sites.filter((site) => /^\d+$/.test(String(site.id)));
     progressService.setMainSites(mainSites);
     passportController.refreshProgress();
+  },
+  onLocationStatus({ message, severity }) {
+    showToast(message, { severity });
   },
 });
 
@@ -476,6 +480,14 @@ function setupGameUIListeners() {
     });
   }
 
+  const btnAdminToggle = document.getElementById('btnAdminToggle');
+  if (btnAdminToggle && btnAdminToggle.dataset.bound !== 'true') {
+    btnAdminToggle.dataset.bound = 'true';
+    btnAdminToggle.addEventListener('click', () => {
+      if (activeSession?.role === 'admin') showAdminExperience();
+    });
+  }
+
   const resetDemoProgressBtn = document.getElementById('resetDemoProgressBtn');
   if (resetDemoProgressBtn && resetDemoProgressBtn.dataset.bound !== 'true') {
     resetDemoProgressBtn.dataset.bound = 'true';
@@ -599,9 +611,18 @@ function setupAccessFlow() {
     async onExploreDemo() {
       try {
         await demoAccess.start();
-        await showMapExperience();
       } catch {
         window.alert('Unable to start the demo session. Please try again.');
+        return;
+      }
+
+      try {
+        await showMapExperience();
+      } catch (error) {
+        console.error('Unable to load the demo map:', error);
+        showToast('Demo access started, but the heritage map could not load. Check your connection and try again.', {
+          severity: 'error',
+        });
       }
     },
     onVisitor() {},
