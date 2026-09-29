@@ -1,0 +1,148 @@
+/* --- 5. BWM KUL CITY WALK LANDING PAGE --- */
+#landing-page {
+    background: #fdfdff;
+    color: #343a40;
+    width: 100%;
+    height: 100dvh;
+    min-height: 100svh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.9rem, 2.4vh, 1.6rem);
+    padding:
+        max(1rem, env(safe-area-inset-top))
+        clamp(1rem, 4vw, 2.5rem)
+        max(1rem, env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+    text-align: center;
+    transition: background 0.5s ease;
+}
+
+.landing-header {
+    width: min(100%, 42rem);
+}
+
+#landing-page h1 {
+    color: #172a3a;
+    font-size: clamp(2.25rem, min(6vw, 7vh), 4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0;
+    text-wrap: balance;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#landing-page .landing-subtitle {
+    color: #6c757d !important;
+    font-size: clamp(0.75rem, 1.4vw, 1rem);
+    font-weight: 500;
+    letter-spacing: clamp(0.08em, 0.25vw, 0.18em);
+    line-height: 1.5;
+    margin: 0.65rem auto 0;
+    max-width: 34rem;
+    padding: 0 0.5rem;
+    text-transform: uppercase;
+}
+
+.landing-actions {
+    width: min(100%, 24rem);
+    display: grid;
+    gap: clamp(0.65rem, 1.6vh, 0.9rem);
+    margin: clamp(0.25rem, 1vh, 0.75rem) auto;
+}
+
+.landing-footer {
+    width: min(100%, 22rem);
+    display: grid;
+    gap: 0.75rem;
+    margin: 0 auto;
+}
+
+.landing-footer > p {
+    color: #94a3b8 !important;
+    font-size: clamp(0.7rem, 1.1vw, 0.85rem);
+    line-height: 1.45;
+    margin: 0;
+    padding: 0 0.5rem;
+}
+
+@media (max-height: 760px) {
+    #landing-page {
+        justify-content: flex-start;
+        gap: 0.75rem;
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+
+    #landing-page h1 {
+        font-size: clamp(2rem, 7vh, 3rem);
+    }
+
+    .landing-actions {
+        gap: 0.55rem;
+        margin-block: 0.15rem;
+    }
+}
+
+@media (max-width: 420px) {
+    #landing-page {
+        padding-inline: 0.9rem;
+    }
+
+    #landing-page h1 {
+        font-size: clamp(2rem, 11vw, 3rem);
+    }
+
+    .landing-actions,
+    .landing-footer {
+        width: 100%;
+    }
+}
+
+/* Professional Button Style (Flat/Minimalist) */
+.glass-card-btn {
+    /* Use the professional primary color for the background */
+    background-color: #007bff !important;
+    color: white !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 15px 40px;
+    border-radius: 8px;
+    /* Slightly rounded corners */
+    border: none !important;
+    box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3);
+    /* Shadow tied to button color */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Remove any glass-morphic effects */
+    backdrop-filter: none;
+}
+
+.glass-card-btn:hover {
+    /* Darker shade of primary color on hover */
+    background-color: #0056b3 !important;
+    transform: translateY(-2px);
+    /* Gentle lift on hover */
+    /* Increased shadow depth on hover */
+    box-shadow: 0 12px 20px rgba(0, 123, 255, 0.4);
+}
+
+/* Secondary Button Style (Optional: Use for "Continue Saved Game") */
+/* If you have a secondary button, give it a subtle outline style */
+.glass-card-btn.secondary {
+    background-color: transparent !important;
+    color: #007bff !important;
+    border: 2px solid #007bff !important;
+    box-shadow: none;
+}
+
+.glass-card-btn.secondary:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
