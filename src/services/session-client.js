@@ -23,7 +23,7 @@ function normalizeSession(session) {
         ...DEFAULT_SESSION,
         ...session,
         role: session.role || 'guest',
-        progressNamespace: session.progressNamespace || (session.role === 'demo' ? 'demo' : 'visitor')
+        progressNamespace: session.progressNamespace || (['demo', 'visitor', 'admin'].includes(session.role) ? session.role : 'visitor')
     };
 }
 
