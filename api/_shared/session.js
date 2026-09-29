@@ -39,6 +39,10 @@ function sign(value) {
         .replace(/\//g, '_');
 }
 
+function createQuotaSubject(value) {
+    return sign(`quota:${String(value || '')}`);
+}
+
 function parseCookies(cookieHeader = '') {
     return cookieHeader.split(';').reduce((cookies, pair) => {
         const index = pair.indexOf('=');
@@ -71,7 +75,8 @@ function createSessionPayload(role, options = {}) {
         accessType,
         issuedAt: now,
         expiresAt: now + maxAge * 1000,
-        sessionId: crypto.randomBytes(16).toString('hex')
+        sessionId: crypto.randomBytes(16).toString('hex'),
+        quotaSubject: options.quotaSubject || null
     };
 }
 
@@ -153,6 +158,7 @@ module.exports = {
     COOKIE_NAME,
     ROLE_LIMITS,
     clearSessionCookie,
+    createQuotaSubject,
     createSessionPayload,
     getSafeSessionDetails,
     getSessionFromRequest,
