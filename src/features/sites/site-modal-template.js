@@ -33,11 +33,17 @@ export function createSiteModalTemplate() {
                     Solve daily challenge
                 </button>
 
-                <div class="site-action-grid">
-                    <button id="siteModalDirections" class="ui-button ui-button--secondary">Directions</button>
-                    <button id="siteModalAskAI" class="ui-button ui-button--secondary">Ask AI</button>
-                    <button id="siteModalFoodBtn" type="button" class="ui-button ui-button--secondary">Food nearby</button>
-                    <button id="siteModalHotelBtn" type="button" class="ui-button ui-button--secondary">Hotels nearby</button>
+                <div class="site-support-actions">
+                    <button id="siteModalDirections" class="ui-button ui-button--secondary site-support-actions__directions">Directions</button>
+                    <button id="siteModalAskAI" class="ui-button ui-button--quiet site-support-actions__ai">Ask AI about this site</button>
+                </div>
+
+                <div class="site-nearby">
+                    <p class="ui-kicker site-nearby__label">Nearby</p>
+                    <div class="site-nearby__actions">
+                        <button id="siteModalFoodBtn" type="button" class="site-nearby__button">Food</button>
+                        <button id="siteModalHotelBtn" type="button" class="site-nearby__button">Hotels</button>
+                    </div>
                 </div>
 
                 <div id="siteModalQuizArea" class="site-quiz">

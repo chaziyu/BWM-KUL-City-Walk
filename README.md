@@ -14,7 +14,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 ### Key Highlights
 *   **📱 Offline-capable PWA:** Same-origin app assets and heritage content are cached after use; third-party map tiles remain online-only
 *   **🎓 Interactive Onboarding:** Beautiful guided tour system with spotlight effects to help new users discover features instantly
-*   **🧭 Heritage Threads:** Curated 30/60/90-minute story walks are planned locally with no routing API cost\n*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI, with deterministic factual answers before model calls
+*   **🧭 Story Walks:** Curated 30/60/90-minute Heritage Threads are planned locally with no routing API cost\n*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI, with deterministic factual answers before model calls
 *   **🛂 Digital Passport:** Collect stamps, check-in to sites, and track your exploration progress
 *   **📍 Interactive Map:** Rich transit routes, food & hotel search, and beautiful site details
 *   **⚡ Performance Aware:** Hardware-accelerated animations, local build assets, and lazy-loaded optional libraries
@@ -164,7 +164,7 @@ Configure these in Vercel Dashboard for deployment. For local API testing, creat
 
 ### Explore Demo
 
-Use **Explore Demo** on the landing page for portfolio evaluation. Public trail features start locally so the map, Heritage Threads, quizzes, passport, and challenges can remain usable during a session-API outage. When online, the client also obtains a short-lived signed `demo` session for protected AI chat.
+Use **Explore Demo** on the landing page for portfolio evaluation. Public trail features start locally so the map, Story Walks, quizzes, passport, and challenges can remain usable during a session-API outage. When online, the client also obtains a short-lived signed `demo` session for protected AI chat.
 
 ### Visitor Passkey Access
 

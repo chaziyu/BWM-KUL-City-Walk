@@ -165,10 +165,17 @@
   }
 
   .chat-panel__input-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+  }
+
+  .chat-panel__input-row .ui-field {
+    min-width: 0;
   }
 
   .chat-panel__send {
-    width: 100%;
+    width: auto;
+    min-width: 4.4rem;
+    padding-inline: 0.8rem;
   }
 }

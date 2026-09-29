@@ -7,11 +7,13 @@ import { createDirectionsTemplate } from '../../src/features/directions/directio
 import { createOnboardingTemplate } from '../../src/features/onboarding/onboarding-template.js';
 import { createPassportTemplate } from '../../src/features/passport/passport-template.js';
 import { createSiteModalTemplate } from '../../src/features/sites/site-modal-template.js';
+import { createTrailModalTemplate } from '../../src/features/trails/trail-template.js';
 
 describe('icon-only close controls', () => {
   it('has modal-specific accessible names', () => {
     document.body.innerHTML = [
       createSiteModalTemplate(),
+      createTrailModalTemplate(),
       createPassportTemplate(),
       createChatTemplate(),
       createDirectionsTemplate(),
@@ -21,6 +23,7 @@ describe('icon-only close controls', () => {
     ].join('');
 
     expect(document.getElementById('closeSiteModal').getAttribute('aria-label')).toBe('Close site details');
+    expect(document.getElementById('closeTrailModal').getAttribute('aria-label')).toBe('Close story walks');
     expect(document.getElementById('closePassportModal').getAttribute('aria-label')).toBe('Close passport');
     expect(document.getElementById('closeCongratsModal').getAttribute('aria-label')).toBe('Close completion message');
     expect(document.getElementById('closeChatModal').getAttribute('aria-label')).toBe('Close AI tour guide');
