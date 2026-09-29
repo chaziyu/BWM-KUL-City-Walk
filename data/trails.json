@@ -1,0 +1,190 @@
+[
+  {
+    "id": "river-to-independence",
+    "title": "River to Independence",
+    "theme": "Origins",
+    "summary": "Follow Kuala Lumpur from the river confluence and early market streets to the civic landmarks around Merdeka Square.",
+    "stops": [
+      {
+        "siteId": "4",
+        "chapter": "Begin where the Klang and Gombak rivers meet and where early Kuala Lumpur took shape.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 0
+      },
+      {
+        "siteId": "5",
+        "chapter": "Move into the old commercial centre around Medan Pasar and the town shaped by Yap Ah Loy.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "6",
+        "chapter": "See how one of the city's oldest Chinese institutions became part of the early urban fabric.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "D",
+        "chapter": "Trace the shift from a working wholesale market to a preserved cultural destination.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 2
+      },
+      {
+        "siteId": "1",
+        "chapter": "Return to the colonial civic centre through one of Kuala Lumpur's best-known administrative landmarks.",
+        "visitMinutes": 8,
+        "walkMinutesFromPrevious": 5
+      },
+      {
+        "siteId": "A",
+        "chapter": "Finish at the field associated with the declaration of Malaysian independence in 1957.",
+        "visitMinutes": 8,
+        "walkMinutesFromPrevious": 2
+      }
+    ]
+  },
+  {
+    "id": "civic-architecture",
+    "title": "Civic Architecture",
+    "theme": "Architecture",
+    "summary": "Compare the civic buildings, railway-era offices and courts that shaped Kuala Lumpur's institutional centre.",
+    "stops": [
+      {
+        "siteId": "A",
+        "chapter": "Start from the open civic space that frames several major heritage buildings.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 0
+      },
+      {
+        "siteId": "1",
+        "chapter": "Examine the landmark administrative complex and its clock tower.",
+        "visitMinutes": 8,
+        "walkMinutesFromPrevious": 2
+      },
+      {
+        "siteId": "2",
+        "chapter": "Compare the neighbouring former post office and its related architectural language.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 2
+      },
+      {
+        "siteId": "B",
+        "chapter": "Look for the contrasting brick-and-plaster treatment of the former railway offices.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "11",
+        "chapter": "Continue to the former municipal offices and theatre.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 5
+      },
+      {
+        "siteId": "M",
+        "chapter": "Compare another Hubback-era civic building across the historic core.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 2
+      },
+      {
+        "siteId": "L",
+        "chapter": "Finish with the long arcade and roof pavilions of the former Survey Office.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 2
+      }
+    ]
+  },
+  {
+    "id": "trade-and-communities",
+    "title": "Trade & Communities",
+    "theme": "Communities",
+    "summary": "Explore streets, places of worship and businesses that show how trading communities built everyday Kuala Lumpur.",
+    "stops": [
+      {
+        "siteId": "5",
+        "chapter": "Begin at the old market square, once a centre of trade and town life.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 0
+      },
+      {
+        "siteId": "6",
+        "chapter": "Continue to Kuala Lumpur's oldest traditional Chinese temple.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "D",
+        "chapter": "See how the city's wholesale market evolved into today's Central Market.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 2
+      },
+      {
+        "siteId": "C",
+        "chapter": "Observe how modern banking and Art Deco design entered the commercial district.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "F",
+        "chapter": "Follow a street historically associated with South Indian Chettiar money-lenders.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 4
+      },
+      {
+        "siteId": "9",
+        "chapter": "Visit the Masjid India area and another important religious and commercial community.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 5
+      },
+      {
+        "siteId": "10",
+        "chapter": "Connect the district to one of Malaysia's longest-running jewellery businesses.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "J",
+        "chapter": "Finish among the businesses and street life associated with Jalan Melayu.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 2
+      }
+    ]
+  },
+  {
+    "id": "modern-kl",
+    "title": "Modern KL Emerges",
+    "theme": "20th Century",
+    "summary": "Track the city's shift toward Art Deco, modern commerce and post-independence urban life.",
+    "stops": [
+      {
+        "siteId": "3",
+        "chapter": "Start with a commercial cluster that includes an important Art Deco building.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 0
+      },
+      {
+        "siteId": "C",
+        "chapter": "Continue with a purpose-built 1930s bank and its modern urban details.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 3
+      },
+      {
+        "siteId": "8",
+        "chapter": "See the 1932 Oriental Building, once the tallest building in Kuala Lumpur.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 5
+      },
+      {
+        "siteId": "H",
+        "chapter": "Jump forward to early post-independence mass housing completed in 1964.",
+        "visitMinutes": 7,
+        "walkMinutesFromPrevious": 5
+      },
+      {
+        "siteId": "I",
+        "chapter": "Finish with a 1970s commercial tower tied to Malay entrepreneurship.",
+        "visitMinutes": 6,
+        "walkMinutesFromPrevious": 2
+      }
+    ]
+  }
+]

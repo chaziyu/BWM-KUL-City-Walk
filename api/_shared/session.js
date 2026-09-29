@@ -133,8 +133,8 @@ function getSafeSessionDetails(session) {
 
     const progressNamespace = session.role;
     const allowedUI = session.role === 'admin'
-        ? ['admin', 'map', 'chat']
-        : ['map', 'chat', 'passport', 'challenge', 'share'];
+        ? ['admin', 'map', 'chat', 'trails']
+        : ['map', 'chat', 'passport', 'challenge', 'share', 'trails'];
 
     return {
         authenticated: true,

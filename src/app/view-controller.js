@@ -30,6 +30,7 @@ export function createViewController({ onViewChange } = {}) {
       ['btnChat', 'chat'],
       ['btnPassport', 'passport'],
       ['btnChallenge', 'challenge'],
+      ['btnTrails', 'trails'],
     ].forEach(([id, capability]) => {
       document.getElementById(id)?.classList.toggle('hidden', !allowedUI.has(capability));
     });

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   setCurrentSession,
   startAdminSession,
+  startDemoSession,
 } from '../../src/services/session-client.js';
 
 afterEach(() => {
@@ -10,6 +11,26 @@ afterEach(() => {
 });
 
 describe('session client', () => {
+  it('keeps demo mode usable when the session API is offline', async () => {
+    const values = new Map();
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key) => values.get(key) || null),
+      setItem: vi.fn((key, value) => values.set(key, value)),
+      removeItem: vi.fn((key) => values.delete(key)),
+    });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+
+    const session = await startDemoSession();
+
+    expect(session).toMatchObject({
+      authenticated: true,
+      role: 'demo',
+      progressNamespace: 'demo',
+      localOnly: true,
+    });
+    expect(session.allowedUI).toContain('trails');
+  });
+
   it('preserves backend error codes and request ids', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,

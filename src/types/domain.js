@@ -30,7 +30,8 @@
  *   chatLimit: number,
  *   remainingQuota?: number | null,
  *   allowedUI: string[],
- *   expiresAt?: number
+ *   expiresAt?: number,
+ *   localOnly?: boolean
  * }} AppSession
  */
 
