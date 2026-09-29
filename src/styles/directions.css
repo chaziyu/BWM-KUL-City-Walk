@@ -1,0 +1,20 @@
+/* --- 13. DIRECTIONS VIEWER (MODERN MODAL) --- */
+#directionsModal .modern-modal-content {
+    background: white;
+    padding: 0;
+    overflow: hidden;
+}
+
+#directionsIframe {
+    background: #f8fafc;
+    border-radius: 0;
+}
+
+@media (max-width: 640px) {
+    #directionsModal .modern-modal-content {
+        height: 90vh;
+        width: 100%;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}
