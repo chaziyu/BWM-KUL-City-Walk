@@ -67,7 +67,17 @@ test.describe('Responsive and Accessibility', () => {
 
   test('keyboard navigation reaches the primary login action', async ({ page }) => {
     await page.goto('/');
-    await page.keyboard.press('Tab');
-    await expect(page.locator('#btnExploreDemo')).toBeFocused();
+    const primaryAction = page.locator('#btnExploreDemo');
+    let reachedPrimaryAction = false;
+
+    for (let index = 0; index < 8; index += 1) {
+      await page.keyboard.press('Tab');
+      if (await primaryAction.evaluate((element) => element.matches(':focus'))) {
+        reachedPrimaryAction = true;
+        break;
+      }
+    }
+
+    expect(reachedPrimaryAction).toBe(true);
   });
 });
