@@ -1,51 +1,66 @@
 export function createMapTemplate() {
   return `
     <div
-      id="filterTabs"
-      data-map-chrome
-      aria-hidden="true"
-      class="hidden fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[2000] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-lg rounded-2xl p-2 flex flex-col md:flex-row gap-2 w-48 md:w-auto transition-all"
-    >
-      <button id="tabMustVisit" class="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 shadow-md transition-all">
-        ✨ Must Visit
-      </button>
-      <button id="tabRecommended" class="w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">
-        Recommended
-      </button>
-    </div>
-
-    <div
-      data-map-chrome
-      aria-hidden="true"
-      class="hidden fixed top-[calc(5rem+env(safe-area-inset-top))] left-4 z-[1000] flex flex-col gap-2 pt-2"
-    >
-      <button id="btnUIZoomIn" aria-label="Zoom In" class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">+</button>
-      <button id="btnUIZoomOut" aria-label="Zoom Out" class="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg text-2xl font-bold text-gray-700 hover:bg-gray-100 border border-gray-200 transition active:scale-95 flex items-center justify-center">−</button>
-    </div>
-
-    <div
       id="progress-container"
       data-map-chrome
       aria-hidden="true"
-      class="hidden fixed top-[env(safe-area-inset-top)] left-0 w-full z-[1000] px-4 pt-4"
+      class="hidden map-progress-region"
     >
-      <div class="bg-white/90 backdrop-blur-sm shadow-lg rounded-full border border-gray-200 p-1 max-w-md mx-auto flex items-center">
-        <div class="bg-gray-200 rounded-full h-3 w-full mx-3 relative overflow-hidden">
-          <div id="progressBar" class="bg-gradient-to-r from-green-400 to-green-500 h-full w-0 transition-all duration-700 ease-out rounded-full"></div>
+      <div class="map-progress-card">
+        <div class="map-progress-copy">
+          <span>Trail progress</span>
+          <strong id="progressText">0/11 Sites</strong>
         </div>
-        <span id="progressText" class="text-xs font-bold text-gray-700 whitespace-nowrap mr-2">0/11 Sites</span>
+        <div class="map-progress-track" aria-hidden="true">
+          <div id="progressBar" class="map-progress-value" style="width: 0%"></div>
+        </div>
       </div>
     </div>
 
     <div id="map" aria-hidden="true" class="w-full h-[100dvh] z-10 hidden"></div>
 
     <div
+      id="mapUtilityRail"
       data-map-chrome
       aria-hidden="true"
-      class="hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 z-[2500] flex flex-col gap-2"
+      class="hidden map-utility-rail"
+      aria-label="Map controls"
     >
-      <button id="btnAdminToggle" aria-label="Toggle Stats / Admin Tools" class="bg-indigo-600 text-white w-12 h-12 rounded-full shadow-2xl hover:bg-indigo-700 transition transform hover:scale-105 border-2 border-indigo-400 hidden flex items-center justify-center text-xl" title="Switch to Admin Tools">🛠️</button>
-      <button id="btnRecenter" aria-label="Recenter Map" class="bg-white/80 backdrop-blur-sm w-12 h-12 rounded-full shadow-xl hover:bg-gray-100 text-xl transition transform hover:scale-110 border border-gray-200" title="Back to Dataran Merdeka">📍</button>
+      <button id="btnUIZoomIn" aria-label="Zoom in" class="ui-icon-button map-utility-button">
+        <span class="map-control-glyph" aria-hidden="true">+</span>
+      </button>
+      <button id="btnUIZoomOut" aria-label="Zoom out" class="ui-icon-button map-utility-button">
+        <span class="map-control-glyph" aria-hidden="true">−</span>
+      </button>
+      <span class="map-utility-divider" aria-hidden="true"></span>
+      <button id="btnRecenter" aria-label="Recenter map on the heritage trail" class="ui-icon-button map-utility-button" title="Recenter map">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"></circle>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+        </svg>
+      </button>
+      <button id="btnAdminToggle" aria-label="Open admin tools" class="ui-icon-button map-utility-button hidden" title="Admin tools">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6l-.08.08V20H10v-.08l-.08-.08a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1L3.92 14H4v-4h-.08L4 9.92a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88L4.2 6.98 7.03 4.15l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6l.08-.08V4h4v.08l.08.08a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.08.36.29.7.6 1l.08.08H20v4h-.08l-.08.08c-.31.3-.52.64-.6 1Z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div
+      id="filterTabs"
+      data-map-chrome
+      aria-hidden="true"
+      class="hidden map-filter-tabs"
+      role="group"
+      aria-label="Filter heritage sites"
+    >
+      <button id="tabMustVisit" class="map-filter-tab" aria-pressed="true">
+        Must visit
+      </button>
+      <button id="tabRecommended" class="map-filter-tab" aria-pressed="false">
+        Recommended
+      </button>
     </div>
   `;
 }
