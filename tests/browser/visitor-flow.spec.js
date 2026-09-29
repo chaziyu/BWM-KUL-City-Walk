@@ -10,9 +10,15 @@ test.describe('Visitor flow', () => {
 
     await page.route('**/api/session/current', async (route) => {
       await route.fulfill({
-        status: 401,
+        status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ authenticated: false }),
+        body: JSON.stringify({
+          authenticated: false,
+          role: 'guest',
+          progressNamespace: null,
+          chatLimit: 0,
+          allowedUI: ['landing'],
+        }),
       });
     });
   });
