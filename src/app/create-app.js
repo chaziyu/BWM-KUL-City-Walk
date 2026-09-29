@@ -306,12 +306,29 @@ function bindAdminUI() {
   });
 }
 
+function showAdminLogin() {
+  document.getElementById('adminLoginForm')?.classList.remove('hidden');
+  document.getElementById('adminResult')?.classList.add('hidden');
+  document.getElementById('closeStaffScreen')?.classList.remove('hidden');
+  document.getElementById('btnAdminToggle')?.classList.add('hidden');
+
+  const passwordInput = document.getElementById('adminPasswordInput');
+  if (passwordInput) {
+    passwordInput.value = '';
+    queueMicrotask(() => passwordInput.focus());
+  }
+
+  const errorElement = document.getElementById('adminErrorMsg');
+  errorElement?.classList.add('hidden');
+  if (errorElement) errorElement.textContent = '';
+}
+
 function showAdminTools() {
   document.documentElement.classList.remove('jejak-hide-staff');
   document.getElementById('adminLoginForm')?.classList.add('hidden');
   document.getElementById('adminResult')?.classList.remove('hidden');
   document.getElementById('passkeyDate')?.replaceChildren(document.createTextNode(STRINGS.auth.adminDate));
-  document.getElementById('closeStaffScreen')?.classList.add('hidden');
+  document.getElementById('closeStaffScreen')?.classList.remove('hidden');
   document.getElementById('btnAdminToggle')?.classList.remove('hidden');
 }
 
@@ -381,7 +398,13 @@ function showAdminExperience() {
   viewController.applySessionCapabilities(activeSession);
   viewController.transitionTo('admin');
   bindAdminUI();
-  showAdminTools();
+
+  if (activeSession?.authenticated && activeSession.role === 'admin') {
+    showAdminTools();
+    return;
+  }
+
+  showAdminLogin();
 }
 
 function showLandingPage() {
