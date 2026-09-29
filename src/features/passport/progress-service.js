@@ -1,3 +1,4 @@
+import { isMustVisitSite } from '../sites/site-domain.js';
 import {
   readScopedJSON,
   writeScopedJSON,
@@ -29,7 +30,7 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
   function setMainSites(sites) {
     mainSiteIds = uniqueIds(
       (sites || [])
-        .filter((site) => /^\d+$/.test(String(site.id)))
+        .filter(isMustVisitSite)
         .map((site) => site.id),
     );
     return emitChanged();
@@ -72,20 +73,22 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
 
   function recordQuizCompletion(siteId) {
     const normalized = normalizeId(siteId);
-    if (!visitedSites.includes(normalized)) {
+    const changed = !visitedSites.includes(normalized);
+    if (changed) {
       visitedSites = [...visitedSites, normalized];
       persistVisited();
     }
-    return emitChanged();
+    return { ...emitChanged(), changed };
   }
 
   function recordCheckIn(siteId) {
     const normalized = normalizeId(siteId);
-    if (!discoveredSites.includes(normalized)) {
+    const changed = !discoveredSites.includes(normalized);
+    if (changed) {
       discoveredSites = [...discoveredSites, normalized];
       persistDiscovered();
     }
-    return emitChanged();
+    return { ...emitChanged(), changed };
   }
 
   return {
