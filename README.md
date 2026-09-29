@@ -79,7 +79,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 
 ### Frontend
 *   **Core:** HTML5, Vanilla JavaScript (ES6+), Tailwind CSS
-*   **Mapping:** Leaflet.js with OpenStreetMap
+*   **Mapping:** Leaflet.js with OpenFreeMap / MapLibre
 *   **Animations:** Native CSS transitions with hardware acceleration
 *   **Configuration:** Modular `src/config/app-config.js` for runtime settings
 
@@ -100,7 +100,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 ## 🚀 Quick Start
 
 ### Prerequisites
-1. **Node.js 18+**
+1. **Node.js 20.19+**
 2. **Vercel Account** for deployment
 3. **Google Cloud Account** for Gemini AI API
 4. **Google Apps Script** for visitor passkey validation/generation (optional prototype workflow)
