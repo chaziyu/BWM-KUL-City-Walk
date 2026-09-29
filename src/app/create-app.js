@@ -8,6 +8,7 @@ import {
 import { createAdminAccess } from '../features/access/admin-access.js';
 import { createDemoAccess } from '../features/access/demo-access.js';
 import { createLandingScreen } from '../features/access/landing-screen.js';
+import { createPlatformWarningController } from '../features/access/platform-warning-controller.js';
 import { createVisitorAccess } from '../features/access/visitor-access.js';
 import { createOpenFreeMapLayer } from '../features/map/basemap.js';
 import { createMapController } from '../features/map/map-controller.js';
@@ -42,6 +43,7 @@ import {
 } from '../services/storage.js';
 import { createModalManager } from '../ui/modal-manager.js';
 import { showToast } from '../ui/toast.js';
+import { createTextSizeController } from '../ui/text-size-controller.js';
 import { createViewController } from './view-controller.js';
 
 let appStartPromise = null;
@@ -53,9 +55,6 @@ let userMessageCount = 0;
 let solvedRiddle = {};
 let gameUIBound = false;
 let deviceId = localStorage.getItem('bwm_device_id');
-const UI_TEXT_SIZE_KEY = 'jejak_ui_text_size';
-const LEGACY_UI_TEXT_SIZE_KEY = 'ui_text_size';
-
 if (!deviceId) {
   const generatedId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 15);
   deviceId = `device-${generatedId}`;
@@ -210,6 +209,18 @@ const visitorAccess = createVisitorAccess({
   },
 });
 
+const textSizeController = createTextSizeController({
+  maxFontSize: MAX_FONT_SIZE,
+});
+
+const platformWarningController = createPlatformWarningController({
+  modalManager,
+  visitorAccess,
+  onAuthenticated() {
+    return openMapSafely();
+  },
+});
+
 const adminAccess = createAdminAccess({
   strings: STRINGS,
   startAdminSession,
@@ -261,129 +272,6 @@ function loadScopedState() {
 function saveChatHistory() {
   writeScopedJSON('chat_history', chatHistory, getProgressNamespace());
 }
-
-function setupTextSizeControls() {
-  const btnTextSizeReset = document.getElementById('btnTextSizeReset');
-  const btnTextSizeLarge = document.getElementById('btnTextSizeLarge');
-  const btnTextSizeSmall = document.getElementById('btnTextSizeSmall');
-  let currentTextSize = Number.parseInt(
-    localStorage.getItem(UI_TEXT_SIZE_KEY) || localStorage.getItem(LEGACY_UI_TEXT_SIZE_KEY) || '100',
-    10,
-  );
-  if (!Number.isFinite(currentTextSize)) currentTextSize = 100;
-
-  function applyTextSize(nextSize) {
-    currentTextSize = Math.min(MAX_FONT_SIZE, Math.max(80, nextSize));
-    document.documentElement.style.setProperty('--content-font-size', `${currentTextSize}%`);
-    localStorage.setItem(UI_TEXT_SIZE_KEY, String(currentTextSize));
-  }
-
-  applyTextSize(currentTextSize);
-
-  function bindTextSizeButton(button, delta) {
-    if (!button || button.dataset.bound === 'true') return;
-    button.dataset.bound = 'true';
-    button.addEventListener('click', () => applyTextSize(currentTextSize + delta));
-  }
-
-  bindTextSizeButton(btnTextSizeSmall, -10);
-  bindTextSizeButton(btnTextSizeLarge, 10);
-
-  if (btnTextSizeReset && btnTextSizeReset.dataset.bound !== 'true') {
-    btnTextSizeReset.dataset.bound = 'true';
-    btnTextSizeReset.addEventListener('click', () => applyTextSize(100));
-  }
-}
-
-function setupPlatformWarning() {
-  let pendingPasskey = '';
-
-  function isPwaMode() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
-  }
-
-  function showPwaExplanation() {
-    modalManager.open('pwaExplanationModal');
-    document.getElementById('closePWAExplanation')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
-    document.getElementById('gotItPWABtn')?.addEventListener('click', () => modalManager.close('pwaExplanationModal'), { once: true });
-  }
-
-  function getElements() {
-    return {
-      modal: document.getElementById('platformWarningModal'),
-      warningContent: document.querySelector('#warningContent p'),
-      continueBtn: document.getElementById('continueLoginBtn'),
-      cancelBtn: document.getElementById('cancelLoginBtn'),
-      passkeyDisplay: document.getElementById('passkeyDisplay'),
-      copyBtn: document.getElementById('copyPasskeyBtn'),
-      copySuccess: document.getElementById('copySuccess'),
-      whatIsPWABtn: document.getElementById('whatIsPWABtn'),
-    };
-  }
-
-  function bindWarningActions(elements) {
-    const { modal, continueBtn, cancelBtn, passkeyDisplay, copyBtn, copySuccess, whatIsPWABtn } = elements;
-
-    if (copyBtn && copyBtn.dataset.bound !== 'true') {
-      copyBtn.dataset.bound = 'true';
-      copyBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(pendingPasskey);
-          copySuccess?.classList.remove('hidden');
-          setTimeout(() => copySuccess?.classList.add('hidden'), 2000);
-        } catch {
-          passkeyDisplay?.select();
-          document.execCommand('copy');
-        }
-      });
-    }
-
-    if (continueBtn && continueBtn.dataset.bound !== 'true') {
-      continueBtn.dataset.bound = 'true';
-      continueBtn.addEventListener('click', async () => {
-        modalManager.close(modal);
-        const session = await visitorAccess.submit(pendingPasskey, {
-          button: document.getElementById('unlockBtn'),
-          errorElement: document.getElementById('errorMsg'),
-        });
-        if (session?.authenticated) await openMapSafely();
-      });
-    }
-
-    if (cancelBtn && cancelBtn.dataset.bound !== 'true') {
-      cancelBtn.dataset.bound = 'true';
-      cancelBtn.addEventListener('click', () => {
-        modalManager.close(modal);
-        const passcodeInput = document.getElementById('passcodeInput');
-        if (passcodeInput) passcodeInput.value = '';
-      });
-    }
-
-    if (whatIsPWABtn && whatIsPWABtn.dataset.bound !== 'true') {
-      whatIsPWABtn.dataset.bound = 'true';
-      whatIsPWABtn.addEventListener('click', showPwaExplanation);
-    }
-  }
-
-  return async function showPlatformWarning() {
-    const elements = getElements();
-    const { modal, warningContent, passkeyDisplay } = elements;
-    const passcodeInput = document.getElementById('passcodeInput');
-    pendingPasskey = passcodeInput?.value || '';
-    if (passkeyDisplay) passkeyDisplay.value = pendingPasskey;
-
-    if (warningContent) {
-      warningContent.textContent = isPwaMode()
-        ? 'You are using the installed app view. Your passkey will be validated with this device.'
-        : 'You are using the browser view. Your passkey will be validated with this device.';
-    }
-
-    modalManager.open(modal);
-    bindWarningActions(elements);
-  };
-}
-
-const showPlatformWarning = setupPlatformWarning();
 
 function setupGameUIListeners() {
   if (gameUIBound) return;
@@ -491,7 +379,7 @@ function setupGameUIListeners() {
     modalManager.closeTopmost();
   });
 
-  setupTextSizeControls();
+  textSizeController.bind();
   chatController.loadHistory();
 }
 
@@ -536,7 +424,7 @@ async function checkForURLPasskey() {
   viewController.transitionTo('gatekeeper');
   const input = document.getElementById('passcodeInput');
   if (input) input.value = code;
-  await showPlatformWarning();
+  await platformWarningController.open();
 }
 
 async function syncActiveSession() {
@@ -669,7 +557,7 @@ function setupAccessFlow() {
     unlockBtn.addEventListener('click', async () => {
       const passcodeInput = document.getElementById('passcodeInput');
       if (!passcodeInput?.value.trim()) return;
-      await showPlatformWarning();
+      await platformWarningController.open();
     });
   }
 }
