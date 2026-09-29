@@ -130,7 +130,7 @@ function getSafeSessionDetails(session) {
         };
     }
 
-    const progressNamespace = session.role === 'demo' ? 'demo' : 'visitor';
+    const progressNamespace = session.role;
     const allowedUI = session.role === 'admin'
         ? ['admin', 'map', 'chat']
         : ['map', 'chat', 'passport', 'challenge', 'share'];
