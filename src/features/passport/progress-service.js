@@ -1,20 +1,42 @@
+// @ts-check
+
+/** @typedef {import('../../types/domain.js').HeritageSite} HeritageSite */
+/** @typedef {import('../../types/domain.js').ProgressState} ProgressState */
+
 import { isMustVisitSite } from '../sites/site-domain.js';
 import {
   readScopedJSON,
   writeScopedJSON,
 } from '../../services/storage.js';
 
+/**
+ * @param {string | number} id
+ * @returns {string}
+ */
 function normalizeId(id) {
   return String(id);
 }
 
+/**
+ * @param {(string | number)[]} ids
+ * @returns {string[]}
+ */
 function uniqueIds(ids) {
   return [...new Set(ids.map(normalizeId))];
 }
 
+/**
+ * @param {{
+ *   getNamespace?: () => string,
+ *   onChanged?: (state: ProgressState) => void
+ * }} [options]
+ */
 export function createProgressService({ getNamespace, onChanged } = {}) {
+  /** @type {string[]} */
   let mainSiteIds = [];
+  /** @type {string[]} */
   let visitedSites = [];
+  /** @type {string[]} */
   let discoveredSites = [];
 
   function getValidIdSet() {
@@ -27,6 +49,10 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
     return state;
   }
 
+  /**
+   * @param {HeritageSite[]} sites
+   * @returns {ProgressState}
+   */
   function setMainSites(sites) {
     mainSiteIds = uniqueIds(
       (sites || [])
@@ -51,6 +77,9 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
     writeScopedJSON('discovered', discoveredSites, getNamespace?.() || 'visitor');
   }
 
+  /**
+   * @returns {ProgressState}
+   */
   function getCompletionState() {
     const validIds = getValidIdSet();
     const completedIds = uniqueIds([...visitedSites, ...discoveredSites]).filter((id) =>
@@ -67,10 +96,18 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
     };
   }
 
+  /**
+   * @param {string | number} siteId
+   * @returns {boolean}
+   */
   function isCompleted(siteId) {
     return getCompletionState().completedIds.includes(normalizeId(siteId));
   }
 
+  /**
+   * @param {string | number} siteId
+   * @returns {ProgressState & { changed: boolean }}
+   */
   function recordQuizCompletion(siteId) {
     const normalized = normalizeId(siteId);
     const changed = !visitedSites.includes(normalized);
@@ -81,6 +118,10 @@ export function createProgressService({ getNamespace, onChanged } = {}) {
     return { ...emitChanged(), changed };
   }
 
+  /**
+   * @param {string | number} siteId
+   * @returns {ProgressState & { changed: boolean }}
+   */
   function recordCheckIn(siteId) {
     const normalized = normalizeId(siteId);
     const changed = !discoveredSites.includes(normalized);

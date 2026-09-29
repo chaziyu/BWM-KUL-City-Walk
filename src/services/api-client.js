@@ -1,5 +1,21 @@
+// @ts-check
+
 export class ApiError extends Error {
-  constructor(message, { code = 'API_ERROR', status = 0, requestId = null, data = {} } = {}) {
+  /**
+   * @param {string} message
+   * @param {{
+   *   code?: string,
+   *   status?: number,
+   *   requestId?: string | null,
+   *   data?: Record<string, any>
+   * }} [options]
+   */
+  constructor(message, {
+    code = 'API_ERROR',
+    status = 0,
+    requestId = null,
+    data = {},
+  } = {}) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
@@ -9,10 +25,20 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * @param {Response} response
+ * @param {string} name
+ * @returns {string | null}
+ */
 function getHeader(response, name) {
   return response?.headers?.get?.(name) || null;
 }
 
+/**
+ * @param {Response} response
+ * @param {string} [fallbackMessage]
+ * @returns {Promise<any>}
+ */
 export async function parseApiResponse(response, fallbackMessage = 'Request failed.') {
   const data = await response.json().catch(() => ({}));
   if (response.ok) return data;
