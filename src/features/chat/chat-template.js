@@ -1,5 +1,11 @@
 export function createChatControlTemplate() {
-  return '<button id="btnChat" aria-label="Open AI Tour Guide" class="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-xl hover:bg-gray-100 text-2xl transition transform hover:scale-110 border border-gray-200">💬</button>';
+  return `<button id="btnChat" aria-label="Open AI Tour Guide" class="map-action-button">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6A2.5 2.5 0 0 1 16.5 15H11l-4 3v-3.2A2.5 2.5 0 0 1 5 12.5v-6Z"></path>
+      <path d="M9 9h6M9 12h4"></path>
+    </svg>
+    <span>AI Guide</span>
+  </button>`;
 }
 
 export function createChatModalTemplate() {
