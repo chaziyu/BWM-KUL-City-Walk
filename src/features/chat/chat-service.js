@@ -14,9 +14,10 @@ export function createChatService({ deviceId, fetchImpl = fetch }) {
       if (!response.ok) {
         const error = new Error(data.reply || data.error || 'AI server error');
         error.status = response.status;
-        error.remainingQuota = Number.isFinite(Number(data.remainingQuota))
-          ? Number(data.remainingQuota)
-          : null;
+        const hasRemainingQuota = data.remainingQuota !== null
+          && data.remainingQuota !== undefined
+          && Number.isFinite(Number(data.remainingQuota));
+        if (hasRemainingQuota) error.remainingQuota = Number(data.remainingQuota);
         throw error;
       }
       return data;
