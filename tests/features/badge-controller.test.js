@@ -8,7 +8,7 @@ import {
     validateBadgePhoto,
 } from '../../src/features/badge/badge-renderer.js';
 import { createBadgeTemplate } from '../../src/features/badge/badge-template.js';
-import { STRINGS } from '../../localization.js';
+import { STRINGS } from '../../src/config/localization.js';
 
 describe('badge controller', () => {
   it('rejects oversized badge photos', () => {
