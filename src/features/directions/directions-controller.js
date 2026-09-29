@@ -59,7 +59,7 @@ function presentationFor(mode, siteName) {
   };
 }
 
-export function createDirectionsController({ modalManager }) {
+export function createDirectionsController({ modalManager, onError }) {
   function bind() {
     const close = () => {
       modalManager.close('directionsModal');
@@ -99,7 +99,7 @@ export function createDirectionsController({ modalManager }) {
     }
 
     if (contextText) contextText.textContent = view.context;
-    if (footerLead) footerLead.innerHTML = `<strong>${view.footerLead}</strong>`;
+    if (footerLead) footerLead.textContent = view.footerLead;
     if (footerDetail) footerDetail.textContent = view.footerDetail;
     if (linkText) linkText.textContent = view.cta;
     if (linkBadge) linkBadge.textContent = view.badge;
@@ -124,6 +124,7 @@ export function createDirectionsController({ modalManager }) {
       urls = getDirectionsUrls(site, mode);
     } catch (error) {
       console.error('Unable to build Google Maps URL:', error);
+      onError?.('Nearby search is unavailable for this location.');
       return false;
     }
 
