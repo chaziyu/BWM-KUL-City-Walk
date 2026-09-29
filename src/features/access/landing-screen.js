@@ -1,6 +1,4 @@
-import { animateScreenSwitch } from '../../utils/modal.js';
-
-export function createLandingScreen({ notifyLifecycle, onExploreDemo, onVisitor, onStaff, onBackHome, onCloseStaff }) {
+export function createLandingScreen({ onExploreDemo, onVisitor, onStaff, onBackHome, onCloseStaff }) {
   return {
     init() {
       const exploreDemoBtn = document.getElementById('btnExploreDemo');
@@ -22,11 +20,7 @@ export function createLandingScreen({ notifyLifecycle, onExploreDemo, onVisitor,
       const visitorButton = document.getElementById('btnVisitor');
       if (visitorButton && visitorButton.dataset.bound !== 'true') {
         visitorButton.dataset.bound = 'true';
-        visitorButton.addEventListener('click', () => {
-          animateScreenSwitch(document.getElementById('landing-page'), document.getElementById('gatekeeper'));
-          notifyLifecycle?.({ activeView: 'gatekeeper' });
-          onVisitor?.();
-        });
+        visitorButton.addEventListener('click', () => onVisitor?.());
       }
 
       const staffButton = document.getElementById('btnStaff');
