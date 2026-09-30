@@ -45,6 +45,45 @@ describe('polygon renderer', () => {
     expect(renderer.getPolygons()['1'].options.className).toBe('heritage-polygon');
   });
 
+  it('uses the configured low base opacity and emphasizes an opened site', () => {
+    const layer = createLayer();
+    const polygon = {
+      handlers: {},
+      bindPopup: vi.fn(),
+      on(event, handler) {
+        this.handlers[event] = handler;
+      },
+      setStyle: vi.fn(),
+    };
+    const renderer = createPolygonRenderer({
+      L: { polygon: vi.fn(() => polygon) },
+      polygonsLayer: layer,
+      onSiteDetails: vi.fn(),
+      onSiteSelected: vi.fn(),
+      getIsCompleted: () => false,
+      getSiteColors: () => ({ markerColor: '#9A642F', fillColor: '#E9D7BD' }),
+      visitedColor: '#2F7D5A',
+      selectedColor: '#172A3A',
+      polygonOpacity: 0.2,
+    });
+    const site = { id: '1', coordinates: { polygon: [[3, 101], [3, 102], [4, 102]] } };
+
+    renderer.render([site]);
+
+    expect(polygon.setStyle).toHaveBeenCalledWith(expect.objectContaining({
+      fillOpacity: 0.2,
+      color: '#9A642F',
+    }));
+
+    polygon.handlers.popupopen();
+
+    expect(polygon.setStyle).toHaveBeenLastCalledWith(expect.objectContaining({
+      color: '#172A3A',
+      fillOpacity: 0.34,
+      weight: 3,
+    }));
+  });
+
   it('routes polygon clicks through site selection', () => {
     const layer = createLayer();
     const onSiteSelected = vi.fn();

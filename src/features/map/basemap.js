@@ -1,9 +1,19 @@
-import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
+export const CARTO_POSITRON_URL =
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
-export const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+export const CARTO_POSITRON_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors ' +
+  '&copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-export function createOpenFreeMapLayer() {
-  return maplibreGL({
-    style: OPENFREEMAP_STYLE_URL,
+export function createCartoPositronLayer(L) {
+  if (!L?.tileLayer) {
+    throw new Error('Leaflet tileLayer is required to create the CARTO Positron basemap.');
+  }
+
+  return L.tileLayer(CARTO_POSITRON_URL, {
+    attribution: CARTO_POSITRON_ATTRIBUTION,
+    maxZoom: 20,
+    opacity: 0.96,
+    subdomains: 'abcd',
   });
 }

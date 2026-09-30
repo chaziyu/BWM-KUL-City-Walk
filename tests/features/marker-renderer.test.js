@@ -3,6 +3,37 @@ import { describe, expect, it, vi } from 'vitest';
 import { createMarkerRenderer } from '../../src/features/map/marker-renderer.js';
 
 describe('marker renderer', () => {
+  it('builds a category-aware heritage div icon', () => {
+    const divIcon = vi.fn((options) => options);
+    const marker = {
+      bindPopup() { return this; },
+      bindTooltip() { return this; },
+      on: vi.fn(),
+      options: {},
+    };
+    const L = {
+      divIcon,
+      marker: vi.fn(() => marker),
+    };
+
+    createMarkerRenderer({
+      L,
+      markersLayer: { addLayer: vi.fn() },
+      onSiteDetails: vi.fn(),
+      onSiteSelected: vi.fn(),
+      getIsCompleted: () => false,
+      getSiteColors: () => ({ className: 'main-marker-pin' }),
+    }).render([{ id: '1', name: 'Site', coordinates: { marker: [3, 101] } }]);
+
+    expect(divIcon).toHaveBeenCalledWith(expect.objectContaining({
+      className: 'heritage-marker-wrapper main-marker-pin',
+      iconSize: [28, 34],
+    }));
+    expect(L.marker).toHaveBeenCalledWith([3, 101], {
+      icon: expect.objectContaining({ className: 'heritage-marker-wrapper main-marker-pin' }),
+    });
+  });
+
   it('routes marker clicks through site selection', () => {
     const onSiteSelected = vi.fn();
     const marker = {

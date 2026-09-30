@@ -5,6 +5,7 @@ export function createMarkerRenderer({
   onSiteSelected,
   onSiteUnselected,
   getIsCompleted,
+  getSiteColors = () => ({ className: 'main-marker-pin' }),
 }) {
   const markers = {};
 
@@ -12,15 +13,18 @@ export function createMarkerRenderer({
     if (!globalThis.document) return [site.name, site.info].filter(Boolean).join('\n');
 
     const content = document.createElement('div');
+    content.className = 'heritage-popup';
     const title = document.createElement('strong');
     const info = document.createElement('p');
     const button = document.createElement('button');
 
+    title.className = 'heritage-popup__title';
     title.textContent = site.name;
+    info.className = 'heritage-popup__copy';
     info.textContent = site.info || '';
     button.type = 'button';
     button.textContent = 'Read full history';
-    button.className = 'mt-2 rounded bg-blue-600 px-3 py-1.5 text-sm font-bold text-white';
+    button.className = 'heritage-popup__button';
     button.addEventListener('click', (event) => {
       event.stopPropagation();
       onSiteDetails(site);
@@ -29,10 +33,28 @@ export function createMarkerRenderer({
     return content;
   }
 
+  function createSiteIcon(site) {
+    if (!L?.divIcon) return undefined;
+    const { className } = getSiteColors(site);
+
+    return L.divIcon({
+      className: `heritage-marker-wrapper ${className || ''}`.trim(),
+      html: '<span class="heritage-marker"><span class="heritage-marker__core"></span></span>',
+      iconSize: [28, 34],
+      iconAnchor: [14, 29],
+      popupAnchor: [0, -27],
+      tooltipAnchor: [0, -25],
+    });
+  }
+
   function updateVisitedState(marker, isVisited) {
     if (!marker) return;
     marker.options.isVisited = isVisited;
     if (marker._icon) marker._icon.classList.toggle('marker-visited', isVisited);
+  }
+
+  function setActiveState(marker, isActive) {
+    marker?._icon?.classList.toggle('marker-active', isActive);
   }
 
   function render(sites) {
@@ -40,7 +62,8 @@ export function createMarkerRenderer({
       const latlng = Array.isArray(site.coordinates) ? site.coordinates : site.coordinates?.marker;
       if (!latlng) return;
 
-      const marker = L.marker(latlng)
+      const icon = createSiteIcon(site);
+      const marker = L.marker(latlng, icon ? { icon } : undefined)
         .bindTooltip(site.name, {
           permanent: false,
           direction: 'top',
@@ -60,8 +83,15 @@ export function createMarkerRenderer({
 
         updateVisitedState(event.target, event.target.options.isVisited);
       });
-      marker.on('click', () => onSiteSelected(site));
-      marker.on('popupclose', () => onSiteUnselected?.(site));
+      marker.on('popupopen', () => setActiveState(marker, true));
+      marker.on('click', () => {
+        setActiveState(marker, true);
+        onSiteSelected(site);
+      });
+      marker.on('popupclose', () => {
+        setActiveState(marker, false);
+        onSiteUnselected?.(site);
+      });
       markersLayer.addLayer(marker);
       markers[site.id] = marker;
     });

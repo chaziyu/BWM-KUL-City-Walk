@@ -2,7 +2,6 @@
 @source "../../index.html";
 @source "../**/*.js";
 @import "leaflet/dist/leaflet.css";
-@import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 @import "./components.css";
 @import "./base.css";
 @import "./modals.css";

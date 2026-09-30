@@ -122,14 +122,13 @@ describe('map controller', () => {
     };
   }
 
-  it('uses the injected vector basemap instead of a CARTO raster tile layer', async () => {
+  it('adds the injected basemap layer without coupling the controller to a tile provider', async () => {
     const { basemapLayer, controller, createBasemapLayer, L, map } = setup(15);
 
     await controller.initMap();
 
     expect(createBasemapLayer).toHaveBeenCalledOnce();
     expect(basemapLayer.addTo).toHaveBeenCalledWith(map);
-    expect(L.tileLayer).not.toHaveBeenCalled();
   });
 
   it('shows filtered markers below the polygon threshold', async () => {

@@ -173,11 +173,7 @@ html {
     animation: cinematicFadeOut 0.4s forwards;
 }
 
-/* --- 6. GAMIFICATION STYLES --- */
-.marker-visited {
-    filter: hue-rotate(140deg) brightness(1.2) saturate(3);
-    transition: filter 0.5s ease;
-}
+/* Map marker state colors are owned by map.css. */
 
 /* --- 7. PASSPORT GRID STYLES --- */
 .passport-stamp {
@@ -276,23 +272,7 @@ html {
     animation: shimmer 1.5s infinite;
 }
 
-/* --- 10. HERITAGE POLYGON STYLES --- */
-.heritage-polygon {
-    filter: drop-shadow(0 0 5px rgba(160, 82, 45, 0.6));
-    transition: fill-opacity 0.3s ease;
-}
-
-.heritage-polygon:hover {
-    fill-opacity: 0.8 !important;
-    cursor: pointer;
-}
-
-/* Visited Marker Override */
-.marker-visited .pin-head {
-    /* Color for stamp/visited sites */
-    background-color: #DAA520 !important;
-    border-color: #fff !important;
-}
+/* Heritage map overlay styling is centralized in map.css. */
 
 /* Define the animation keyframes */
 @keyframes dash {

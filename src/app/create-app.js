@@ -9,7 +9,7 @@ import { createAdminAccess } from '../features/access/admin-access.js';
 import { createDemoAccess } from '../features/access/demo-access.js';
 import { createPlatformWarningController } from '../features/access/platform-warning-controller.js';
 import { createVisitorAccess } from '../features/access/visitor-access.js';
-import { createOpenFreeMapLayer } from '../features/map/basemap.js';
+import { createCartoPositronLayer } from '../features/map/basemap.js';
 import { createMapController } from '../features/map/map-controller.js';
 import { bindMapUI } from '../features/map/map-ui.js';
 import { createBadgeController } from '../features/badge/badge-controller.js';
@@ -86,7 +86,7 @@ const progressService = createProgressService({
 const mapController = createMapController({
   L: window.L,
   loadSites: loadSiteData,
-  createBasemapLayer: createOpenFreeMapLayer,
+  createBasemapLayer: () => createCartoPositronLayer(window.L),
   getIsCompleted: (siteId) => progressService.isCompleted(siteId),
   onSiteSelected: (site) => siteModalController.open(site),
   onSitesLoaded: (sites) => {
