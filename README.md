@@ -16,7 +16,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 *   **🎓 Interactive Onboarding:** Beautiful guided tour system with spotlight effects to help new users discover features instantly
 *   **🧭 Story Walks:** Curated 30/60/90-minute Heritage Threads are planned locally with no routing API cost\n*   **🧠 AI Tour Guide:** Context-aware chatbot powered by Google GenAI, with deterministic factual answers before model calls
 *   **🛂 Digital Passport:** Collect stamps, check-in to sites, and track your exploration progress
-*   **📍 Interactive Map:** Rich transit routes, food & hotel search, and beautiful site details
+*   **📍 Interactive Map:** Quiet CARTO Positron basemap, heritage-first markers/polygons, food & hotel search, and site details
 *   **⚡ Performance Aware:** Hardware-accelerated animations, local build assets, and lazy-loaded optional libraries
 *   **♿ Accessible:** Global UI zoom controls, high-contrast design, and keyboard navigation support
 
@@ -39,6 +39,8 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 - **Smooth Scrolling:** Momentum scrolling on iOS with no bounce/overscroll
 
 ### 🗺️ **3. Enhanced Map Experience** *(UPGRADED!)*
+- **Heritage-first Basemap:** CARTO Positron keeps roads, buildings, and POIs visually quiet so BWM content remains the focus
+- **Muted Overlay Palette:** Bronze must-visit sites, desaturated teal recommended sites, green completed sites, and navy selected states
 - **Transit Routes:** View interactive transit lines and travel times directly in embedded maps
 - **Smart Search:** Find food and hotels near heritage sites (centered on site location)
 - **Dynamic Titles:** Map modal shows contextual titles like "🍔 Food Near [Site Name]"
@@ -79,7 +81,7 @@ The project is designed as a low-cost portfolio prototype using Vercel serverles
 
 ### Frontend
 *   **Core:** HTML5, Vanilla JavaScript (ES6+), Tailwind CSS
-*   **Mapping:** Leaflet.js with OpenFreeMap / MapLibre
+*   **Mapping:** Leaflet.js with CARTO Positron tiles and OpenStreetMap data attribution
 *   **Animations:** Native CSS transitions with hardware acceleration
 *   **Configuration:** Modular `src/config/app-config.js` for runtime settings
 
@@ -262,7 +264,7 @@ Client UI state is not trusted for authorization. Demo, visitor, admin, and chat
 
 ## Known Limitations
 
-- Offline support covers the app shell and previously loaded same-origin content; third-party map tiles and external services remain online-only.
+- Offline support covers the app shell and previously loaded same-origin content; CARTO basemap tiles and other external services remain online-only.
 - The admin workflow is a portfolio prototype.
 - Recommended sites do not all have quiz content yet.
 - Google Translate is a third-party widget loaded only when requested.
@@ -369,7 +371,8 @@ Update UI strings for internationalization support.
 - **Badan Warisan Malaysia** for heritage preservation
 - **Google Gemini** for AI capabilities
 - **Vercel** for hosting infrastructure
-- **OpenStreetMap** for mapping data
+- **OpenStreetMap** contributors for mapping data
+- **CARTO** for the Positron basemap tiles
 - **Leaflet.js** community for excellent documentation
 
 ---

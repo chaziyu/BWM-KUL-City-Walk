@@ -18,10 +18,10 @@
 }
 
 .map-progress-card {
-  border: 1px solid rgba(203, 213, 225, 0.88);
+  border: 1px solid rgba(219, 226, 232, 0.9);
   border-radius: var(--ui-radius-lg);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: var(--ui-shadow-md);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   padding: 0.65rem 0.8rem 0.7rem;
@@ -104,10 +104,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.25rem;
-  border: 1px solid rgba(203, 213, 225, 0.92);
+  border: 1px solid rgba(219, 226, 232, 0.92);
   border-radius: var(--ui-radius-pill);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: var(--ui-shadow-md);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   padding: 0.25rem;
@@ -149,8 +149,8 @@
   gap: 0.35rem;
   border: 1px solid rgba(203, 213, 225, 0.92);
   border-radius: var(--ui-radius-pill);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: var(--ui-shadow-lg);
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.11);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   padding: 0.32rem;
@@ -238,18 +238,134 @@
 }
 
 .heritage-polygon {
-  filter: drop-shadow(0 1px 3px rgba(85, 58, 35, 0.22));
-  transition: fill-opacity var(--ui-transition);
-}
-
-.heritage-polygon:hover {
-  fill-opacity: 0.78 !important;
   cursor: pointer;
+  filter: drop-shadow(0 1px 1px rgba(60, 49, 37, 0.10));
+  transition:
+    fill-opacity var(--ui-transition),
+    stroke-width var(--ui-transition);
 }
 
-.marker-visited .pin-head {
-  background-color: var(--ui-accent) !important;
-  border-color: #fff !important;
+.heritage-marker-wrapper {
+  --marker-stroke: #9a642f;
+  --marker-fill: #f5eadb;
+  width: 28px !important;
+  height: 34px !important;
+  border: 0;
+  background: transparent;
+}
+
+.main-marker-pin {
+  --marker-stroke: #9a642f;
+  --marker-fill: #f5eadb;
+}
+
+.bonus-marker-pin {
+  --marker-stroke: #617a78;
+  --marker-fill: #e4ece9;
+}
+
+.heritage-marker {
+  width: 1.45rem;
+  height: 1.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(45deg);
+  transform-origin: 50% 50%;
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 0;
+  background: var(--marker-stroke);
+  box-shadow: 0 3px 9px rgba(23, 42, 58, 0.2);
+  transition:
+    background-color var(--ui-transition),
+    box-shadow var(--ui-transition),
+    scale var(--ui-transition);
+}
+
+.heritage-marker__core {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--marker-fill);
+  box-shadow: inset 0 0 0 1px rgba(23, 42, 58, 0.08);
+}
+
+.marker-visited .heritage-marker {
+  background: var(--ui-success);
+}
+
+.marker-visited .heritage-marker__core {
+  background: white;
+}
+
+.marker-active .heritage-marker {
+  background: var(--ui-primary);
+  box-shadow: 0 4px 14px rgba(23, 42, 58, 0.3);
+  scale: 1.1;
+}
+
+.heritage-popup__title {
+  display: block;
+  color: var(--ui-ink);
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.heritage-popup__copy {
+  margin: 0.4rem 0 0;
+  color: var(--ui-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.heritage-popup__button {
+  margin-top: 0.65rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--ui-primary);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-primary);
+  color: white;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+#map .leaflet-popup-content-wrapper,
+#map .leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+#map .leaflet-popup-content-wrapper {
+  border: 1px solid rgba(219, 226, 232, 0.95);
+  border-radius: var(--ui-radius-md);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.13);
+}
+
+#map .leaflet-popup-content {
+  margin: 0.9rem 1rem;
+}
+
+#map .leaflet-tooltip {
+  border: 1px solid rgba(219, 226, 232, 0.92);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--ui-ink);
+  box-shadow: var(--ui-shadow-sm);
+  font-size: 0.72rem;
+  font-weight: 750;
+  padding: 0.35rem 0.5rem;
+}
+
+#map .leaflet-control-attribution {
+  border-radius: 0.4rem 0 0 0;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ui-muted);
+  font-size: 0.62rem;
+  line-height: 1.3;
+}
+
+#map .leaflet-control-attribution a {
+  color: var(--ui-ink-soft);
 }
 
 @media (min-width: 720px) {

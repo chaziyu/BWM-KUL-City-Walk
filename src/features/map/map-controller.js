@@ -5,14 +5,15 @@ import { createMapFilter } from './map-filter.js';
 import { createMarkerRenderer } from './marker-renderer.js';
 import { createPolygonRenderer } from './polygon-renderer.js';
 
-const VISITED_POLYGON_COLOR = '#007bff';
+const VISITED_POLYGON_COLOR = '#2F7D5A';
+const SELECTED_POLYGON_COLOR = '#172A3A';
 
 export function getSiteColors(site) {
   if (isMustVisitSite(site)) {
-    return { markerColor: '#A0522D', fillColor: '#DEB887', className: 'main-marker-pin' };
+    return { markerColor: '#9A642F', fillColor: '#E9D7BD', className: 'main-marker-pin' };
   }
 
-  return { markerColor: '#9333EA', fillColor: '#E9D5FF', className: 'bonus-marker-pin' };
+  return { markerColor: '#617A78', fillColor: '#DCE7E3', className: 'bonus-marker-pin' };
 }
 
 export function createMapController({
@@ -99,6 +100,7 @@ export function createMapController({
         if (briefPopupSiteId === String(site.id)) briefPopupSiteId = null;
       },
       getIsCompleted,
+      getSiteColors,
     });
     polygonRenderer = createPolygonRenderer({
       L,
@@ -117,6 +119,7 @@ export function createMapController({
       getIsCompleted,
       getSiteColors,
       polygonOpacity: POLYGON_OPACITY,
+      selectedColor: SELECTED_POLYGON_COLOR,
       visitedColor: VISITED_POLYGON_COLOR,
     });
 
