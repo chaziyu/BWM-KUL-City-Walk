@@ -52,7 +52,7 @@ The service worker caches the same-origin app shell, heritage site data, Heritag
 The service worker deliberately does **not** cache:
 
 - `/api/*` responses
-- OpenFreeMap / MapLibre tiles
+- CARTO Positron basemap tiles
 - Google Maps
 - Google Translate
 - Gemini or other third-party services
